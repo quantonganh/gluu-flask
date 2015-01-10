@@ -26,9 +26,10 @@ $ env/bin/pip install -r requirements.txt
 ```
 
 ## Run
-Just launch run.py
+Just launch `run.py`
 
 ## Test
-nosetests tests.singleton
-nosetests tests.cluster
-
+```
+$ nosetests tests.singleton
+$ nosetests tests.cluster
+```
