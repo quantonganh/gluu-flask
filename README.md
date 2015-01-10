@@ -4,9 +4,16 @@
 
 This is an API server to enable management of Gluu clusters.
 
-## Dependencies
-The following are included in the distribution 
-1. pip install flask
-2. pip install flask-restful
-3. pip install nose
+## Deployment
+$ wget https://github.com/GluuFederation/gluu-flask/archive/master.zip
+$ unzip master.zip
+$ c 
+pip install -r requirements.txt
+
+## Run
+Just launch run.py
+
+## Test
+nosetests tests.singleton
+nosetests tests.cluster
 
