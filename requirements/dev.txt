@@ -1,0 +1,8 @@
+# Everything the developer needs in addition to the production requirements
+-r prod.txt
+
+# Testing
+Flask-Testing>=0.4.2
+
+# Management script
+#Flask-Script
