@@ -4,6 +4,7 @@ from flask import Flask
 from api.settings import ProdConfig
 from api.extensions import (
     bcrypt,
+    #restapi,
 )
 
 
@@ -22,6 +23,7 @@ def create_app(config_object=ProdConfig):
 
 def register_extensions(app):
     bcrypt.init_app(app)
+    #restapi.init_app(app)
     return None
 
 

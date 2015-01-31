@@ -9,6 +9,7 @@ class Config(object):
     PROJECT_ROOT = os.path.abspath(os.path.join(APP_DIR, os.pardir))
     BCRYPT_LOG_ROUNDS = 13
     #CACHE_TYPE = 'simple'  # Can be "memcached", "redis", etc.
+    PORT = 8080
 
 
 class ProdConfig(Config):

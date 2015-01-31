@@ -5,3 +5,6 @@ in app.py
 
 from flask.ext.bcrypt import Bcrypt
 bcrypt = Bcrypt()
+
+#from flask.ext import restful
+#restapi = restful.Api()
