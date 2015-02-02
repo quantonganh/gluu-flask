@@ -36,7 +36,7 @@ class Bootstrap(Resource):
         responseMessages=[
             {
               "code": 200,
-              "message": "node created"
+              "message": "node deleted"
             }
           ]
         )

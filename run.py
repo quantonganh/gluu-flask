@@ -21,7 +21,9 @@ else:
     app = create_app(DevConfig)
 
 #restapi = restful.Api()
-restapi = swagger.docs(restful.Api(app), apiVersion='0.1')
+restapi = swagger.docs(restful.Api(app), apiVersion='0.1',
+    api_spec_url='/api/spec',
+    description='A Basic API')
 #restapi.init_app(app)
 restapi.add_resource(Bootstrap, '/bootstrap')
 #restapi.init_app(app)
