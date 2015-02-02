@@ -8,6 +8,8 @@ This is an API server to enable management of Gluu clusters.
 
 ### Install pip and virtualenv
 
+Make sure you have python development libraries installed. For example, on Ubuntu use ``apt-get install python-all-dev`` or in Centos ``yum install python-devel``
+
 ```
 # curl https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py | python -
 # curl https://raw.github.com/pypa/pip/master/contrib/get-pip.py | python -
