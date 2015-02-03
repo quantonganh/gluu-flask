@@ -2,10 +2,9 @@
 '''The app module, containing the app factory function.'''
 from flask import Flask
 from api.settings import ProdConfig
-from api.extensions import (
-    bcrypt,
-    #restapi,
-)
+#from api.extensions import (
+#    restapi,
+#)
 
 
 def create_app(config_object=ProdConfig):
@@ -22,7 +21,6 @@ def create_app(config_object=ProdConfig):
 
 
 def register_extensions(app):
-    bcrypt.init_app(app)
     #restapi.init_app(app)
     return None
 
