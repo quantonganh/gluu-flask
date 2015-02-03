@@ -4,6 +4,10 @@ from flask.ext.restful import Resource
 from flask_restful_swagger import swagger
 
 class Bootstrap(Resource):
+    """
+    bootstrap gluu salt-master node
+    docker minions will point to salt-master
+    """
     @swagger.operation(
         notes='a test note',
         nickname='bootstrap',
