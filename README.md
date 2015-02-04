@@ -4,6 +4,21 @@
 
 This is an API server to enable management of Gluu clusters.
 
+## Prerequisites
+
+### Install docker.io
+
+```
+http://docs.docker.com/installation/ubuntulinux/#ubuntu-trusty-1404-lts-64-bit
+```
+### Install salt-master
+
+```
+echo deb http://ppa.launchpad.net/saltstack/salt/ubuntu `lsb_release -sc` main | sudo tee /etc/apt/sources.list.d/saltstack.list
+wget -q -O- "http://keyserver.ubuntu.com:11371/pks/lookup?op=get&search=0x4759FA960E27C0A6" | sudo apt-key add -
+sudo apt-get update
+sudo apt-get install -y salt-master
+```
 ## Deployment
 
 ### Install pip and virtualenv
