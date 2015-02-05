@@ -46,9 +46,8 @@ $ env/bin/pip install -r requirements.txt
 ## Run
 Just launch `run.py`
 
-## Test
-```
-$ nosetests testapi
-$ nosetests tests.singleton
-$ nosetests tests.cluster
-```
+## Flask Swagger Docs
+
+gluu-flask publishes swagger API documentation. You should be able to access the following APIs
+
+http://localhost:8080/api/spec.html
