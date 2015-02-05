@@ -48,6 +48,7 @@ Just launch `run.py`
 
 ## Flask Swagger Docs
 
-gluu-flask publishes swagger API documentation. You should be able to access the following APIs
+gluu-flask publishes swagger API documentation. You should be able
+view this interactive HTML page that lets you play with the API to some extent.
 
 http://localhost:8080/api/spec.html
