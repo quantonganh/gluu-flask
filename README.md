@@ -10,9 +10,8 @@ the design and goals of the components with which the gluu-flask api server inte
 
 ### Install docker.io
 
-```
-http://docs.docker.com/installation/ubuntulinux/#ubuntu-trusty-1404-lts-64-bit
-```
+Follow these instructions to install the Docker managed package for Ubuntu Trusty 14.04 
+[http://docs.docker.com/installation/ubuntulinux/#docker-maintained-package-installation](http://docs.docker.com/installation/ubuntulinux/#ubuntu-trusty-1404-lts-64-bit)
 
 ### Install salt-master
 
