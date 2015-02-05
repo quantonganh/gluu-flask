@@ -1,8 +1,11 @@
-# Gluu Server Flask Management API Server
+# gluu-flask Cluster Management API Server
 
 ## Overview
 
-This is an API server to enable management of Gluu clusters.
+The gluu-flask server which should be run on a very secure, non-Internet facing
+server to enable management of Gluu Server clusters, and nodes within the cluster.
+There is an ever-evolving [wiki Page](http://www.gluu.co/gluu_salt) which describes
+the design and goals of the components with which the gluu-flask api server interacts.
 
 ## Prerequisites
 
