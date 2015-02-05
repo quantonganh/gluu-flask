@@ -68,6 +68,7 @@ Just launch `run.py`
 
 ## Test
 ```
+$ nosetests testapi
 $ nosetests tests.singleton
 $ nosetests tests.cluster
 ```
