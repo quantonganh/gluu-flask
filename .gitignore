@@ -47,5 +47,5 @@ env
 env*
 gluu-flask.iml
 
-# Intellij Edito
+# Intellij Editor
 .idea

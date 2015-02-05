@@ -2,8 +2,7 @@
 
 ## Overview
 
-The gluu-flask server which should be run on a very secure, non-Internet facing
-server to enable management of Gluu Server clusters, and nodes within the cluster.
+The gluu-flask server is used to enable management of Gluu Server clusters.
 There is an ever-evolving [wiki Page](http://www.gluu.co/gluu_salt) which describes
 the design and goals of the components with which the gluu-flask api server interacts.
 
