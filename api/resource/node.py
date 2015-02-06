@@ -9,7 +9,7 @@ class Node(Resource):
     Create gluu node
     """
     @swagger.operation(
-        notes='Gives all nodes info/state',
+        notes='Gives node or nodes info/state',
         nickname='getnode',
         parameters = [],
         responseMessages=[
@@ -20,7 +20,7 @@ class Node(Resource):
           ],
         summary = 'TODO'
         )
-    def get(self, node_id):
+    def get(self, node_id = None):
         if node_id:
             return {'echo': 'list info/state of node no: {}'.format(node_id)}
         else:

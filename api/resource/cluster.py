@@ -20,8 +20,11 @@ class Cluster(Resource):
           ],
         summary = 'TODO'
         )
-    def get(self, cluster_id):
-        return {'echo': 'list cluster info of cluster: {}'.format(cluster_id)}
+    def get(self, cluster_id = None):
+        if cluster_id:
+            return {'echo': 'list cluster info of cluster: {}'.format(cluster_id)}
+        else:
+            return {'echo': 'all cluster info/state'}
 
     @swagger.operation(
         notes='create a new cluster',
