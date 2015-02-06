@@ -22,11 +22,8 @@ class DevConfig(Config):
     """Development configuration."""
     ENV = 'dev'
     DEBUG = True
-    #CACHE_TYPE = 'simple'  # Can be "memcached", "redis", etc.
-
 
 class TestConfig(Config):
     TESTING = True
     DEBUG = True
-    #SQLALCHEMY_DATABASE_URI = 'sqlite://'
     BCRYPT_LOG_ROUNDS = 1  # For faster tests
