@@ -3,7 +3,7 @@
 from flask.ext.restful import Resource
 from flask_restful_swagger import swagger
 
-class Bootstrap(Resource):
+class Node(Resource):
     """
     bootstrap gluu salt-master node
     docker minions will point to salt-master

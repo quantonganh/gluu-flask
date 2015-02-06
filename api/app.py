@@ -2,9 +2,10 @@
 '''The app module, containing the app factory function.'''
 from flask import Flask
 from api.settings import ProdConfig
-#from api.extensions import (
-#    restapi,
-#)
+from api.extensions import (
+    restapi,
+)
+from api.resource.node import Node
 
 
 def create_app(config_object=ProdConfig):
@@ -15,15 +16,19 @@ def create_app(config_object=ProdConfig):
     '''
     app = Flask(__name__)
     app.config.from_object(config_object)
+    register_resources()
     register_extensions(app)
-    register_blueprints(app)
+    #register_blueprints(app)
     return app
 
 
 def register_extensions(app):
-    #restapi.init_app(app)
+    restapi.init_app(app)
     return None
 
+def register_resources():
+    restapi.add_resource(Node, '/node')
+    return None
 
 def register_blueprints(app):
     return None
