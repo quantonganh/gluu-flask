@@ -6,6 +6,7 @@ from api.extensions import (
     restapi,
 )
 from api.resource.node import Node
+from api.resource.cluster import Cluster
 
 
 def create_app(config_object=ProdConfig):
@@ -27,7 +28,8 @@ def register_extensions(app):
     return None
 
 def register_resources():
-    restapi.add_resource(Node, '/node')
+    restapi.add_resource(Node, '/node/<string:node_id>')
+    restapi.add_resource(Cluster, '/cluster/<string:cluster_id>')
     return None
 
 def register_blueprints(app):
