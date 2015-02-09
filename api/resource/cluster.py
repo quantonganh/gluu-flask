@@ -38,7 +38,7 @@ class Cluster(Resource):
           ],
         summary = 'TODO'
         )
-    def post(self, cluster_id):
+    def post(self):
         return {'echo': 'new cluster created'}
 
     @swagger.operation(

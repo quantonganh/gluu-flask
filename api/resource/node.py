@@ -38,7 +38,7 @@ class Node(Resource):
           ],
         summary = 'TODO'
         )
-    def post(self, node_id):
+    def post(self):
         return {'echo': 'node created'}
 
     @swagger.operation(
