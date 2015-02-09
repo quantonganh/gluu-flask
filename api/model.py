@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import json
 from flask_restful_swagger import swagger
 
 @swagger.model
@@ -53,6 +54,9 @@ class Cluster:
         self.inumAppliance = None
         self.inumOrgFN = None
         self.inumApplianceFN = None
+
+    def get_json(self):
+        return json.dumps(self.__dict__)
 
 @swagger.model
 class LdapNode:

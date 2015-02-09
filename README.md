@@ -27,8 +27,8 @@ sudo apt-get install -y salt-master
 ### Install pip and virtualenv
 
 ```
-# curl https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py | python -
-# curl https://raw.github.com/pypa/pip/master/contrib/get-pip.py | python -
+# wget -q -O- https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py | python -
+# wget -q -O- https://raw.github.com/pypa/pip/master/contrib/get-pip.py | python -
 # export PATH="/usr/local/bin:$PATH"
 # pip install virtualenv
 
@@ -44,11 +44,10 @@ $ env/bin/pip install -r requirements.txt
 ```
 
 ## Run
-Just launch `run.py`
+`$ env/bin/python run.py`
 
 ## Flask Swagger Docs
 
-gluu-flask publishes swagger API documentation. You should be able
-view this interactive HTML page that lets you play with the API to some extent.
+gluu-flask publishes swagger API documentation. You should be able view this interactive HTML page that lets you play with the API to some extent.
 
 http://localhost:8080/api/spec.html
