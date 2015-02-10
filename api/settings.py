@@ -10,6 +10,8 @@ class Config(object):
     BCRYPT_LOG_ROUNDS = 13
     #CACHE_TYPE = 'simple'  # Can be "memcached", "redis", etc.
     PORT = 8080
+    DATA_DIR = os.path.expanduser('~') + '/gfdata'
+    CLUSTER_FILE = DATA_DIR + '/cluster.json'
 
 
 class ProdConfig(Config):
@@ -22,6 +24,7 @@ class DevConfig(Config):
     """Development configuration."""
     ENV = 'dev'
     DEBUG = True
+    RELOADER = False
 
 class TestConfig(Config):
     TESTING = True
