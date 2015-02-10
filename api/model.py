@@ -21,10 +21,15 @@
 # SOFTWARE.
 
 from flask_restful_swagger import swagger
+import os
+import os.path
+import json
+from api.settings import Config
 
 @swagger.model
-class Cluster:
+class cluster:
     def __init__(self):
+        self.id = ""
         self.name = ""
         self.description = ""
         self.ldap_nodes = {}
@@ -54,8 +59,16 @@ class Cluster:
         self.inumOrgFN = None
         self.inumApplianceFN = None
 
+    def persist(self):
+        db = Config.DB
+        if not os.path.exists(db):
+            os.mkdir(db)
+        jsonData = json.dumps(self.__dict__)
+        with open('%s/cluster%s.json' % (db, self.id), 'w') as outfile:
+            json.dump(jsonData, outfile, sort_keys = True, indent = 4, ensure_ascii=False)
+
 @swagger.model
-class LdapNode:
+class ldapNode:
     def __init__(self, install_dir=None):
         self.local_hostname = None
         self.ip = None

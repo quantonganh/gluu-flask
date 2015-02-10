@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 '''/cluster resource'''
-from flask.ext.restful import Resource
+from flask.ext.restful import Resource, reqparse
 from flask_restful_swagger import swagger
+from ..model import cluster 
 
 class Cluster(Resource):
     """
@@ -27,7 +28,7 @@ class Cluster(Resource):
             return {'echo': 'all cluster info/state'}
 
     @swagger.operation(
-        notes='create a new cluster',
+        notes='Create a new cluster',
         nickname='postcluster',
         parameters = [],
         responseMessages=[
@@ -36,9 +37,13 @@ class Cluster(Resource):
               "message": "cluster created"
             }
           ],
-        summary = 'TODO'
+        summary = 'Create a new cluster and persist json to disk.'
         )
     def post(self):
+        c = cluster()
+        c.id = "12345"
+        c.description = "Test Cluster"
+        c.persist()
         return {'echo': 'new cluster created'}
 
     @swagger.operation(
