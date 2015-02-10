@@ -60,7 +60,6 @@ class cluster:
         self.inumOrgFN = None
         self.inumApplianceFN = None
 
-<<<<<<< HEAD
     def persist(self):
         db = Config.DB
         if not os.path.exists(db):
@@ -68,10 +67,9 @@ class cluster:
         jsonData = json.dumps(self.__dict__)
         with open('%s/cluster%s.json' % (db, self.id), 'w') as outfile:
             json.dump(jsonData, outfile, sort_keys = True, indent = 4, ensure_ascii=False)
-=======
+
     def get_json(self):
         return json.dumps(self.__dict__)
->>>>>>> 0fb484e9c2f04fa12a1165120951b60ee9f7a1f3
 
 @swagger.model
 class ldapNode:
