@@ -49,3 +49,6 @@ gluu-flask.iml
 
 # Intellij Editor
 .idea
+
+# exclude data
+db

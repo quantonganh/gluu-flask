@@ -8,6 +8,7 @@ class Config(object):
     APP_DIR = os.path.abspath(os.path.dirname(__file__))  # This directory
     PROJECT_ROOT = os.path.abspath(os.path.join(APP_DIR, os.pardir))
     BCRYPT_LOG_ROUNDS = 13
+    DB = "./db"
     #CACHE_TYPE = 'simple'  # Can be "memcached", "redis", etc.
     PORT = 8080
     DATA_DIR = os.path.expanduser('~') + '/gfdata'
