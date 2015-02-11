@@ -4,7 +4,7 @@ import os
 import json
 import subprocess
 from flask import g
-from api.model import cluster 
+from api.model import GluuCluster
 
 from api.app import create_app
 from api.settings import DevConfig, ProdConfig
