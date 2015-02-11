@@ -5,6 +5,8 @@ from flask_restful_swagger import swagger
 from ..model import ldapNode
 from flask import g
 from flask.ext.restful import reqparse
+import subprocess
+import sys
 
 def run(command, exit_on_error=True, cwd=None):
         try:
@@ -14,6 +16,7 @@ def run(command, exit_on_error=True, cwd=None):
                 sys.exit(e.returncode)
             else:
                 raise
+
 def get_image(name = ''):
     from docker import Client
     c = Client(base_url='unix://var/run/docker.sock')
@@ -64,16 +67,17 @@ class Node(Resource):
             required=True, help='Cluster name or id',
         )
         post_parser.add_argument(
-            'node', type=str, location='form',
-            required=True, help='node type',
+            'node_type', type=str, location='form',
+            required=True, help='node type: ldap | oxauth | oxtrust',
         )
         args = post_parser.parse_args()
         # check that cluster name or id is valid else return with message and code
         if args.cluster not in ['1234', 'gluu']:
             return {'echo': 'cluster not found'}
+
         # get relivent dockerfile
         # build image
-        image = get_image(args.node)
+        image = get_image(args.node_type)
         """
             [{u'Created': 1422048669,
             u'Id': u'e348da14b96d85f1dfec380b53dfb106ea1fb4723f93fa8619ad798fd9509f7c',

@@ -14,6 +14,10 @@ flask-restful-swagger==0.15
 #Flask-Login==0.2.11
 #Flask-Bcrypt==0.6.0
 
+# Docker
+docker-py
+
 # Testing
 Flask-Testing==0.4.2
 nose==1.3.4
+
