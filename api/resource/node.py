@@ -56,7 +56,24 @@ class Node(Resource):
     @swagger.operation(
         notes='create a node',
         nickname='postnode',
-        parameters = ['cluster', 'node_type'],
+        parameters = [
+          {
+            "name": "cluster",
+            "description": "The ID of the cluster--must exist",
+            "required": True,
+            "allowMultiple": False,
+            "dataType": 'string',
+            "paramType": "body"
+          },
+          {
+            "name": "node_type",
+            "description": "The type of the node: either ldap | oxauth | oxtrust",
+            "required": True,
+            "allowMultiple": False,
+            "dataType": 'string',
+            "paramType": "body"
+          }
+        ],
         responseMessages=[
             {
               "code": 200,
@@ -74,7 +91,7 @@ class Node(Resource):
         )
         post_parser.add_argument(
             'node_type', type=str, location='form',
-            required=True, help='node type: ldap | oxauth | oxtrust',
+            required=True, help='ldap | oxauth | oxtrust',
         )
         args = post_parser.parse_args()
         # check that cluster name or id is valid else return with message and code
