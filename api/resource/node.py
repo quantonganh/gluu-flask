@@ -2,6 +2,9 @@
 '''/node resource'''
 from flask.ext.restful import Resource
 from flask_restful_swagger import swagger
+from ..model import ldapNode
+from flask import g
+from flask.ext.restful import reqparse
 
 class Node(Resource):
     """
@@ -24,7 +27,7 @@ class Node(Resource):
         if node_id:
             return {'echo': 'list info/state of node no: {}'.format(node_id)}
         else:
-            return {'echo': 'list of all nodes info/state'}
+            return {'echo': 'list of all nodes info/state {}'.format(g.get('cluster',None))}
 
     @swagger.operation(
         notes='create a node',
@@ -39,7 +42,26 @@ class Node(Resource):
         summary = 'TODO'
         )
     def post(self):
-        return {'echo': 'node created'}
+        #post data: {"cluster":"id/name","node":"ldap"}
+        post_parser = reqparse.RequestParser()
+        post_parser.add_argument(
+            'cluster', type=str, location='form',
+            required=True, help='Cluster name or id',
+        )
+        post_parser.add_argument(
+            'node', type=str, location='form',
+            required=True, help='node type',
+        )
+        args = post_parser.parse_args()
+        # clone relivent dockerfile
+        # build image
+        # deploy container
+        # accept container cert in host salt-master
+        # create ldapNode() object
+        # populate ldapNode object
+        # add ldapNode object into cluster object
+        # save cluster object in db
+        return {'echo': '{} node created in Cluster: {}'.format(args.node, args.cluster)}
 
     @swagger.operation(
         notes='delete a node',
