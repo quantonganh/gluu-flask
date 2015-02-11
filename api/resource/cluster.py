@@ -2,7 +2,7 @@
 '''/cluster resource'''
 from flask.ext.restful import Resource, reqparse
 from flask_restful_swagger import swagger
-from ..model import cluster 
+from ..model import GluuCluster
 
 class Cluster(Resource):
     """
@@ -40,7 +40,7 @@ class Cluster(Resource):
         summary = 'Create a new cluster and persist json to disk.'
         )
     def post(self):
-        c = cluster()
+        c = GluuCluster()
         c.id = "12345"
         c.description = "Test Cluster"
         c.persist()

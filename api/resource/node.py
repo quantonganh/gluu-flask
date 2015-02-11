@@ -17,17 +17,22 @@ def run(command, exit_on_error=True, cwd=None):
             else:
                 raise
 
-def get_image(name = ''):
-    from docker import Client
-    c = Client(base_url='unix://var/run/docker.sock')
-    return c.images(name)
+def get_image(name = '', docker_base_url='unix://var/run/docker.sock'):
+    try:
+        from docker import Client
+        c = Client(base_url=docker_base_url)
+        return c.images(name)
+    except:
+        # TODO add logging
+        print "Error making connection to Docker Server"
+    return None
 
 class Node(Resource):
     """
-    Node is a docker container runs salt-minions and points to salt-master
-    Create gluu node
+    APIs for cluster node CRUD.
     """
-    images = ['saltminion', 'gluuopendj', 'gluuoxauth', 'gluuoxtrust', 'gluuhttpd', 'gluushib', 'gluuasimba', 'gluucas']
+    def __init__(self):
+        self.available_docker_images = ['saltminion', 'gluuopendj', 'oxauth', 'oxtrust']
 
     @swagger.operation(
         notes='Gives node or nodes info/state',
@@ -41,6 +46,7 @@ class Node(Resource):
           ],
         summary = 'TODO'
         )
+
     def get(self, node_id = None):
         if node_id:
             return {'echo': 'list info/state of node no: {}'.format(node_id)}
@@ -50,7 +56,7 @@ class Node(Resource):
     @swagger.operation(
         notes='create a node',
         nickname='postnode',
-        parameters = [],
+        parameters = ['cluster', 'node_type'],
         responseMessages=[
             {
               "code": 200,
@@ -88,7 +94,7 @@ class Node(Resource):
             or
             []
         """
-        if not image and args.node in images:
+        if not image and args.node in self.available_docker_images:
             run('mkdir /tmp/{}'.format(args.node))
             raw_url = 'https://raw.githubusercontent.com/GluuFederation/gluu-docker/master/ubuntu/14.04/{}/Dockerfile'.format(args.node)
             run('wget -q {} -P /tmp/{}'.format(raw_url, args.node))

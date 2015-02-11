@@ -26,9 +26,38 @@ import os
 import os.path
 import json
 from api.settings import Config
+from flask.ext.restful import fields
 
 @swagger.model
-class cluster:
+class GluuCluster:
+    # Swager Doc
+    resource_fields = {
+      'id': fields.String(attribute='GluuCluster unique identifier'),
+      'name': fields.String(attribute='GluuCluster name'),
+      'description': fields.String(attribute='Description of cluster'),
+      'ldap_nodes': fields.List(fields.String, attribute='Ids of ldap nodes'),
+      'oxauth_nodes': fields.List(fields.String, attribute='Ids of oxauth nodes'),
+      'oxtrust_nodes': fields.List(fields.String, attribute='Ids of oxtrust nodes'),
+      'hostname_ldap_cluster': fields.String,
+      'hostname_oxauth_cluster': fields.String,
+      'hostname_oxtrust_cluster': fields.String,
+      'orgName': fields.String(attribute='Name of org for X.509 certificate'),
+      'orgShortName': fields.String(attribute='Short name of org for X.509 certificate'),
+      'countryCode': fields.String(attribute='ISO 3166-1 alpha-2 country code'),
+      'city': fields.String(attribute='City for X.509 certificate'),
+      'state': fields.String(attribute='State or province for X.509 certificate'),
+      'admin_email': fields.String(attribute='Admin email address for X.509 certificate'),
+      'encoded_ox_ldap_pw': fields.String,
+      'encoded_ldap_pw': fields.String,
+      'oxauthClient_encoded_pw': fields.String,
+      'baseInum': fields.String(attribute='Unique identifier for domain'),
+      'inumOrg': fields.String(attribute='Unique identifier for organization'),
+      'inumOrgFN': fields.String(attribute='Unique organization identifier sans special characters.'),
+      'inumAppliance': fields.String(attribute='Unique identifier for cluster'),
+      'inumApplianceFN': fields.String(attribute='Unique cluster identifier sans special characters.')
+    }
+    required = ['id']
+
     def __init__(self):
         self.id = ""
         self.name = ""
