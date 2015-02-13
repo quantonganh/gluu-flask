@@ -163,7 +163,7 @@ class ldapNode:
         'ldif_groups': fields.String(attribute='Full path to output folder ldif'),
         'ldif_site': fields.String(attribute='Full path to output folder ldif'),
         'ldif_scripts': fields.String(attribute='Full path to output folder ldif'),
-        'ldif_files': fields.List(attribute='List of initial ldif files')
+        'ldif_files': fields.List(fields.String, attribute='List of initial ldif files')
         }
     def __init__(self, install_dir=None):
         self.local_hostname = None
