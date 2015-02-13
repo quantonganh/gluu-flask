@@ -67,4 +67,8 @@ class Cluster(Resource):
         summary='TODO'
         )
     def delete(self, cluster_id):
-        return {'echo': 'cluster deleted'}
+        cluster = GluuCluster()
+        deleted = cluster.delete(cluster_id, current_app.config["DB"])
+        if deleted:
+            return {'echo': 'cluster deleted'}
+        return {"echo": "failed to delete cluster"}

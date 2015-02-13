@@ -115,6 +115,15 @@ class GluuCluster:
             pass
         return data
 
+    def delete(self, id_, data_dir):
+        deleted = False
+        try:
+            os.unlink("{}/cluster_{}.json".format(data_dir, id_))
+            deleted = True
+        except OSError:
+            deleted = False
+        return deleted
+
 
 @swagger.model
 class ldapNode:
