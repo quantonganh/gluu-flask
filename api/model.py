@@ -100,10 +100,20 @@ class GluuCluster:
         with open('{}/cluster_{}.json'.format(data_dir, self.id), 'w') as fp:
             frozen = jsonpickle.encode(json_data)
             fp.write(frozen)
-        return json_data
+        return self.__dict__
 
     def get_json(self):
         return json.dumps(self.__dict__)
+
+    def get(self, id_, data_dir):
+        data = {}
+        try:
+            with open("{}/cluster_{}.json".format(data_dir, id_), "r") as fp:
+                data = jsonpickle.decode(fp.read())
+                data = json.loads(data)
+        except IOError:
+            pass
+        return data
 
 
 @swagger.model

@@ -1,9 +1,8 @@
-import uuid
-
-
 def test_cluster_persist(config):
     import os
+    import uuid
     import jsonpickle
+    import json
     from api.model import GluuCluster
 
     cluster = GluuCluster()
@@ -18,7 +17,7 @@ def test_cluster_persist(config):
     # ensure we save the data
     with open(fp) as file_:
         expected_json = jsonpickle.decode(file_.read())
-        assert json_data == expected_json
+        assert json_data == json.loads(expected_json)
 
     # remove test file
     os.unlink(fp)

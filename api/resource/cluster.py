@@ -3,7 +3,7 @@
 import uuid
 
 from flask import current_app
-from flask.ext.restful import Resource  # , reqparse
+from flask.ext.restful import Resource
 from flask_restful_swagger import swagger
 
 from ..model import GluuCluster
@@ -28,9 +28,12 @@ class Cluster(Resource):
         )
     def get(self, cluster_id=None):
         if cluster_id:
-            return {'echo': 'list cluster info of cluster: {}'.format(cluster_id)}
-        else:
-            return {'echo': 'all cluster info/state'}
+            cluster = GluuCluster()
+            data = cluster.get(cluster_id, current_app.config["DB"])
+            return data
+
+        # TODO: get all clusters
+        return {'echo': 'all cluster info/state'}
 
     @swagger.operation(
         notes='Create a new cluster',
@@ -54,14 +57,14 @@ class Cluster(Resource):
     @swagger.operation(
         notes='delete a cluster',
         nickname='delcluster',
-        parameters = [],
+        parameters=[],
         responseMessages=[
             {
               "code": 200,
               "message": "cluster deleted"
             }
-          ],
-        summary = 'TODO'
+        ],
+        summary='TODO'
         )
     def delete(self, cluster_id):
         return {'echo': 'cluster deleted'}
