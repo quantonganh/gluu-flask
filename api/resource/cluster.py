@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
 '''/cluster resource'''
-from flask.ext.restful import Resource, reqparse
+import uuid
+
+from flask import current_app
+from flask.ext.restful import Resource  # , reqparse
 from flask_restful_swagger import swagger
+
 from ..model import GluuCluster
+
 
 class Cluster(Resource):
     """
@@ -12,16 +17,16 @@ class Cluster(Resource):
     @swagger.operation(
         notes='Gives cluster info/state',
         nickname='getcluster',
-        parameters = [],
+        parameters=[],
         responseMessages=[
             {
               "code": 200,
               "message": "list node information"
             }
-          ],
-        summary = 'TODO'
+        ],
+        summary='TODO'
         )
-    def get(self, cluster_id = None):
+    def get(self, cluster_id=None):
         if cluster_id:
             return {'echo': 'list cluster info of cluster: {}'.format(cluster_id)}
         else:
@@ -30,20 +35,20 @@ class Cluster(Resource):
     @swagger.operation(
         notes='Create a new cluster',
         nickname='postcluster',
-        parameters = [],
+        parameters=[],
         responseMessages=[
             {
               "code": 200,
               "message": "cluster created"
             }
-          ],
-        summary = 'Create a new cluster and persist json to disk.'
+        ],
+        summary='Create a new cluster and persist json to disk.'
         )
     def post(self):
         c = GluuCluster()
-        c.id = "12345"
+        c.id = "{}".format(uuid.uuid4())
         c.description = "Test Cluster"
-        c.persist()
+        c.persist(current_app.config["DB"])
         return {'echo': 'new cluster created'}
 
     @swagger.operation(

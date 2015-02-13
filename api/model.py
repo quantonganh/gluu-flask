@@ -24,37 +24,38 @@ import json
 from flask_restful_swagger import swagger
 import os
 import os.path
-import json
+import jsonpickle
 from api.settings import Config
 from flask.ext.restful import fields
+
 
 @swagger.model
 class GluuCluster:
     # Swager Doc
     resource_fields = {
-      'id': fields.String(attribute='GluuCluster unique identifier'),
-      'name': fields.String(attribute='GluuCluster name'),
-      'description': fields.String(attribute='Description of cluster'),
-      'ldap_nodes': fields.List(fields.String, attribute='Ids of ldap nodes'),
-      'oxauth_nodes': fields.List(fields.String, attribute='Ids of oxauth nodes'),
-      'oxtrust_nodes': fields.List(fields.String, attribute='Ids of oxtrust nodes'),
-      'hostname_ldap_cluster': fields.String,
-      'hostname_oxauth_cluster': fields.String,
-      'hostname_oxtrust_cluster': fields.String,
-      'orgName': fields.String(attribute='Name of org for X.509 certificate'),
-      'orgShortName': fields.String(attribute='Short name of org for X.509 certificate'),
-      'countryCode': fields.String(attribute='ISO 3166-1 alpha-2 country code'),
-      'city': fields.String(attribute='City for X.509 certificate'),
-      'state': fields.String(attribute='State or province for X.509 certificate'),
-      'admin_email': fields.String(attribute='Admin email address for X.509 certificate'),
-      'encoded_ox_ldap_pw': fields.String,
-      'encoded_ldap_pw': fields.String,
-      'oxauthClient_encoded_pw': fields.String,
-      'baseInum': fields.String(attribute='Unique identifier for domain'),
-      'inumOrg': fields.String(attribute='Unique identifier for organization'),
-      'inumOrgFN': fields.String(attribute='Unique organization identifier sans special characters.'),
-      'inumAppliance': fields.String(attribute='Unique identifier for cluster'),
-      'inumApplianceFN': fields.String(attribute='Unique cluster identifier sans special characters.')
+        'id': fields.String(attribute='GluuCluster unique identifier'),
+        'name': fields.String(attribute='GluuCluster name'),
+        'description': fields.String(attribute='Description of cluster'),
+        'ldap_nodes': fields.List(fields.String, attribute='Ids of ldap nodes'),
+        'oxauth_nodes': fields.List(fields.String, attribute='Ids of oxauth nodes'),
+        'oxtrust_nodes': fields.List(fields.String, attribute='Ids of oxtrust nodes'),
+        'hostname_ldap_cluster': fields.String,
+        'hostname_oxauth_cluster': fields.String,
+        'hostname_oxtrust_cluster': fields.String,
+        'orgName': fields.String(attribute='Name of org for X.509 certificate'),
+        'orgShortName': fields.String(attribute='Short name of org for X.509 certificate'),
+        'countryCode': fields.String(attribute='ISO 3166-1 alpha-2 country code'),
+        'city': fields.String(attribute='City for X.509 certificate'),
+        'state': fields.String(attribute='State or province for X.509 certificate'),
+        'admin_email': fields.String(attribute='Admin email address for X.509 certificate'),
+        'encoded_ox_ldap_pw': fields.String,
+        'encoded_ldap_pw': fields.String,
+        'oxauthClient_encoded_pw': fields.String,
+        'baseInum': fields.String(attribute='Unique identifier for domain'),
+        'inumOrg': fields.String(attribute='Unique identifier for organization'),
+        'inumOrgFN': fields.String(attribute='Unique organization identifier sans special characters.'),
+        'inumAppliance': fields.String(attribute='Unique identifier for cluster'),
+        'inumApplianceFN': fields.String(attribute='Unique cluster identifier sans special characters.')
     }
     required = ['id']
 
@@ -89,16 +90,21 @@ class GluuCluster:
         self.inumOrgFN = None
         self.inumApplianceFN = None
 
-    def persist(self):
-        db = Config.DB
-        if not os.path.exists(db):
-            os.mkdir(db)
-        jsonData = json.dumps(self.__dict__)
-        with open('%s/cluster%s.json' % (db, self.id), 'w') as outfile:
-            json.dump(jsonData, outfile, sort_keys = True, indent = 4, ensure_ascii=False)
+    def persist(self, data_dir):
+        """Saves data into a storage. Currently using JSON file.
+        """
+        if not os.path.exists(data_dir):
+            os.mkdir(data_dir)
+
+        json_data = self.get_json()
+        with open('{}/cluster_{}.json'.format(data_dir, self.id), 'w') as fp:
+            frozen = jsonpickle.encode(json_data)
+            fp.write(frozen)
+        return json_data
 
     def get_json(self):
         return json.dumps(self.__dict__)
+
 
 @swagger.model
 class ldapNode:
