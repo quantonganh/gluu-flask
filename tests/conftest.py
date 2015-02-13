@@ -13,4 +13,10 @@ def app(request):
     from api.settings import TestConfig
 
     app = create_app(TestConfig)
+
+    def teardown():
+        import shutil
+        shutil.rmtree(app.config["DB"])
+
+    request.addfinalizer(teardown)
     return app
