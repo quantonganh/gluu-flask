@@ -33,7 +33,7 @@ sudo apt-get install -y salt-master
 # pip install virtualenv
 
 ```
-### Clone the project 
+### Clone the project
 
 ```
 $ git clone https://github.com/GluuFederation/gluu-flask.git
@@ -45,6 +45,10 @@ $ env/bin/pip install -r requirements.txt
 
 ## Run
 `$ env/bin/python run.py`
+
+## Testing
+
+`$ env/bin/python py.test --cov api --cov-report term-missing`
 
 ## Flask Swagger Docs
 

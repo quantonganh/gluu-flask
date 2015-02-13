@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
 '''/cluster resource'''
-from flask.ext.restful import Resource, reqparse
+import uuid
+
+from flask import current_app
+from flask.ext.restful import Resource
 from flask_restful_swagger import swagger
+
 from ..model import GluuCluster
+
 
 class Cluster(Resource):
     """
@@ -12,51 +17,58 @@ class Cluster(Resource):
     @swagger.operation(
         notes='Gives cluster info/state',
         nickname='getcluster',
-        parameters = [],
+        parameters=[],
         responseMessages=[
             {
               "code": 200,
               "message": "list node information"
             }
-          ],
-        summary = 'TODO'
+        ],
+        summary='TODO'
         )
-    def get(self, cluster_id = None):
+    def get(self, cluster_id=None):
         if cluster_id:
-            return {'echo': 'list cluster info of cluster: {}'.format(cluster_id)}
-        else:
-            return {'echo': 'all cluster info/state'}
+            cluster = GluuCluster()
+            data = cluster.get(cluster_id, current_app.config["DB"])
+            return data
+
+        # TODO: get all clusters
+        return {'echo': 'all cluster info/state'}
 
     @swagger.operation(
         notes='Create a new cluster',
         nickname='postcluster',
-        parameters = [],
+        parameters=[],
         responseMessages=[
             {
               "code": 200,
               "message": "cluster created"
             }
-          ],
-        summary = 'Create a new cluster and persist json to disk.'
+        ],
+        summary='Create a new cluster and persist json to disk.'
         )
     def post(self):
         c = GluuCluster()
-        c.id = "12345"
+        c.id = "{}".format(uuid.uuid4())
         c.description = "Test Cluster"
-        c.persist()
+        c.persist(current_app.config["DB"])
         return {'echo': 'new cluster created'}
 
     @swagger.operation(
         notes='delete a cluster',
         nickname='delcluster',
-        parameters = [],
+        parameters=[],
         responseMessages=[
             {
               "code": 200,
               "message": "cluster deleted"
             }
-          ],
-        summary = 'TODO'
+        ],
+        summary='TODO'
         )
     def delete(self, cluster_id):
-        return {'echo': 'cluster deleted'}
+        cluster = GluuCluster()
+        deleted = cluster.delete(cluster_id, current_app.config["DB"])
+        if deleted:
+            return {'echo': 'cluster deleted'}
+        return {"echo": "failed to delete cluster"}
