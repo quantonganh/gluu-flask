@@ -3,6 +3,7 @@ import os
 
 os_env = os.environ
 
+
 class Config(object):
     SECRET_KEY = os_env.get('API_SECRET', 'blablabla')  # TODO: Change me
     APP_DIR = os.path.abspath(os.path.dirname(__file__))  # This directory
@@ -27,7 +28,9 @@ class DevConfig(Config):
     DEBUG = True
     RELOADER = False
 
+
 class TestConfig(Config):
     TESTING = True
     DEBUG = True
     BCRYPT_LOG_ROUNDS = 1  # For faster tests
+    DB = "./dbtest"

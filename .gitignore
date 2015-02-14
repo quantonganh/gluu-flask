@@ -52,3 +52,4 @@ gluu-flask.iml
 
 # exclude data
 db
+dbtest
