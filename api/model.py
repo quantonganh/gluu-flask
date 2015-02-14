@@ -29,7 +29,7 @@ from api.settings import Config
 from flask.ext.restful import fields
 
 @swagger.model
-class GluuCluster:
+class GluuCluster(object):
     # Swager Doc
     resource_fields = {
       'id': fields.String(attribute='GluuCluster unique identifier'),
@@ -101,7 +101,7 @@ class GluuCluster:
         return json.dumps(self.__dict__)
 
 @swagger.model
-class ldapNode:
+class ldapNode(object):
     def __init__(self, install_dir=None):
         self.local_hostname = None
         self.ip = None
@@ -153,3 +153,5 @@ class ldapNode:
                            self.ldif_groups,
                            self.ldif_site,
                            self.ldif_scripts]
+        def setup(self):
+            pass
