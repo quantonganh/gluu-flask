@@ -21,8 +21,16 @@ class Cluster(Resource):
         responseMessages=[
             {
               "code": 200,
-              "message": "list node information"
-            }
+              "message": "List node information",
+            },
+            {
+                "code": 404,
+                "message": "Cluster not found",
+            },
+            {
+                "code": 500,
+                "message": "Internal Server Error"
+            },
         ],
         summary='TODO'
         )
@@ -30,6 +38,8 @@ class Cluster(Resource):
         if cluster_id:
             cluster = GluuCluster()
             data = cluster.get(cluster_id, current_app.config["DB"])
+            if not data:
+                return {"code": 404, "message": "Cluster not found"}, 404
             return data
 
         # TODO: get all clusters
@@ -41,9 +51,13 @@ class Cluster(Resource):
         parameters=[],
         responseMessages=[
             {
-              "code": 200,
-              "message": "cluster created"
-            }
+                "code": 201,
+                "message": "Created",
+            },
+            {
+                "code": 500,
+                "message": "Internal Server Error",
+            },
         ],
         summary='Create a new cluster and persist json to disk.'
         )
@@ -52,7 +66,7 @@ class Cluster(Resource):
         c.id = "{}".format(uuid.uuid4())
         c.description = "Test Cluster"
         c.persist(current_app.config["DB"])
-        return {'echo': 'new cluster created'}
+        return c.__dict__, 201
 
     @swagger.operation(
         notes='delete a cluster',
@@ -60,9 +74,17 @@ class Cluster(Resource):
         parameters=[],
         responseMessages=[
             {
-              "code": 200,
-              "message": "cluster deleted"
-            }
+                "code": 200,
+                "message": "Cluster deleted"
+            },
+            {
+                "code": 404,
+                "message": "Cluster not found"
+            },
+            {
+                "code": 500,
+                "message": "Internal Server Error",
+            },
         ],
         summary='TODO'
         )
@@ -70,5 +92,5 @@ class Cluster(Resource):
         cluster = GluuCluster()
         deleted = cluster.delete(cluster_id, current_app.config["DB"])
         if deleted:
-            return {'echo': 'cluster deleted'}
-        return {"echo": "failed to delete cluster"}
+            return {"code": 200, "message": "Cluster deleted"}
+        return {"code": 404, "message": "Cluster not found"}, 404

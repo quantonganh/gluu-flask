@@ -98,14 +98,17 @@ class GluuCluster(object):
         if not os.path.exists(data_dir):
             os.mkdir(data_dir)
 
-        json_data = self.get_json()
+        json_data = self.as_json()
         with open('{}/cluster_{}.json'.format(data_dir, self.id), 'w') as fp:
             frozen = jsonpickle.encode(json_data)
             fp.write(frozen)
-        return self.__dict__
+        return self.as_dict()
 
-    def get_json(self):
+    def as_json(self):
         return json.dumps(self.__dict__)
+
+    def as_dict(self):
+        return self.__dict__
 
     def get(self, id_, data_dir):
         data = {}
