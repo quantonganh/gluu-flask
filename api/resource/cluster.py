@@ -35,15 +35,16 @@ class Cluster(Resource):
         summary='TODO'
         )
     def get(self, cluster_id=None):
+        cluster = GluuCluster()
+
         if cluster_id:
-            cluster = GluuCluster()
             data = cluster.get(cluster_id, current_app.config["DB"])
             if not data:
                 return {"code": 404, "message": "Cluster not found"}, 404
             return data
 
-        # TODO: get all clusters
-        return {'echo': 'all cluster info/state'}
+        data = cluster.all(current_app.config["DB"])
+        return data
 
     @swagger.operation(
         notes='Create a new cluster',

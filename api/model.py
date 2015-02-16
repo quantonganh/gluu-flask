@@ -25,7 +25,6 @@ from flask_restful_swagger import swagger
 import os
 import os.path
 import jsonpickle
-from api.settings import Config
 from flask.ext.restful import fields
 
 
@@ -96,7 +95,7 @@ class GluuCluster(object):
         """Saves data into a storage. Currently using JSON file.
         """
         if not os.path.exists(data_dir):
-            os.mkdir(data_dir)
+            os.makedirs(data_dir)
 
         json_data = self.as_json()
         with open('{}/cluster_{}.json'.format(data_dir, self.id), 'w') as fp:
@@ -128,6 +127,17 @@ class GluuCluster(object):
         except OSError:
             deleted = False
         return deleted
+
+    def all(self, data_dir):
+        data = []
+        try:
+            for file_ in os.listdir(data_dir):
+                with open("{}/{}".format(data_dir, file_), "r") as fp:
+                    item = jsonpickle.decode(fp.read())
+                    data.append(json.loads(item))
+        except OSError:
+            pass
+        return data
 
 
 @swagger.model
