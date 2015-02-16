@@ -17,6 +17,10 @@ flask-restful-swagger==0.15
 # Docker
 docker-py
 
+#salt
+salt==2014.7.0
+pyzmq==14.5.0
+
 # Testing
 Flask-Testing==0.4.2
 nose==1.3.4

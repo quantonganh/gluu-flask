@@ -146,8 +146,8 @@ class Node(Resource):
             return abort(400)
         
         # deploy container
-        cname = '{0}_{1}_{2}'.format(args.node_type, args.cluster, randrange(101,999))
-        cid = run('docker run -d -P --name={0} {1}'.format(cname, args.node_type))
+        con_name = '{0}_{1}_{2}'.format(args.node_type, args.cluster, randrange(101,999))
+        cid = run('docker run -d -P --name={0} {1}'.format(con_name, args.node_type))
         scid = cid.strip()[:-(len(cid)-12)]
         # accept container cert in host salt-master
         sleep(10)
@@ -156,7 +156,7 @@ class Node(Resource):
         node = get_node_object(args.node_type)
         # populate ldapNode object
         node.id = scid
-        node.name = cname
+        node.name = con_name
         node.type = args.node_type
         # run setup using salt
         node.setup()
@@ -164,7 +164,7 @@ class Node(Resource):
         gc = GluuCluster(args.cluster)
         gc.add_node(node)
         # save cluster object in db
-        gc.save()
+        gc.persist()
         return {'status_code': 201, 'message': '{} node created in Cluster: {}'.format(args.node_type, args.cluster)}
 
     @swagger.operation(

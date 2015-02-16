@@ -25,6 +25,7 @@ import os
 import os.path
 import jsonpickle
 from flask.ext.restful import fields
+import salt.client
 
 
 @swagger.model
@@ -223,4 +224,16 @@ class ldapNode(object):
                            self.ldif_site,
                            self.ldif_scripts]
         def setup(self):
-            pass
+            saltlocal = salt.client.LocalClient()
+            with open(self.ldapPassFn, 'w') as fp:
+                f.write(self.ldapPass)
+            for ldif in self.ldif_files:
+                with open(ldif, 'r') as fp:
+                    tmpl = fp.read()
+                with open('/tmp/'+ldif, 'w') as fp:
+                    fp.write(tmpl % self.__dict__)
+                #saltlocal.cmd(self.id, 'cmd.run', ['uname -a'])
+                saltlocal.cmd(self.id, 'cp.get_file', ['/tmp/'+ldif, target])
+
+
+
