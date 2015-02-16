@@ -20,7 +20,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import json
 from flask_restful_swagger import swagger
 import os
 import os.path
@@ -97,27 +96,22 @@ class GluuCluster(object):
         if not os.path.exists(data_dir):
             os.makedirs(data_dir)
 
-        json_data = self.as_json()
         with open('{}/cluster_{}.json'.format(data_dir, self.id), 'w') as fp:
-            frozen = jsonpickle.encode(json_data)
+            frozen = jsonpickle.encode(self)
             fp.write(frozen)
-        return self.as_dict()
-
-    def as_json(self):
-        return json.dumps(self.__dict__)
+        return self
 
     def as_dict(self):
         return self.__dict__
 
     def get(self, id_, data_dir):
-        data = {}
+        obj = None
         try:
             with open("{}/cluster_{}.json".format(data_dir, id_), "r") as fp:
-                data = jsonpickle.decode(fp.read())
-                data = json.loads(data)
+                obj = jsonpickle.decode(fp.read())
         except IOError:
             pass
-        return data
+        return obj
 
     def delete(self, id_, data_dir):
         deleted = False
@@ -125,19 +119,19 @@ class GluuCluster(object):
             os.unlink("{}/cluster_{}.json".format(data_dir, id_))
             deleted = True
         except OSError:
-            deleted = False
+            pass
         return deleted
 
     def all(self, data_dir):
-        data = []
+        obj_list = []
         try:
             for file_ in os.listdir(data_dir):
                 with open("{}/{}".format(data_dir, file_), "r") as fp:
                     item = jsonpickle.decode(fp.read())
-                    data.append(json.loads(item))
+                    obj_list.append(item)
         except OSError:
             pass
-        return data
+        return obj_list
 
 
 @swagger.model

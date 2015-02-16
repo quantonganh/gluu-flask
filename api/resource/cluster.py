@@ -38,13 +38,13 @@ class Cluster(Resource):
         cluster = GluuCluster()
 
         if cluster_id:
-            data = cluster.get(cluster_id, current_app.config["DB"])
-            if not data:
+            obj = cluster.get(cluster_id, current_app.config["DB"])
+            if not obj:
                 return {"code": 404, "message": "Cluster not found"}, 404
-            return data
+            return obj.as_dict()
 
-        data = cluster.all(current_app.config["DB"])
-        return data
+        obj_list = cluster.all(current_app.config["DB"])
+        return [item.as_dict() for item in obj_list]
 
     @swagger.operation(
         notes='Create a new cluster',
@@ -67,7 +67,7 @@ class Cluster(Resource):
         c.id = "{}".format(uuid.uuid4())
         c.description = "Test Cluster"
         c.persist(current_app.config["DB"])
-        return c.__dict__, 201
+        return c.as_dict(), 201
 
     @swagger.operation(
         notes='delete a cluster',

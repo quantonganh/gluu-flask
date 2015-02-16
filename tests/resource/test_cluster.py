@@ -24,16 +24,24 @@ def test_cluster_get(app, config):
     cluster.id = "{}".format(uuid.uuid4())
     data = cluster.persist(config.DB)
 
-    resp = app.test_client().get("/cluster/{}".format(data["id"]))
+    resp = app.test_client().get("/cluster/{}".format(data.id))
     actual_data = json.loads(resp.data)
 
     assert resp.status_code == 200
-    assert data == actual_data
+    assert data.as_dict() == actual_data
     for field in cluster.resource_fields.keys():
         assert field in actual_data
 
     # remove test file
-    os.unlink("{}/cluster_{}.json".format(config.DB, data["id"]))
+    os.unlink("{}/cluster_{}.json".format(config.DB, data.id))
+
+
+def test_cluster_get_invalid_id(app, config):
+    resp = app.test_client().get("/cluster/random-invalid-id")
+    actual_data = json.loads(resp.data)
+    assert resp.status_code == 404
+    assert actual_data["code"] == 404
+    assert "message" in actual_data
 
 
 def test_cluster_get_list(app, config):
@@ -55,7 +63,7 @@ def test_cluster_get_list(app, config):
             assert field in item
 
     # remove test file
-    os.unlink("{}/cluster_{}.json".format(config.DB, data["id"]))
+    os.unlink("{}/cluster_{}.json".format(config.DB, data.id))
 
 
 def test_cluster_get_list_empty(app, config):
@@ -67,14 +75,6 @@ def test_cluster_get_list_empty(app, config):
     assert actual_data == []
 
 
-def test_cluster_get_invalid_id(app, config):
-    resp = app.test_client().get("/cluster/random-invalid-id")
-    actual_data = json.loads(resp.data)
-    assert resp.status_code == 404
-    assert actual_data["code"] == 404
-    assert "message" in actual_data
-
-
 def test_cluster_delete(app, config):
     from api.model import GluuCluster
 
@@ -82,7 +82,7 @@ def test_cluster_delete(app, config):
     cluster.id = "{}".format(uuid.uuid4())
     data = cluster.persist(config.DB)
 
-    resp = app.test_client().delete("/cluster/{}".format(data["id"]))
+    resp = app.test_client().delete("/cluster/{}".format(data.id))
     actual_data = json.loads(resp.data)
 
     assert resp.status_code == 200
