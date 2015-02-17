@@ -119,7 +119,7 @@ class Node(Resource):
         )
         args = post_parser.parse_args()
         # check that cluster name or id is valid else return with message and code
-        if args.cluster not in ['1234', 'gluu']:
+        if args.cluster not in ['1234', 'ldap']:
             abort(400)
 
         # get relivent dockerfile
