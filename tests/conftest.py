@@ -1,4 +1,6 @@
+import os.path
 import shutil
+import uuid
 
 import pytest
 
@@ -21,3 +23,24 @@ def app(request):
 
     request.addfinalizer(teardown)
     return app
+
+
+@pytest.fixture()
+def cluster(request, config):
+    from api.model import GluuCluster
+
+    cluster = GluuCluster()
+    cluster.id = "{}".format(uuid.uuid4())
+    cluster.persist(config.DB)
+
+    def teardown():
+        fp = os.path.join(config.DB, "cluster_{}.json".format(cluster.id))
+        try:
+            os.unlink(fp)
+        except OSError as exc:
+            # likely file has been removed
+            if exc.errno == 2:
+                pass
+
+    request.addfinalizer(teardown)
+    return cluster

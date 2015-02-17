@@ -1,6 +1,5 @@
 import json
 import os
-import uuid
 
 
 def test_cluster_post(app, config):
@@ -17,23 +16,14 @@ def test_cluster_post(app, config):
     os.unlink("{}/cluster_{}.json".format(config.DB, actual_data["id"]))
 
 
-def test_cluster_get(app, config):
-    from api.model import GluuCluster
-
-    cluster = GluuCluster()
-    cluster.id = "{}".format(uuid.uuid4())
-    data = cluster.persist(config.DB)
-
-    resp = app.test_client().get("/cluster/{}".format(data.id))
+def test_cluster_get(app, config, cluster):
+    resp = app.test_client().get("/cluster/{}".format(cluster.id))
     actual_data = json.loads(resp.data)
 
     assert resp.status_code == 200
-    assert data.as_dict() == actual_data
+    assert cluster.as_dict() == actual_data
     for field in cluster.resource_fields.keys():
         assert field in actual_data
-
-    # remove test file
-    os.unlink("{}/cluster_{}.json".format(config.DB, data.id))
 
 
 def test_cluster_get_invalid_id(app, config):
@@ -44,13 +34,7 @@ def test_cluster_get_invalid_id(app, config):
     assert "message" in actual_data
 
 
-def test_cluster_get_list(app, config):
-    from api.model import GluuCluster
-
-    cluster = GluuCluster()
-    cluster.id = "{}".format(uuid.uuid4())
-    data = cluster.persist(config.DB)
-
+def test_cluster_get_list(app, cluster):
     resp = app.test_client().get("/cluster")
     actual_data = json.loads(resp.data)
 
@@ -62,11 +46,8 @@ def test_cluster_get_list(app, config):
         for field in fields:
             assert field in item
 
-    # remove test file
-    os.unlink("{}/cluster_{}.json".format(config.DB, data.id))
 
-
-def test_cluster_get_list_empty(app, config):
+def test_cluster_get_list_empty(app):
     resp = app.test_client().get("/cluster")
     actual_data = json.loads(resp.data)
 
@@ -75,14 +56,8 @@ def test_cluster_get_list_empty(app, config):
     assert actual_data == []
 
 
-def test_cluster_delete(app, config):
-    from api.model import GluuCluster
-
-    cluster = GluuCluster()
-    cluster.id = "{}".format(uuid.uuid4())
-    data = cluster.persist(config.DB)
-
-    resp = app.test_client().delete("/cluster/{}".format(data.id))
+def test_cluster_delete(app, cluster):
+    resp = app.test_client().delete("/cluster/{}".format(cluster.id))
     actual_data = json.loads(resp.data)
 
     assert resp.status_code == 200
@@ -90,7 +65,7 @@ def test_cluster_delete(app, config):
     assert actual_data["message"] == "Cluster deleted"
 
 
-def test_cluster_delete_failed(app, config):
+def test_cluster_delete_failed(app):
     resp = app.test_client().delete("/cluster/random-invalid-id")
     actual_data = json.loads(resp.data)
 

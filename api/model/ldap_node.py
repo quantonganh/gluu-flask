@@ -9,8 +9,8 @@
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
 #
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
 #
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -21,118 +21,8 @@
 # SOFTWARE.
 
 from flask_restful_swagger import swagger
-import os
-import os.path
-import jsonpickle
 from flask.ext.restful import fields
 import salt.client
-
-
-@swagger.model
-class GluuCluster(object):
-    # Swager Doc
-    resource_fields = {
-        'id': fields.String(attribute='GluuCluster unique identifier'),
-        'name': fields.String(attribute='GluuCluster name'),
-        'description': fields.String(attribute='Description of cluster'),
-        'ldap_nodes': fields.List(fields.String, attribute='Ids of ldap nodes'),
-        'oxauth_nodes': fields.List(fields.String, attribute='Ids of oxauth nodes'),
-        'oxtrust_nodes': fields.List(fields.String, attribute='Ids of oxtrust nodes'),
-        'hostname_ldap_cluster': fields.String,
-        'hostname_oxauth_cluster': fields.String,
-        'hostname_oxtrust_cluster': fields.String,
-        'ldaps_port': fields.String,
-        'orgName': fields.String(attribute='Name of org for X.509 certificate'),
-        'orgShortName': fields.String(attribute='Short name of org for X.509 certificate'),
-        'countryCode': fields.String(attribute='ISO 3166-1 alpha-2 country code'),
-        'city': fields.String(attribute='City for X.509 certificate'),
-        'state': fields.String(attribute='State or province for X.509 certificate'),
-        'admin_email': fields.String(attribute='Admin email address for X.509 certificate'),
-        'encoded_ox_ldap_pw': fields.String,
-        'encoded_ldap_pw': fields.String,
-        'oxauthClient_encoded_pw': fields.String,
-        'baseInum': fields.String(attribute='Unique identifier for domain'),
-        'inumOrg': fields.String(attribute='Unique identifier for organization'),
-        'inumOrgFN': fields.String(attribute='Unique organization identifier sans special characters.'),
-        'inumAppliance': fields.String(attribute='Unique identifier for cluster'),
-        'inumApplianceFN': fields.String(attribute='Unique cluster identifier sans special characters.')
-    }
-    required = ['id']
-
-    def __init__(self):
-        self.id = ""
-        self.name = ""
-        self.description = ""
-        self.ldap_nodes = {}
-        self.oxauth_nodes = {}
-        self.oxtrust_nodes = {}
-        self.hostname_ldap_cluster = ""
-        self.hostname_oxauth_cluster = ""
-        self.hostname_oxtrust_cluster = ""
-        self.ldaps_port = "1636"
-
-        # X.509 Certificate Information
-        self.orgName = None
-        self.orgShortName = None
-        self.countryCode = None
-        self.city = None
-        self.state = None
-        self.admin_email = None
-
-        # Cluster secrets
-        self.encoded_ox_ldap_pw = None
-        self.encoded_ldap_pw = None
-        self.oxauthClient_encoded_pw = None
-
-        # Inums
-        self.baseInum = None
-        self.inumOrg = None
-        self.inumAppliance = None
-        self.inumOrgFN = None
-        self.inumApplianceFN = None
-
-    def persist(self, data_dir):
-        """Saves data into a storage. Currently using JSON file.
-        """
-        if not os.path.exists(data_dir):
-            os.makedirs(data_dir)
-
-        with open('{}/cluster_{}.json'.format(data_dir, self.id), 'w') as fp:
-            frozen = jsonpickle.encode(self)
-            fp.write(frozen)
-        return self
-
-    def as_dict(self):
-        return self.__dict__
-
-    def get(self, id_, data_dir):
-        obj = None
-        try:
-            with open("{}/cluster_{}.json".format(data_dir, id_), "r") as fp:
-                obj = jsonpickle.decode(fp.read())
-        except IOError:
-            pass
-        return obj
-
-    def delete(self, id_, data_dir):
-        deleted = False
-        try:
-            os.unlink("{}/cluster_{}.json".format(data_dir, id_))
-            deleted = True
-        except OSError:
-            pass
-        return deleted
-
-    def all(self, data_dir):
-        obj_list = []
-        try:
-            for file_ in os.listdir(data_dir):
-                with open("{}/{}".format(data_dir, file_), "r") as fp:
-                    item = jsonpickle.decode(fp.read())
-                    obj_list.append(item)
-        except OSError:
-            pass
-        return obj_list
 
 
 @swagger.model
@@ -234,6 +124,3 @@ class ldapNode(object):
                     fp.write(tmpl % self.__dict__)
                 #saltlocal.cmd(self.id, 'cmd.run', ['uname -a'])
                 saltlocal.cmd(self.id, 'cp.get_file', ['/tmp/'+ldif, target])
-
-
-
