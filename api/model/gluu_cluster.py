@@ -151,7 +151,14 @@ class GluuCluster(object):
         node_type = getattr(node, "type")
         if node_type not in self.available_node_types:
             raise ValueError("{!r} node is not supported".format(node_type))
-        self.ldap_nodes[node.id] = node
+
+        node_type_map = {
+            "ldap": self.ldap_nodes,
+            "oxauth": self.oxauth_nodes,
+            "oxtrust": self.oxtrust_nodes,
+        }
+
+        node_type_map.get(node_type)[node.id] = node.as_dict()
         return node
 
     @property
