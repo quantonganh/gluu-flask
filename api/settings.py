@@ -14,6 +14,7 @@ class Config(object):
     DATA_DIR = os.path.expanduser('~') + '/gfdata'
     CLUSTER_FILE = DATA_DIR + '/cluster.json'
     DB = os.path.join(PROJECT_ROOT, "db")
+    DATABASE_URI = os.path.join(DATA_DIR, "db", "db.json")
 
 
 class ProdConfig(Config):
@@ -27,6 +28,7 @@ class DevConfig(Config):
     ENV = 'dev'
     DEBUG = True
     RELOADER = False
+    DATABASE_URI = os.path.join(Config.PROJECT_ROOT, "db", "db_dev.json")
 
 
 class TestConfig(Config):
@@ -34,3 +36,4 @@ class TestConfig(Config):
     DEBUG = True
     BCRYPT_LOG_ROUNDS = 1  # For faster tests
     DB = os.path.join(Config.PROJECT_ROOT, "dbtest")
+    DATABASE_URI = os.path.join(Config.PROJECT_ROOT, "db", "db_test.json")

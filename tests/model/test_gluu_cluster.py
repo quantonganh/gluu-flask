@@ -1,23 +1,8 @@
-import os
 from collections import namedtuple
-
-import jsonpickle
 import pytest
 
 # Acts as a fake Node until we have a stable Node model
 _DummyNode = namedtuple("DummyNode", ["id", "type"])
-
-
-def test_cluster_persist(config, cluster):
-    fp = os.path.join(config.DB, "cluster_{}.json".format(cluster.id))
-
-    # ensure file is created
-    assert os.path.exists(fp)
-
-    # ensure we save the data
-    with open(fp) as file_:
-        expected_data = jsonpickle.decode(file_.read())
-        assert cluster.as_dict() == expected_data.as_dict()
 
 
 @pytest.mark.parametrize("node", [
@@ -25,7 +10,10 @@ def test_cluster_persist(config, cluster):
     _DummyNode(id="2", type="oxauth"),
     _DummyNode(id="3", type="oxtrust"),
 ])
-def test_cluster_add_node(cluster, node):
+def test_cluster_add_node(node):
+    from api.model import GluuCluster
+
+    cluster = GluuCluster()
     retval = cluster.add_node(node)
 
     # ensure node is returned as return value
@@ -35,10 +23,23 @@ def test_cluster_add_node(cluster, node):
     assert cluster.ldap_nodes[node.id] == node
 
 
-def test_cluster_add_unsupported_node(cluster):
+def test_cluster_add_unsupported_node():
+    from api.model import GluuCluster
+
+    cluster = GluuCluster()
     with pytest.raises(ValueError):
         node = _DummyNode(id="123", type="random")
         cluster.add_node(node)
 
         # ensure unsupported node isn't added to cluster
         assert cluster.ldap_nodes == {}
+
+
+def test_cluster_as_dict():
+    from api.model import GluuCluster
+
+    cluster = GluuCluster()
+    actual = cluster.as_dict()
+
+    for field in cluster.resource_fields.keys():
+        assert field in actual
