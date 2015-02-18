@@ -21,8 +21,10 @@
 # SOFTWARE.
 
 import inspect
-import jsonpickle
+import json
 import os
+
+import jsonpickle
 import tinydb
 
 
@@ -69,14 +71,18 @@ class Database(object):
         data = table.get(tinydb.where("id") == identifier)
 
         if data:
-            _obj = jsonpickle.decode(data["_instance"])
+            _obj = jsonpickle.decode(json.dumps(data))
         return _obj
 
     def persist(self, obj):
+        # encode the object so we can decode it later
+        encoded = jsonpickle.encode(obj)
+
+        # tinydb requires a ``dict`` object
+        data = json.loads(encoded)
+
         table_name = _table_name_from_obj(obj)
         table = self.db.table(table_name)
-        data = obj.as_dict()
-        data.update({"_instance": jsonpickle.encode(obj)})
         table.insert(data)
         return True
 
@@ -84,7 +90,7 @@ class Database(object):
         table_name = _table_name_from_obj(obj)
         table = self.db.table(table_name)
         data = table.all()
-        return [jsonpickle.decode(item["_instance"]) for item in data]
+        return [jsonpickle.decode(json.dumps(item)) for item in data]
 
     def delete(self, identifier, obj):
         table_name = _table_name_from_obj(obj)
