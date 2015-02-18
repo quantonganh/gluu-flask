@@ -1,6 +1,4 @@
-import os
-
-import jsonpickle
+# import jsonpickle
 import pytest
 
 
@@ -13,18 +11,6 @@ class _DummyNode(object):
 
     def as_dict(self):
         return self.__dict__
-
-
-def test_cluster_persist(config, cluster):
-    fp = os.path.join(config.DB, "cluster_{}.json".format(cluster.id))
-
-    # ensure file is created
-    assert os.path.exists(fp)
-
-    # ensure we save the data
-    with open(fp) as file_:
-        expected_data = jsonpickle.decode(file_.read())
-        assert cluster.as_dict() == expected_data.as_dict()
 
 
 @pytest.mark.parametrize("node, container", [
@@ -42,10 +28,23 @@ def test_cluster_add_node(cluster, node, container):
     assert getattr(cluster, container)[node.id] == node.as_dict()
 
 
-def test_cluster_add_unsupported_node(cluster):
+def test_cluster_add_unsupported_node():
+    from api.model import GluuCluster
+
+    cluster = GluuCluster()
     with pytest.raises(ValueError):
         node = _DummyNode(id_="123", type_="random")
         cluster.add_node(node)
 
         # ensure unsupported node isn't added to cluster
         assert cluster.ldap_nodes == {}
+
+
+def test_cluster_as_dict():
+    from api.model import GluuCluster
+
+    cluster = GluuCluster()
+    actual = cluster.as_dict()
+
+    for field in cluster.resource_fields.keys():
+        assert field in actual

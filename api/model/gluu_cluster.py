@@ -20,9 +20,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import os.path
+# import os.path
 
-import jsonpickle
+# import jsonpickle
 from flask_restful_swagger import swagger
 from flask.ext.restful import fields
 
@@ -90,48 +90,12 @@ class GluuCluster(object):
         self.inumOrgFN = None
         self.inumApplianceFN = None
 
-    def persist(self, data_dir):
-        """Saves data into a storage. Currently using JSON file.
-        """
-        if not os.path.exists(data_dir):
-            os.makedirs(data_dir)
-
-        with open('{}/cluster_{}.json'.format(data_dir, self.id), 'w') as fp:
-            frozen = jsonpickle.encode(self)
-            fp.write(frozen)
-        return self
-
     def as_dict(self):
-        return self.__dict__
-
-    def get(self, id_, data_dir):
-        obj = None
-        try:
-            with open("{}/cluster_{}.json".format(data_dir, id_), "r") as fp:
-                obj = jsonpickle.decode(fp.read())
-        except IOError:
-            pass
-        return obj
-
-    def delete(self, id_, data_dir):
-        deleted = False
-        try:
-            os.unlink("{}/cluster_{}.json".format(data_dir, id_))
-            deleted = True
-        except OSError:
-            pass
-        return deleted
-
-    def all(self, data_dir):
-        obj_list = []
-        try:
-            for file_ in os.listdir(data_dir):
-                with open("{}/{}".format(data_dir, file_), "r") as fp:
-                    item = jsonpickle.decode(fp.read())
-                    obj_list.append(item)
-        except OSError:
-            pass
-        return obj_list
+        fields = tuple(self.resource_fields.keys())
+        return {
+            k: v for k, v in self.__dict__.items()
+            if k in fields
+        }
 
     def add_node(self, node):
         """Adds node into current cluster.
