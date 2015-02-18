@@ -10,10 +10,10 @@ the design of the gluu-flask component.
 
 ### Ubuntu packages
 
-'''
+```
 $ sudo apt-get install libssl-dev
 $ sudo apt-get install build-dep openssl
-'''
+```
 
 ### Install docker.io
 
