@@ -5,6 +5,7 @@ from flask_restful_swagger import swagger
 from ..model import ldapNode, GluuCluster
 from flask import g
 from flask import abort
+from flask import current_app
 from random import randrange
 from flask.ext.restful import reqparse
 import subprocess
@@ -118,8 +119,14 @@ class Node(Resource):
             required=True, help='ldap | oxauth | oxtrust',
         )
         args = post_parser.parse_args()
+
+        # check node type
+        if not args.node_type in self.available_docker_images:
+            abort(400)
+
         # check that cluster name or id is valid else return with message and code
-        if args.cluster not in ['1234', 'gluu']:
+        cluster = GluuCluster(args.cluster, current_app.config["DB"])
+        if not cluster:
             abort(400)
 
         # get relivent dockerfile
@@ -136,14 +143,12 @@ class Node(Resource):
             or
             []
         """
-        if not image and args.node_type in self.available_docker_images:
+        if not image:
             run('mkdir /tmp/{}'.format(args.node_type))
             raw_url = 'https://raw.githubusercontent.com/GluuFederation/gluu-docker/master/ubuntu/14.04/{}/Dockerfile'.format(args.node_type)
             run('wget -q {} -P /tmp/{}'.format(raw_url, args.node_type))
             run('docker build -q --rm --force-rm -t {} {}'.format(args.node_type, '/tmp/{}'.format(args.node_type)))
             run('rm -rf /tmp/{}'.format(args.node_type))
-        else:
-            return abort(400)
         
         # deploy container
         con_name = '{0}_{1}_{2}'.format(args.node_type, args.cluster, randrange(101,999))
@@ -161,10 +166,9 @@ class Node(Resource):
         # run setup using salt
         node.setup()
         # add ldapNode object into cluster object
-        gc = GluuCluster(args.cluster)
-        gc.add_node(node)
+        cluster.add_node(node)
         # save cluster object in db
-        gc.persist()
+        cluster.persist()
         return {'status_code': 201, 'message': '{} node created in Cluster: {}'.format(args.node_type, args.cluster)}
 
     @swagger.operation(
