@@ -2,11 +2,11 @@
 '''/cluster resource'''
 import uuid
 
-from flask import current_app
 from flask.ext.restful import Resource
 from flask_restful_swagger import swagger
 
 from ..model import GluuCluster
+from api.database import db
 
 
 class Cluster(Resource):
@@ -35,15 +35,13 @@ class Cluster(Resource):
         summary='TODO'
         )
     def get(self, cluster_id=None):
-        cluster = GluuCluster()
-
         if cluster_id:
-            obj = cluster.get(cluster_id, current_app.config["DB"])
+            obj = db.get(cluster_id, GluuCluster)
             if not obj:
                 return {"code": 404, "message": "Cluster not found"}, 404
             return obj.as_dict()
 
-        obj_list = cluster.all(current_app.config["DB"])
+        obj_list = db.all(GluuCluster)
         return [item.as_dict() for item in obj_list]
 
     @swagger.operation(
@@ -66,7 +64,7 @@ class Cluster(Resource):
         c = GluuCluster()
         c.id = "{}".format(uuid.uuid4())
         c.description = "Test Cluster"
-        c.persist(current_app.config["DB"])
+        db.persist(c)
         return c.as_dict(), 201
 
     @swagger.operation(
@@ -75,12 +73,8 @@ class Cluster(Resource):
         parameters=[],
         responseMessages=[
             {
-                "code": 200,
+                "code": 204,
                 "message": "Cluster deleted"
-            },
-            {
-                "code": 404,
-                "message": "Cluster not found"
             },
             {
                 "code": 500,
@@ -90,8 +84,5 @@ class Cluster(Resource):
         summary='TODO'
         )
     def delete(self, cluster_id):
-        cluster = GluuCluster()
-        deleted = cluster.delete(cluster_id, current_app.config["DB"])
-        if deleted:
-            return {"code": 200, "message": "Cluster deleted"}
-        return {"code": 404, "message": "Cluster not found"}, 404
+        db.delete(cluster_id, GluuCluster)
+        return {}, 204
