@@ -20,7 +20,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import inspect
 import json
 import os
 
@@ -31,9 +30,7 @@ import tinydb
 def _table_name_from_obj(obj):
     if hasattr(obj, "__table_name__"):
         return obj.__table_name__
-    if inspect.isclass(obj):
-        return obj.__name__.lower()
-    return obj.__class__.__name__.lower()
+    return obj
 
 
 class Database(object):
@@ -96,6 +93,18 @@ class Database(object):
         table_name = _table_name_from_obj(obj)
         table = self.db.table(table_name)
         table.remove(tinydb.where("id") == identifier)
+        return True
+
+    def update(self, obj):
+        # encode the object so we can decode it later
+        encoded = jsonpickle.encode(obj)
+
+        # tinydb requires a ``dict`` object
+        data = json.loads(encoded)
+
+        table_name = _table_name_from_obj(obj)
+        table = self.db.table(table_name)
+        table.update(data, tinydb.where("id") == obj.id)
         return True
 
 

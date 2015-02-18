@@ -20,15 +20,22 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+import salt.client
 from flask_restful_swagger import swagger
 from flask.ext.restful import fields
-import salt.client
+
+from .base import BaseModel
 
 
 @swagger.model
-class ldapNode(object):
+class ldapNode(BaseModel):
+    __table_name__ = "nodes"
+
     # Swager Doc
     resource_fields = {
+        'id': fields.String(attribute='Node unique identifier'),
+        'type': fields.String(attribute='Node type'),
+        'cluster_id': fields.String(attribute='Cluster ID'),
         'local_hostname': fields.String(attribute='Local hostname of the node (not the cluster hostname).'),
         'ip': fields.String(attribute='IP address of the node'),
         'ldap_setup_properties': fields.String(attribute='Filesystem path of the opendj-setup.properties template'),
@@ -65,6 +72,10 @@ class ldapNode(object):
         }
 
     def __init__(self, install_dir=None):
+        self.install_dir = install_dir
+        self.outputFolder = ""
+        self.ldap_type = ""
+
         self.local_hostname = None
         self.ip = None
         self.ldap_setup_properties = './templates/opendj-setup.properties'

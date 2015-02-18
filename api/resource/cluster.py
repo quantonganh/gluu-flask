@@ -21,7 +21,7 @@ class Cluster(Resource):
         responseMessages=[
             {
               "code": 200,
-              "message": "List node information",
+              "message": "List cluster information",
             },
             {
                 "code": 404,

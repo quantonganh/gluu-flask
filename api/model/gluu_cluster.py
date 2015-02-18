@@ -20,15 +20,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-# import os.path
-
-# import jsonpickle
 from flask_restful_swagger import swagger
 from flask.ext.restful import fields
 
+from .base import BaseModel
+
 
 @swagger.model
-class GluuCluster(object):
+class GluuCluster(BaseModel):
+    __table_name__ = "clusters"
+
     # Swager Doc
     resource_fields = {
         'id': fields.String(attribute='GluuCluster unique identifier'),
@@ -62,9 +63,9 @@ class GluuCluster(object):
         self.id = ""
         self.name = ""
         self.description = ""
-        self.ldap_nodes = {}
-        self.oxauth_nodes = {}
-        self.oxtrust_nodes = {}
+        self.ldap_nodes = []
+        self.oxauth_nodes = []
+        self.oxtrust_nodes = []
         self.hostname_ldap_cluster = ""
         self.hostname_oxauth_cluster = ""
         self.hostname_oxtrust_cluster = ""
@@ -90,13 +91,6 @@ class GluuCluster(object):
         self.inumOrgFN = None
         self.inumApplianceFN = None
 
-    def as_dict(self):
-        fields = tuple(self.resource_fields.keys())
-        return {
-            k: v for k, v in self.__dict__.items()
-            if k in fields
-        }
-
     def add_node(self, node):
         """Adds node into current cluster.
 
@@ -116,15 +110,25 @@ class GluuCluster(object):
         if node_type not in self.available_node_types:
             raise ValueError("{!r} node is not supported".format(node_type))
 
-        node_type_map = {
-            "ldap": self.ldap_nodes,
-            "oxauth": self.oxauth_nodes,
-            "oxtrust": self.oxtrust_nodes,
-        }
+        node_container = self.node_type_map.get(node_type)
+        node_container.append(node.id)
 
-        node_type_map.get(node_type)[node.id] = node.as_dict()
-        return node
+    def remove_node(self, node):
+        node_type = getattr(node, "type")
+        if node_type not in self.available_node_types:
+            raise ValueError("{!r} node is not supported".format(node_type))
+        node_container = self.node_type_map.get(node_type)
+        node_container.remove(node.id)
 
     @property
     def available_node_types(self):
-        return ("ldap", "oxauth", "oxtrust",)
+        return tuple(self.node_type_map.keys())
+
+    @property
+    def node_type_map(self):
+        node_type_map = {
+            "gluuopendj": self.ldap_nodes,
+            "oxauth": self.oxauth_nodes,
+            "oxtrust": self.oxtrust_nodes,
+        }
+        return node_type_map
