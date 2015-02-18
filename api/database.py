@@ -28,9 +28,16 @@ import tinydb
 
 
 def _table_name_from_obj(obj):
-    if hasattr(obj, "__table_name__"):
-        return obj.__table_name__
-    return obj
+    table_name = None
+    if isinstance(obj, str):
+        table_name = obj
+    elif hasattr(obj, "__table_name__"):
+        table_name = obj.__table_name__
+
+    assert table_name is not None, "At least a string or object " \
+                                   "with __table_name__ attribute " \
+                                   "is required"
+    return table_name
 
 
 class Database(object):

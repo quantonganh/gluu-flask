@@ -1,5 +1,7 @@
 import json
 
+import pytest
+
 
 def test_node_post(app, db, cluster):
     from api.model import ldapNode
@@ -56,7 +58,7 @@ def test_node_get_list(app, db, cluster, ldap_node):
             assert field in item
 
 
-def test_cluster_get_list_empty(app):
+def test_node_get_list_empty(app):
     resp = app.test_client().get("/node")
     actual_data = json.loads(resp.data)
 
@@ -65,7 +67,7 @@ def test_cluster_get_list_empty(app):
     assert actual_data == []
 
 
-def test_cluster_delete(app, db, cluster, ldap_node):
+def test_node_delete(app, db, cluster, ldap_node):
     db.persist(ldap_node)
     cluster.add_node(ldap_node)
     db.persist(cluster)
@@ -74,6 +76,17 @@ def test_cluster_delete(app, db, cluster, ldap_node):
     assert resp.status_code == 204
 
 
-def test_cluster_delete_failed(app):
+def test_node_delete_failed(app):
     resp = app.test_client().delete("/node/random-invalid-id")
     assert resp.status_code == 204
+
+
+@pytest.mark.parametrize("name, cls_name", [
+    ("gluuopendj", "ldapNode"),
+    ("", "NoneType"),
+])
+def test_get_node_object(name, cls_name):
+    from api.resource.node import get_node_object
+
+    node = get_node_object(name)
+    assert node.__class__.__name__ == cls_name
