@@ -2,10 +2,10 @@
 '''/node resource'''
 from flask.ext.restful import Resource
 from flask_restful_swagger import swagger
-from ..model/gluu_cluster import GluuCluster
-from ..model/ldap_node import ldapNode
-from ..model/oxauth_node import oxauthNode
-from ..model/oxtrust_node import oxtrustNode
+from ..model.gluu_cluster import GluuCluster
+from ..model.ldap_node import ldapNode
+from ..model.oxauth_node import oxauthNode
+from ..model.oxtrust_node import oxtrustNode
 from flask import g
 from flask import abort
 from random import randrange
