@@ -78,7 +78,7 @@ class Node(Resource):
     APIs for cluster node CRUD.
     """
     def __init__(self):
-        self.available_docker_images = ['gluuopendj', 'oxauth', 'oxtrust']
+        self.available_docker_images = ['ldap', 'oxauth', 'oxtrust']
 
     @swagger.operation(
         notes='Gives node or nodes info/state',
@@ -148,11 +148,12 @@ class Node(Resource):
         summary='TODO'
     )
     def post(self):
-        #post data: {"cluster":"id/name","node_type":"gluuopendj"}
+
+        # Sample post data: {"cluster":"21389213","node_type":"ldap"}
         post_parser = reqparse.RequestParser()
         post_parser.add_argument(
             'cluster', type=str, location='form',
-            required=True, help='Cluster name or id',
+            required=True, help='Cluster id to which this node will be added.',
         )
         post_parser.add_argument(
             'node_type', type=str, location='form',
@@ -169,10 +170,61 @@ class Node(Resource):
         if not cluster:
             abort(400)
 
-        # get relivent dockerfile
+        # MIKE: I think the business logic should be implemented in helper classes.
+        # I'd like to see the code in this API be readable.
+
+        if args.node_type == "ldap":
+            # (1) Create the model for this new ldap node. For replication, you will need
+            # to use the ip address of docker instance as hostname--not the cluster
+            # ldap hostname. For the four ports (ldap, ldaps, admin, jmx), try to use the default
+            # ports unless they are already in use, at which point it should chose a random
+            # port over 10,000. Note these ports will need to be open between the ldap docker instances
+            # (2) Render opendj-setup.properties
+            # (3) Run /opt/opendj/setup and dsconfig commands
+            # (4) If no ldap nodes exist, import auto-generated base ldif data; otherwise
+            # initialize data from existing ldap node.
+
+            pass
+            # from helpers import *
+            #
+            # newLdapNode = None
+            #
+            # try:
+            #     newLdapNode = LdapModelHelper(args.cluster)
+            # except:
+            #     logs.error("could not create new ldap model for %s" % args.cluster
+            #     abort(400)
+            #
+            # try:
+            #     d = dockerHelper(newLdapNode)
+            # except:
+            #     logs.error("could not new docker instance for ldap node %s" % str(newLdapNode)
+            #     abort(400)
+            #
+            # try:
+            #     s = saltHelper(newLdapNode)
+            # except:
+            #     logs.error("Error configuring salt minion for %s" % str(newLdapNode)
+
+        elif args.node_type == "oxauth":
+            # (1) generate oxauth-ldap.properties, oxauth-config.xml
+            # oxauth-static-conf.json; (2) Create or copy key material to /etc/certs;
+            # (3) Configure apache httpd to proxy AJP:8009; (4) configure tomcat
+            # to run oxauth war file.
+            pass
+        elif args.node_type == "oxtrust":
+            # (1) generate oxtrustLdap.properties, oxTrust.properties,
+            # oxauth-static-conf.json, oxTrustLogRotationConfiguration.xml,
+            # (2) Create or copy key material to /etc/certs
+            # (3) Configure apache httpd to proxy AJP:8009; (4) configure tomcat
+            # to run oxtrust war file
+            pass
+
+        # get relevent dockerfile
         # build image
         image = get_image(args.node_type)
-        # an example responce of get_image()
+
+        # an example response of get_image()
         """
             [{u'Created': 1422048669,
             u'Id': u'e348da14b96d85f1dfec380b53dfb106ea1fb4723f93fa8619ad798fd9509f7c',
