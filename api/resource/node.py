@@ -179,11 +179,14 @@ class Node(Resource):
             # ldap hostname. For the four ports (ldap, ldaps, admin, jmx), try to use the default
             # ports unless they are already in use, at which point it should chose a random
             # port over 10,000. Note these ports will need to be open between the ldap docker instances
-            # (2) Render opendj-setup.properties
-            # (3) Run /opt/opendj/setup and dsconfig commands
-            # (4) If no ldap nodes exist, import auto-generated base ldif data; otherwise
-            # initialize data from existing ldap node. Also to create fully meshed replication,
-            # update the other ldap nodes to use this new ldap node as a master.
+            # (2) Start job to create docker instance
+            # (3) Render opendj-setup.properties
+            # (4) Start job to run /opt/opendj/setup and dsconfig commands
+            # (5) Start job to import data. If no ldap nodes exist, import auto-generated
+            # base ldif data; otherwise initialize data from existing ldap node. Also to
+            # create fully meshed replication, update the other ldap nodes to use this new
+            # ldap node as a master.
+            #
             # from helpers import *
             #
             # newLdapNode = None
