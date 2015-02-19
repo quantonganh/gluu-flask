@@ -67,3 +67,9 @@ def test_cluster_remove_unsupported_node():
     with pytest.raises(ValueError):
         node = _DummyNode(id_="123", type_="random")
         cluster.remove_node(node)
+
+
+def test_cluster_update_fields(db, cluster):
+    data = {"name": "hello"}
+    cluster.set_fields(data)
+    assert cluster.name == "hello"

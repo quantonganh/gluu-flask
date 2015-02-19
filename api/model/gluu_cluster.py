@@ -57,7 +57,6 @@ class GluuCluster(BaseModel):
         'inumAppliance': fields.String(attribute='Unique identifier for cluster'),  # noqa
         'inumApplianceFN': fields.String(attribute='Unique cluster identifier sans special characters.')  # noqa
     }
-    required = ['id']
 
     def __init__(self):
         self.id = ""
@@ -72,24 +71,24 @@ class GluuCluster(BaseModel):
         self.ldaps_port = "1636"
 
         # X.509 Certificate Information
-        self.orgName = None
-        self.orgShortName = None
-        self.countryCode = None
-        self.city = None
-        self.state = None
-        self.admin_email = None
+        self.orgName = ""
+        self.orgShortName = ""
+        self.countryCode = ""
+        self.city = ""
+        self.state = ""
+        self.admin_email = ""
 
         # Cluster secrets
-        self.encoded_ox_ldap_pw = None
-        self.encoded_ldap_pw = None
-        self.oxauthClient_encoded_pw = None
+        self.encoded_ox_ldap_pw = ""
+        self.encoded_ldap_pw = ""
+        self.oxauthClient_encoded_pw = ""
 
         # Inums
-        self.baseInum = None
-        self.inumOrg = None
-        self.inumAppliance = None
-        self.inumOrgFN = None
-        self.inumApplianceFN = None
+        self.baseInum = ""
+        self.inumOrg = ""
+        self.inumAppliance = ""
+        self.inumOrgFN = ""
+        self.inumApplianceFN = ""
 
     def add_node(self, node):
         """Adds node into current cluster.
@@ -132,3 +131,11 @@ class GluuCluster(BaseModel):
             "oxtrust": self.oxtrust_nodes,
         }
         return node_type_map
+
+    def set_fields(self, data=None):
+        data = data or {}
+        for attr, val in data.items():
+            # skip field that is None
+            if val is None:
+                continue
+            setattr(self, attr, val)

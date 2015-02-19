@@ -63,3 +63,18 @@ def test_cluster_delete(app, db, cluster):
 def test_cluster_delete_failed(app):
     resp = app.test_client().delete("/cluster/random-invalid-id")
     assert resp.status_code == 204
+
+
+def test_cluster_update(app, db, cluster):
+    db.persist(cluster)
+
+    resp = app.test_client().put("/cluster/{}".format(cluster.id))
+    actual_data = json.loads(resp.data)
+
+    assert resp.status_code == 200
+    assert actual_data == cluster.as_dict()
+
+
+def test_cluster_update_cluster_not_found(app):
+    resp = app.test_client().put("/cluster/random-cluster-id")
+    assert resp.status_code == 404
