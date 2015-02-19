@@ -62,9 +62,9 @@ def get_image(name='', docker_base_url='unix://var/run/docker.sock'):
 
 def get_node_object(node=''):
     node_map = {
-        'gluuopendj' : ldapNode,
-        'gluuoxauth' : oxauthNode,
-        'gluuoxtrust' : oxtrustNode,
+        'ldap' : ldapNode,
+        'oxauth' : oxauthNode,
+        'oxtrust' : oxtrustNode,
     }
     if node in node_map:
         node_obj = node_map[node]()
