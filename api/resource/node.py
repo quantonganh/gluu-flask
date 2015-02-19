@@ -182,9 +182,8 @@ class Node(Resource):
             # (2) Render opendj-setup.properties
             # (3) Run /opt/opendj/setup and dsconfig commands
             # (4) If no ldap nodes exist, import auto-generated base ldif data; otherwise
-            # initialize data from existing ldap node.
-
-            pass
+            # initialize data from existing ldap node. Also to create fully meshed replication,
+            # update the other ldap nodes to use this new ldap node as a master.
             # from helpers import *
             #
             # newLdapNode = None
@@ -205,6 +204,7 @@ class Node(Resource):
             #     s = saltHelper(newLdapNode)
             # except:
             #     logs.error("Error configuring salt minion for %s" % str(newLdapNode)
+            pass
 
         elif args.node_type == "oxauth":
             # (1) generate oxauth-ldap.properties, oxauth-config.xml
@@ -212,6 +212,7 @@ class Node(Resource):
             # (3) Configure apache httpd to proxy AJP:8009; (4) configure tomcat
             # to run oxauth war file.
             pass
+
         elif args.node_type == "oxtrust":
             # (1) generate oxtrustLdap.properties, oxTrust.properties,
             # oxauth-static-conf.json, oxTrustLogRotationConfiguration.xml,
