@@ -5,8 +5,9 @@ import uuid
 from flask.ext.restful import Resource
 from flask_restful_swagger import swagger
 
-from ..model import GluuCluster
+from api.model import GluuCluster
 from api.database import db
+from api.reqparser import cluster_reqparser
 
 
 class Cluster(Resource):
@@ -21,7 +22,7 @@ class Cluster(Resource):
         responseMessages=[
             {
               "code": 200,
-              "message": "List node information",
+              "message": "List cluster information",
             },
             {
                 "code": 404,
@@ -33,7 +34,7 @@ class Cluster(Resource):
             },
         ],
         summary='TODO'
-        )
+    )
     def get(self, cluster_id=None):
         if cluster_id:
             obj = db.get(cluster_id, GluuCluster)
@@ -59,13 +60,15 @@ class Cluster(Resource):
             },
         ],
         summary='Create a new cluster and persist json to disk.'
-        )
+    )
     def post(self):
-        c = GluuCluster()
-        c.id = "{}".format(uuid.uuid4())
-        c.description = "Test Cluster"
-        db.persist(c)
-        return c.as_dict(), 201
+        params = cluster_reqparser.parse_args()
+
+        cluster = GluuCluster()
+        cluster.id = "{}".format(uuid.uuid4())
+        cluster.set_fields(params)
+        db.persist(cluster)
+        return cluster.as_dict(), 201
 
     @swagger.operation(
         notes='delete a cluster',
@@ -82,7 +85,38 @@ class Cluster(Resource):
             },
         ],
         summary='TODO'
-        )
+    )
     def delete(self, cluster_id):
         db.delete(cluster_id, GluuCluster)
         return {}, 204
+
+    @swagger.operation(
+        notes='update a cluster',
+        nickname='editcluster',
+        parameters=[],
+        responseMessages=[
+            {
+                "code": 200,
+                "message": "Cluster updated"
+            },
+            {
+                "code": 404,
+                "message": "Cluster not found",
+            },
+            {
+                "code": 500,
+                "message": "Internal Server Error",
+            },
+        ],
+        summary='TODO'
+    )
+    def put(self, cluster_id):
+        params = cluster_reqparser.parse_args()
+
+        cluster = db.get(cluster_id, GluuCluster)
+        if not cluster:
+            return {"code": 404, "message": "Cluster not found"}, 404
+
+        cluster.set_fields(params)
+        db.update(cluster)
+        return cluster.as_dict()

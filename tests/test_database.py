@@ -1,22 +1,29 @@
 import pytest
 
 
-class DummyObject(object):
+class DummyTable(object):
+    __table_name__ = "dummy_table_name"
+
+
+class DummyTableNotFound(object):
     pass
 
 
-DummyTableName = DummyObject()
-DummyTableName.__table_name__ = "dummy_table_name"
-
-
 @pytest.mark.parametrize("obj, expected", [
-    (DummyObject(), "dummyobject"),
-    (DummyObject, "dummyobject"),
-    (DummyTableName, "dummy_table_name"),
+    ("dummy_table_name", "dummy_table_name"),
+    (DummyTable, "dummy_table_name"),
 ])
 def test_table_from_obj(obj, expected):
     from api.database import _table_name_from_obj
-    assert expected == _table_name_from_obj(obj)
+    assert _table_name_from_obj(obj) == expected
+
+
+def test_table_from_unsupported_obj():
+    from api.database import _table_name_from_obj
+
+    with pytest.raises(AssertionError):
+        obj = DummyTableNotFound()
+        assert _table_name_from_obj(obj) == "a_table"
 
 
 def test_database_init(app):

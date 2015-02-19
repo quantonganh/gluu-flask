@@ -19,16 +19,24 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import os
 
+import salt.client
 from flask_restful_swagger import swagger
 from flask.ext.restful import fields
-import salt.client
+
+from .base import BaseModel
 
 
 @swagger.model
-class ldapNode(object):
+class ldapNode(BaseModel):
+    __table_name__ = "nodes"
+
     # Swager Doc
     resource_fields = {
+        'id': fields.String(attribute='Node unique identifier'),
+        'type': fields.String(attribute='Node type'),
+        'cluster_id': fields.String(attribute='Cluster ID'),
         'local_hostname': fields.String(attribute='Local hostname of the node (not the cluster hostname).'),
         'ip': fields.String(attribute='IP address of the node'),
         'ldap_setup_properties': fields.String(attribute='Filesystem path of the opendj-setup.properties template'),
@@ -62,9 +70,12 @@ class ldapNode(object):
         'ldif_site': fields.String(attribute='Full path to output folder ldif'),
         'ldif_scripts': fields.String(attribute='Full path to output folder ldif'),
         'ldif_files': fields.List(fields.String, attribute='List of initial ldif files')
-        }
+    }
 
     def __init__(self, install_dir=None):
+        self.install_dir = install_dir
+        self.ldap_type = ""
+
         self.local_hostname = None
         self.ip = None
         self.ldap_setup_properties = './templates/opendj-setup.properties'
@@ -124,13 +135,13 @@ class ldapNode(object):
                 return None
             saltlocal = salt.client.LocalClient()
             with open(self.ldapPassFn, 'w') as fp:
-                f.write(self.ldapPass)
+                fp.write(self.ldapPass)
             for ldif in self.ldif_files:
                 with open(ldif, 'r') as fp:
                     tmpl = fp.read()
-                with open(self.outputFolder+ldif, 'w') as fp:
+                with open(self.outputFolder + ldif, 'w') as fp:
                     fp.write(tmpl % self.__dict__)
-                saltlocal.cmd(self.id, 'cp.get_file', [self.outputFolder+ldif, target]) #where is terget???
+                saltlocal.cmd(self.id, 'cp.get_file', [self.outputFolder + ldif, target]) #where is terget???
             #setup_opendj
             for schemaFile in self.schemaFiles:
                 saltlocal.cmd(self.id, 'cp.get_file', [schemaFile, self.schemaFolder])
