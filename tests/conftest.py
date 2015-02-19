@@ -39,3 +39,14 @@ def cluster():
     cluster = GluuCluster()
     cluster.id = "{}".format(uuid.uuid4())
     return cluster
+
+
+@pytest.fixture()
+def ldap_node(cluster):
+    from api.model import ldapNode
+
+    node = ldapNode()
+    node.id = "{}".format(uuid.uuid4())
+    node.type = "gluuopendj"
+    node.cluster_id = cluster.id
+    return node

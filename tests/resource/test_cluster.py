@@ -1,5 +1,4 @@
 import json
-# import os
 
 
 def test_cluster_post(app, db):
