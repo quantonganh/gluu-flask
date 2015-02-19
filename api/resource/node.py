@@ -2,7 +2,10 @@
 '''/node resource'''
 from flask.ext.restful import Resource
 from flask_restful_swagger import swagger
-from ..model import ldapNode, GluuCluster
+from ..model/gluu_cluster import GluuCluster
+from ..model/ldap_node import ldapNode
+from ..model/oxauth_node import oxauthNode
+from ..model/oxtrust_node import oxtrustNode
 from flask import g
 from flask import abort
 from flask import current_app
@@ -34,8 +37,8 @@ def get_image(name = '', docker_base_url='unix://var/run/docker.sock'):
 def get_node_object(node = ''):
     node_map = {
         'gluuopendj' : ldapNode,
-        #'oxauth' : oxauthNode,
-        #'oxtrust' : oxtrustNode,
+        'gluuoxauth' : oxauthNode,
+        'gluuoxtrust' : oxtrustNode,
     }
     if node in node_map:
         node_obj = node_map[node]()
