@@ -6,6 +6,7 @@ Jinja2==2.7.3
 itsdangerous==0.24
 flask-restful==0.3.1
 flask-restful-swagger==0.15
+crochet==1.3.0
 
 # Deployment
 #gunicorn>=19.1.1

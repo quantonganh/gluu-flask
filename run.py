@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
-import json
-import subprocess
-from flask import g
-from api.model import GluuCluster
+
+from crochet import setup as crochet_setup
 
 from api.app import create_app
 from api.settings import DevConfig, ProdConfig
@@ -16,21 +14,7 @@ if os.environ.get("API_ENV") == 'prod':
 else:
     app = create_app(DevConfig)
 
-@app.before_first_request
-def _init():
-    print '** set dynamic configaration here **'
-
-@app.before_request
-def connect():
-    #g.db = connect_db()
-    print 'create db/fp connection and store it in g'
-
-@app.teardown_request
-def teardown_request(exception):
-    db = g.get('db', None)
-    if db is not None:
-        db.close()
-
 if __name__ == '__main__':
-    app.run(port = app.config['PORT'])
+    crochet_setup()
+    app.run(port=app.config['PORT'])
     #app.run(port = app.config['PORT'], use_reloader = app.config['RELOADER'])
