@@ -48,9 +48,7 @@ class GluuCluster(BaseModel):
         'city': fields.String(attribute='City for X.509 certificate'),
         'state': fields.String(attribute='State or province for X.509 certificate'),  # noqa
         'admin_email': fields.String(attribute='Admin email address for X.509 certificate'),  # noqa
-        'encoded_ox_ldap_pw': fields.String,
-        'encoded_ldap_pw': fields.String,
-        'oxauthClient_encoded_pw': fields.String,
+        'encrypted_pw': fields.String(attribute='Secret for ldap cn=directory manager, and oxTrust admin'),
         'baseInum': fields.String(attribute='Unique identifier for domain'),
         'inumOrg': fields.String(attribute='Unique identifier for organization'),  # noqa
         'inumOrgFN': fields.String(attribute='Unique organization identifier sans special characters.'),  # noqa
@@ -78,10 +76,8 @@ class GluuCluster(BaseModel):
         self.state = ""
         self.admin_email = ""
 
-        # Cluster secrets
-        self.encoded_ox_ldap_pw = ""
-        self.encoded_ldap_pw = ""
-        self.oxauthClient_encoded_pw = ""
+        # Secret for ldap cn=directory manager, and oxTrust admin
+        self.encrypted_pw = ""
 
         # Inums
         self.baseInum = ""

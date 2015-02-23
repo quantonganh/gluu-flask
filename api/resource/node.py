@@ -94,7 +94,7 @@ status of the cluster node is available.""",
             },
             {
                 "name": "node_type",
-                "description": "The type of the node: either ldap | oxauth | oxtrust",
+                "description": "ldap | oxauth | oxtrust",
                 "required": True,
                 "allowMultiple": False,
                 "dataType": 'string',
