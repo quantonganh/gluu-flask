@@ -48,7 +48,104 @@ class Cluster(Resource):
     @swagger.operation(
         notes='Create a new cluster',
         nickname='postcluster',
-        parameters=[],
+        parameters=[
+            {
+                "name": "name",
+                "description": "Name of the cluster",
+                "required": True,
+                "allowMultiple": False,
+                "dataType": 'string',
+                "paramType": "body"
+            },
+            {
+                "name": "description",
+                "description": "Description of the purpose of the cluster.",
+                "required": True,
+                "allowMultiple": False,
+                "dataType": 'string',
+                "paramType": "body"
+            },
+            {
+                "name": "orgName",
+                "description": "Full name of the Organization",
+                "required": True,
+                "allowMultiple": False,
+                "dataType": 'string',
+                "paramType": "body"
+            },
+            {
+                "name": "orgShortName",
+                "description": "Short word or abbreviation for the organization",
+                "required": True,
+                "allowMultiple": False,
+                "dataType": 'string',
+                "paramType": "body"
+            },
+            {
+                "name": "city",
+                "description": "City for self-signed certificates.",
+                "required": True,
+                "allowMultiple": False,
+                "dataType": 'string',
+                "paramType": "body"
+            },
+            {
+                "name": "state",
+                "description": "State or province for self-signed certificates.",
+                "required": True,
+                "allowMultiple": False,
+                "dataType": 'string',
+                "paramType": "body"
+            },
+            {
+                "name": "countryCode",
+                "description": "ISO 3166-1 two-character country code for self-signed certificates.",
+                "required": True,
+                "allowMultiple": False,
+                "dataType": 'string',
+                "paramType": "body"
+            },
+            {
+                "name": "admin_email",
+                "description": "Admin email for the self-signed certifcates.",
+                "required": True,
+                "allowMultiple": False,
+                "dataType": 'string',
+                "paramType": "body"
+            },
+            {
+                "name": "hostname_ldap_cluster",
+                "description": "Hostname to use for the LDAP cluster",
+                "required": True,
+                "allowMultiple": False,
+                "dataType": 'string',
+                "paramType": "body"
+            },
+            {
+                "name": "hostname_oxauth_cluster",
+                "description": "Hostname to use for the oxAuth authentication APIs",
+                "required": True,
+                "allowMultiple": False,
+                "dataType": 'string',
+                "paramType": "body"
+            },
+            {
+                "name": "hostname_oxtrust_cluster",
+                "description": "Hostname to use for the oxTrust admin interface website.",
+                "required": True,
+                "allowMultiple": False,
+                "dataType": 'string',
+                "paramType": "body"
+            },
+            {
+                "name": "ldaps_port",
+                "description": "Hostname to use for the ldaps service for respective hostname_ldap_cluster",
+                "required": True,
+                "allowMultiple": False,
+                "dataType": 'string',
+                "paramType": "body"
+            }
+        ]
         responseMessages=[
             {
                 "code": 201,
