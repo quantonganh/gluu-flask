@@ -28,7 +28,6 @@ import tempfile
 import docker.errors
 import requests
 from docker import Client
-from crochet import run_in_reactor
 
 docker_client = Client(base_url="unix://var/run/docker.sock")
 
@@ -133,7 +132,6 @@ def _build_saltminion():
     return build_succeed
 
 
-@run_in_reactor
 def setup_container(name, image, dockerfile):
     """Builds and runs a container.
 

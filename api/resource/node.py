@@ -23,7 +23,6 @@
 '''/node resource'''
 from flask.ext.restful import Resource
 from flask_restful_swagger import swagger
-# from ..setup import nodeSetup
 from flask import abort
 from flask.ext.restful import reqparse
 import subprocess
@@ -32,7 +31,6 @@ import sys
 
 from api.database import db
 from api.helper.model_helper import LdapModelHelper
-from api.helper.docker_helper import setup_container
 
 
 def run(command, exit_on_error=True, cwd=None):
@@ -175,35 +173,14 @@ class Node(Resource):
             # except:
             #     logs.error("Error configuring salt minion for %s" % str(newLdapNode)
 
-            ldap = LdapModelHelper(args.cluster)
+            ldap = LdapModelHelper(cluster)
+            # note, ``setup_node`` is a long-running task, hence the return
+            # value won't be available immediately
+            ldap.setup_node()
 
-            # ``setup_container`` is a long-running task (deferred)
-            # its return value, which is a container ID, will not be available
-            # immediately
-            setup_container(ldap.name, ldap.image, ldap.dockerfile)
-
-            # TODO: runs the block below after container is successfully created
-            #       and return value is available
-            #
-            # scid = cid.strip()[:-(len(cid) - 12)]
             # # accept container cert in host salt-master
             # sleep(10)
             # run('salt-key -y -a {}'.format(scid))
-            # # create ldapNode() object
-            # node = get_node_object(args.node_type)
-            # # populate ldapNode object
-            # node.id = scid
-            # node.name = con_name
-            # node.type = args.node_type
-            # # run setup using salt
-            # ns = nodeSetup(node)
-            # ns.setup()
-
-            # # add ldapNode object into cluster object
-            # db.persist(node, "nodes")
-            # cluster.add_node(node)
-            # db.update(cluster.id, cluster, "clusters")
-            # return {'status_code': 201, 'message': '{} node created in Cluster: {}'.format(args.node_type, args.cluster)}
 
         elif args.node_type == "oxauth":
             # (1) generate oxauth-ldap.properties, oxauth-config.xml

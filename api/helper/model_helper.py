@@ -22,19 +22,23 @@
 # SOFTWARE.
 from random import randrange
 
+from crochet import run_in_reactor
+
+from api.database import db
 from api.model import ldapNode
 from api.model import oxauthNode  # noqa
 from api.model import oxtrustNode  # noqa
+from api.helper.docker_helper import setup_container
 
 
 class LdapModelHelper(object):
-    def __init__(self, cluster_id):
+    def __init__(self, cluster):
         self._model = ldapNode()
-        self._model.cluster_id = cluster_id
+        self._model.cluster_id = cluster.id
         self._model.name = "{}_{}_{}".format(self.image, self.model.cluster_id,
                                              randrange(101, 999))
-
         self._model.type = "ldap"
+        self._cluster = cluster
 
     @property
     def model(self):
@@ -52,3 +56,13 @@ class LdapModelHelper(object):
     @property
     def name(self):
         return self.model.name
+
+    @run_in_reactor
+    def setup_node(self):
+        cont_id = setup_container(self.name, self.image, self.dockerfile)
+        if cont_id:
+            # TODO: setup node using salt before saving it to database
+            self._model.id = cont_id[:-(len(cont_id) - 12)]
+            db.persist(self.model, "nodes")
+            self._cluster.add_node(self.model)
+            db.update(self._cluster.id, self._cluster, "clusters")
