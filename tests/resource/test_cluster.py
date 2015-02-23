@@ -13,7 +13,7 @@ def test_cluster_post(app, db):
 
 
 def test_cluster_get(app, config, cluster, db):
-    db.persist(cluster)
+    db.persist(cluster, "clusters")
     resp = app.test_client().get("/cluster/{}".format(cluster.id))
     actual_data = json.loads(resp.data)
 
@@ -32,7 +32,7 @@ def test_cluster_get_invalid_id(app):
 
 
 def test_cluster_get_list(app, db, cluster):
-    db.persist(cluster)
+    db.persist(cluster, "clusters")
     resp = app.test_client().get("/cluster")
     actual_data = json.loads(resp.data)
 
@@ -55,7 +55,7 @@ def test_cluster_get_list_empty(app):
 
 
 def test_cluster_delete(app, db, cluster):
-    db.persist(cluster)
+    db.persist(cluster, "clusters")
     resp = app.test_client().delete("/cluster/{}".format(cluster.id))
     assert resp.status_code == 204
 
@@ -66,7 +66,7 @@ def test_cluster_delete_failed(app):
 
 
 def test_cluster_update(app, db, cluster):
-    db.persist(cluster)
+    db.persist(cluster, "clusters")
 
     resp = app.test_client().put("/cluster/{}".format(cluster.id))
     actual_data = json.loads(resp.data)

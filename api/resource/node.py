@@ -23,12 +23,11 @@
 '''/node resource'''
 from flask.ext.restful import Resource
 from flask_restful_swagger import swagger
-from ..model.gluu_cluster import GluuCluster
+# from ..model.gluu_cluster import GluuCluster
 from ..model.ldap_node import ldapNode
 from ..model.oxauth_node import oxauthNode
 from ..model.oxtrust_node import oxtrustNode
 from ..setup import nodeSetup
-from flask import g
 from flask import abort
 from random import randrange
 from flask.ext.restful import reqparse
@@ -37,7 +36,6 @@ import sys
 from time import sleep
 
 from api.database import db
-from api.model import ldapNode, GluuCluster
 
 
 def run(command, exit_on_error=True, cwd=None):
@@ -62,9 +60,9 @@ def get_image(name='', docker_base_url='unix://var/run/docker.sock'):
 
 def get_node_object(node=''):
     node_map = {
-        'ldap' : ldapNode,
-        'oxauth' : oxauthNode,
-        'oxtrust' : oxtrustNode,
+        'ldap': ldapNode,
+        'oxauth': oxauthNode,
+        'oxtrust': oxtrustNode,
     }
     if node in node_map:
         node_obj = node_map[node]()
@@ -166,7 +164,7 @@ class Node(Resource):
             abort(400)
 
         # check that cluster name or id is valid else return with message and code
-        cluster = db.get(args.cluster, GluuCluster)
+        cluster = db.get(args.cluster, "clusters")
         if not cluster:
             abort(400)
 
@@ -264,9 +262,9 @@ class Node(Resource):
         ns.setup()
 
         # add ldapNode object into cluster object
-        db.persist(node)
+        db.persist(node, "nodes")
         cluster.add_node(node)
-        db.update(cluster)
+        db.update(cluster.id, cluster, "clusters")
         return {'status_code': 201, 'message': '{} node created in Cluster: {}'.format(args.node_type, args.cluster)}
 
     @swagger.operation(
@@ -290,10 +288,10 @@ class Node(Resource):
 
         if node:
             # remove node
-            db.delete(node_id, node)
+            db.delete(node_id, "nodes")
 
             # removes reference from cluster
-            cluster = db.get(node.cluster_id, GluuCluster)
+            cluster = db.get(node.cluster_id, "clusters")
             cluster.remove_node(node)
-            db.update(cluster)
+            db.update(cluster.id, cluster, "clusters")
         return {}, 204

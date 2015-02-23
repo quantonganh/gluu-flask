@@ -37,12 +37,12 @@ class Cluster(Resource):
     )
     def get(self, cluster_id=None):
         if cluster_id:
-            obj = db.get(cluster_id, GluuCluster)
+            obj = db.get(cluster_id, "clusters")
             if not obj:
                 return {"code": 404, "message": "Cluster not found"}, 404
             return obj.as_dict()
 
-        obj_list = db.all(GluuCluster)
+        obj_list = db.all("clusters")
         return [item.as_dict() for item in obj_list]
 
     @swagger.operation(
@@ -67,7 +67,7 @@ class Cluster(Resource):
         cluster = GluuCluster()
         cluster.id = "{}".format(uuid.uuid4())
         cluster.set_fields(params)
-        db.persist(cluster)
+        db.persist(cluster, "clusters")
         return cluster.as_dict(), 201
 
     @swagger.operation(
@@ -87,7 +87,7 @@ class Cluster(Resource):
         summary='TODO'
     )
     def delete(self, cluster_id):
-        db.delete(cluster_id, GluuCluster)
+        db.delete(cluster_id, "clusters")
         return {}, 204
 
     @swagger.operation(
@@ -113,10 +113,10 @@ class Cluster(Resource):
     def put(self, cluster_id):
         params = cluster_reqparser.parse_args()
 
-        cluster = db.get(cluster_id, GluuCluster)
+        cluster = db.get(cluster_id, "clusters")
         if not cluster:
             return {"code": 404, "message": "Cluster not found"}, 404
 
         cluster.set_fields(params)
-        db.update(cluster)
+        db.update(cluster_id, cluster, "clusters")
         return cluster.as_dict()
