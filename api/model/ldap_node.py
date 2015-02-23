@@ -20,8 +20,6 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
-import os
 from flask_restful_swagger import swagger
 from flask.ext.restful import fields
 
@@ -30,8 +28,6 @@ from .base import BaseModel
 
 @swagger.model
 class ldapNode(BaseModel):
-    __table_name__ = "nodes"
-
     # Swager Doc
     resource_fields = {
         'id': fields.String(attribute='Node unique identifier'),

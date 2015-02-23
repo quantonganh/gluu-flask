@@ -1,6 +1,6 @@
 import json
 
-import pytest
+# import pytest
 
 
 # @pytest.skip("unstable API")
@@ -80,16 +80,3 @@ def test_node_delete(app, db, cluster, ldap_node):
 def test_node_delete_failed(app):
     resp = app.test_client().delete("/node/random-invalid-id")
     assert resp.status_code == 204
-
-
-@pytest.mark.parametrize("name, cls_name", [
-    ("ldap", "ldapNode"),
-    ("oxauth", "oxauthNode"),
-    ("oxtrust", "oxtrustNode"),
-    ("", "NoneType"),
-])
-def test_get_node_object(name, cls_name):
-    from api.resource.node import get_node_object
-
-    node = get_node_object(name)
-    assert node.__class__.__name__ == cls_name
