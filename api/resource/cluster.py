@@ -19,8 +19,7 @@ class Cluster(Resource):
         notes='Gives cluster info/state',
         nickname='getcluster',
         parameters=[],
-        responseMessages=[
-            {
+        responseMessages=[ {
               "code": 200,
               "message": "List cluster information",
             },
@@ -145,7 +144,7 @@ class Cluster(Resource):
                 "dataType": 'string',
                 "paramType": "body"
             }
-        ]
+        ],
         responseMessages=[
             {
                 "code": 201,
