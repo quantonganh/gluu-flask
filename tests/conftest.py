@@ -47,6 +47,28 @@ def ldap_node(cluster):
 
     node = ldapNode()
     node.id = "{}".format(uuid.uuid4())
-    node.type = "gluuopendj"
+    node.type = "ldap"
+    node.cluster_id = cluster.id
+    return node
+
+
+@pytest.fixture()
+def oxauth_node(cluster):
+    from api.model import ldapNode
+
+    node = ldapNode()
+    node.id = "{}".format(uuid.uuid4())
+    node.type = "oxauth"
+    node.cluster_id = cluster.id
+    return node
+
+
+@pytest.fixture()
+def oxtrust_node(cluster):
+    from api.model import ldapNode
+
+    node = ldapNode()
+    node.id = "{}".format(uuid.uuid4())
+    node.type = "oxtrust"
     node.cluster_id = cluster.id
     return node
