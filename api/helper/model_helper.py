@@ -59,6 +59,7 @@ class LdapModelHelper(object):
 
     @run_in_reactor
     def setup_node(self):
+        # TODO - This should be in a try/except, with logging for both creation and errors to access log, and just errors to error log.
         cont_id = setup_container(self.name, self.image, self.dockerfile)
         if cont_id:
             # TODO: setup node using salt before saving it to database

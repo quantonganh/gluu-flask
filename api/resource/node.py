@@ -78,8 +78,11 @@ class Node(Resource):
         return [item.as_dict() for item in obj_list]
 
     @swagger.operation(
-        notes='create a node',
-        nickname='postnode',
+        notes="""This API will create a new Gluu Server cluster node. This may take a while, so the process
+is handled asyncronously by the Twisted reactor. It includes creating a new docker instance, deploying
+the necessary software components, and updating the configuration of the target node and any
+other dependent cluster nodes. Subsequent GET requests will be necessary to find out when the
+status of the cluster node is available.""",
         parameters=[
             {
                 "name": "cluster",
