@@ -27,19 +27,6 @@ import jsonpickle
 import tinydb
 
 
-def _table_name_from_obj(obj):
-    table_name = None
-    if isinstance(obj, str):
-        table_name = obj
-    elif hasattr(obj, "__table_name__"):
-        table_name = obj.__table_name__
-
-    assert table_name is not None, "At least a string or object " \
-                                   "with __table_name__ attribute " \
-                                   "is required"
-    return table_name
-
-
 class Database(object):
     def __init__(self, app=None):
         self._db = None
@@ -67,51 +54,45 @@ class Database(object):
             self._db = tinydb.TinyDB(self.app.config["DATABASE_URI"])
         return self._db
 
-    def get(self, identifier, obj):
-        _obj = None
-
-        table_name = _table_name_from_obj(obj)
+    def get(self, identifier, table_name):
+        obj = None
         table = self.db.table(table_name)
         data = table.get(tinydb.where("id") == identifier)
 
         if data:
-            _obj = jsonpickle.decode(json.dumps(data))
-        return _obj
+            obj = jsonpickle.decode(json.dumps(data))
+        return obj
 
-    def persist(self, obj):
+    def persist(self, obj, table_name):
         # encode the object so we can decode it later
         encoded = jsonpickle.encode(obj)
 
         # tinydb requires a ``dict`` object
         data = json.loads(encoded)
 
-        table_name = _table_name_from_obj(obj)
         table = self.db.table(table_name)
         table.insert(data)
         return True
 
-    def all(self, obj):
-        table_name = _table_name_from_obj(obj)
+    def all(self, table_name):
         table = self.db.table(table_name)
         data = table.all()
         return [jsonpickle.decode(json.dumps(item)) for item in data]
 
-    def delete(self, identifier, obj):
-        table_name = _table_name_from_obj(obj)
+    def delete(self, identifier, table_name):
         table = self.db.table(table_name)
         table.remove(tinydb.where("id") == identifier)
         return True
 
-    def update(self, obj):
+    def update(self, identifier, obj, table_name):
         # encode the object so we can decode it later
         encoded = jsonpickle.encode(obj)
 
         # tinydb requires a ``dict`` object
         data = json.loads(encoded)
 
-        table_name = _table_name_from_obj(obj)
         table = self.db.table(table_name)
-        table.update(data, tinydb.where("id") == obj.id)
+        table.update(data, tinydb.where("id") == identifier)
         return True
 
 

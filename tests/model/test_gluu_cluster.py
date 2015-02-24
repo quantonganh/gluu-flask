@@ -1,4 +1,3 @@
-# import jsonpickle
 import pytest
 
 
@@ -13,15 +12,19 @@ class _DummyNode(object):
         return self.__dict__
 
 
-@pytest.mark.parametrize("node, container", [
-    (_DummyNode(id_="1", type_="gluuopendj"), "ldap_nodes"),
-    (_DummyNode(id_="2", type_="oxauth"), "oxauth_nodes"),
-    (_DummyNode(id_="3", type_="oxtrust"), "oxtrust_nodes"),
-])
-def test_cluster_add_node(cluster, node, container):
-    cluster.add_node(node)
-    # ensure node added to cluster
-    assert getattr(cluster, container)[0] == node.id
+def test_cluster_add_ldap_node(cluster, ldap_node):
+    cluster.add_node(ldap_node)
+    assert getattr(cluster, "ldap_nodes")[0] == ldap_node.id
+
+
+def test_cluster_add_oxauth_node(cluster, oxauth_node):
+    cluster.add_node(oxauth_node)
+    assert getattr(cluster, "oxauth_nodes")[0] == oxauth_node.id
+
+
+def test_cluster_add_oxtrust_node(cluster, oxtrust_node):
+    cluster.add_node(oxtrust_node)
+    assert getattr(cluster, "oxtrust_nodes")[0] == oxtrust_node.id
 
 
 def test_cluster_add_unsupported_node():
@@ -45,17 +48,22 @@ def test_cluster_as_dict():
         assert field in actual
 
 
-@pytest.mark.parametrize("node, container", [
-    (_DummyNode(id_="1", type_="gluuopendj"), "ldap_nodes"),
-    (_DummyNode(id_="2", type_="oxauth"), "oxauth_nodes"),
-    (_DummyNode(id_="3", type_="oxtrust"), "oxtrust_nodes"),
-])
-def test_cluster_remove_node(cluster, node, container):
-    cluster.add_node(node)
-    cluster.remove_node(node)
+def test_cluster_remove_ldap_node(cluster, ldap_node):
+    cluster.add_node(ldap_node)
+    cluster.remove_node(ldap_node)
+    assert getattr(cluster, "ldap_nodes") == []
 
-    # ensure node removed from cluster
-    assert getattr(cluster, container) == []
+
+def test_cluster_remove_oxauth_node(cluster, oxauth_node):
+    cluster.add_node(oxauth_node)
+    cluster.remove_node(oxauth_node)
+    assert getattr(cluster, "oxauth_nodes") == []
+
+
+def test_cluster_remove_oxtrust_node(cluster, oxtrust_node):
+    cluster.add_node(oxtrust_node)
+    cluster.remove_node(oxtrust_node)
+    assert getattr(cluster, "oxtrust_nodes") == []
 
 
 def test_cluster_remove_unsupported_node():

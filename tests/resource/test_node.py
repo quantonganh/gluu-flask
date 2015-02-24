@@ -1,29 +1,29 @@
 import json
 
-import pytest
+# import pytest
 
 
-@pytest.skip("unstable API")
-def test_node_post(app, db, cluster):
-    from api.model import ldapNode
+# @pytest.skip("unstable API")
+# def test_node_post(app, db, cluster):
+#     from api.model import ldapNode
 
-    db.persist(cluster)
+#     db.persist(cluster, "clusters")
 
-    resp = app.test_client().post(
-        "/node",
-        data={"cluster": cluster.id, "node_type": "gluuopendj"},
-    )
-    actual_data = json.loads(resp.data)
+#     resp = app.test_client().post(
+#         "/node",
+#         data={"cluster": cluster.id, "node_type": "ldap"},
+#     )
+#     actual_data = json.loads(resp.data)
 
-    assert resp.status_code == 201
-    for field in ldapNode.resource_fields.keys():
-        assert field in actual_data
+#     assert resp.status_code == 201
+#     for field in ldapNode.resource_fields.keys():
+#         assert field in actual_data
 
 
 def test_node_get(app, cluster, db, ldap_node):
-    db.persist(ldap_node)
+    db.persist(ldap_node, "nodes")
     cluster.add_node(ldap_node)
-    db.persist(cluster)
+    db.persist(cluster, "clusters")
 
     resp = app.test_client().get("/node/{}".format(ldap_node.id))
     actual_data = json.loads(resp.data)
@@ -43,9 +43,9 @@ def test_node_get_invalid_id(app):
 
 
 def test_node_get_list(app, db, cluster, ldap_node):
-    db.persist(ldap_node)
+    db.persist(ldap_node, "nodes")
     cluster.add_node(ldap_node)
-    db.persist(cluster)
+    db.persist(cluster, "clusters")
 
     resp = app.test_client().get("/node")
     actual_data = json.loads(resp.data)
@@ -69,9 +69,9 @@ def test_node_get_list_empty(app):
 
 
 def test_node_delete(app, db, cluster, ldap_node):
-    db.persist(ldap_node)
+    db.persist(ldap_node, "nodes")
     cluster.add_node(ldap_node)
-    db.persist(cluster)
+    db.persist(cluster, "clusters")
 
     resp = app.test_client().delete("/node/{}".format(ldap_node.id))
     assert resp.status_code == 204
@@ -80,14 +80,3 @@ def test_node_delete(app, db, cluster, ldap_node):
 def test_node_delete_failed(app):
     resp = app.test_client().delete("/node/random-invalid-id")
     assert resp.status_code == 204
-
-
-@pytest.mark.parametrize("name, cls_name", [
-    ("gluuopendj", "ldapNode"),
-    ("", "NoneType"),
-])
-def test_get_node_object(name, cls_name):
-    from api.resource.node import get_node_object
-
-    node = get_node_object(name)
-    assert node.__class__.__name__ == cls_name

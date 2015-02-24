@@ -23,14 +23,9 @@
 '''/node resource'''
 from flask.ext.restful import Resource
 from flask_restful_swagger import swagger
-from ..model.gluu_cluster import GluuCluster
-from ..model.ldap_node import ldapNode
-from ..model.oxauth_node import oxauthNode
-from ..model.oxtrust_node import oxtrustNode
-from ..setup import nodeSetup
-from flask import g
 from flask import abort
 from flask.ext.restful import reqparse
+<<<<<<< HEAD
 from api.database import db
 
 
@@ -47,13 +42,30 @@ def get_node_object(node=''):
     return node_obj
 
 
+=======
+import subprocess
+import sys
+# from time import sleep
+
+from api.database import db
+from api.helper.model_helper import LdapModelHelper
+
+
+def run(command, exit_on_error=True, cwd=None):
+    try:
+        return subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True, cwd=cwd)
+    except subprocess.CalledProcessError, e:
+        if exit_on_error:
+            sys.exit(e.returncode)
+        else:
+            raise
+
+
+>>>>>>> ade6254581fa83dbbb6c380213efecd916901a12
 class Node(Resource):
     """
     APIs for cluster node CRUD.
     """
-    def __init__(self):
-        self.available_docker_images = ['ldap', 'oxauth', 'oxtrust']
-
     @swagger.operation(
         notes='Gives node or nodes info/state',
         nickname='getnode',
@@ -85,8 +97,11 @@ class Node(Resource):
         return [item.as_dict() for item in obj_list]
 
     @swagger.operation(
-        notes='create a node',
-        nickname='postnode',
+        notes="""This API will create a new Gluu Server cluster node. This may take a while, so the process
+is handled asyncronously by the Twisted reactor. It includes creating a new docker instance, deploying
+the necessary software components, and updating the configuration of the target node and any
+other dependent cluster nodes. Subsequent GET requests will be necessary to find out when the
+status of the cluster node is available.""",
         parameters=[
             {
                 "name": "cluster",
@@ -98,7 +113,7 @@ class Node(Resource):
             },
             {
                 "name": "node_type",
-                "description": "The type of the node: either ldap | oxauth | oxtrust",
+                "description": "ldap | oxauth | oxtrust",
                 "required": True,
                 "allowMultiple": False,
                 "dataType": 'string',
@@ -122,8 +137,6 @@ class Node(Resource):
         summary='TODO'
     )
     def post(self):
-
-        # Sample post data: {"cluster":"21389213","node_type":"ldap"}
         post_parser = reqparse.RequestParser()
         post_parser.add_argument(
             'cluster', type=str, location='form',
@@ -136,11 +149,11 @@ class Node(Resource):
         args = post_parser.parse_args()
 
         # check node type
-        if args.node_type not in self.available_docker_images:
+        if args.node_type not in ("ldap", "oxauth", "oxtrust"):
             abort(400)
 
-        # check that cluster name or id is valid else return with message and code
-        cluster = db.get(args.cluster, GluuCluster)
+        # check that cluster id is valid else return with message and code
+        cluster = db.get(args.cluster, "clusters")
         if not cluster:
             abort(400)
 
@@ -185,7 +198,15 @@ class Node(Resource):
             #     s = saltHelper(newLdapNode)
             # except:
             #     logs.error("Error configuring salt minion for %s" % str(newLdapNode)
-            pass
+
+            ldap = LdapModelHelper(cluster)
+            # note, ``setup_node`` is a long-running task, hence the return
+            # value won't be available immediately
+            ldap.setup_node()
+
+            # # accept container cert in host salt-master
+            # sleep(10)
+            # run('salt-key -y -a {}'.format(scid))
 
         elif args.node_type == "oxauth":
             # (1) generate oxauth-ldap.properties, oxauth-config.xml
@@ -202,18 +223,9 @@ class Node(Resource):
             # to run oxtrust war file
             pass
 
-        # get relevent dockerfile
-        # build image
-        image = get_image(args.node_type)
-        # run setup using salt
-        ns = nodeSetup(node)
-        ns.setup()
-
-        # add ldapNode object into cluster object
-        db.persist(node)
-        cluster.add_node(node)
-        db.update(cluster)
-        return {'status_code': 201, 'message': '{} node created in Cluster: {}'.format(args.node_type, args.cluster)}
+        # Returns the HTTP response as ACCEPTED
+        # TODO: what's the best way to monitor the result?
+        return {}, 202
 
     @swagger.operation(
         notes='delete a node',
@@ -236,10 +248,10 @@ class Node(Resource):
 
         if node:
             # remove node
-            db.delete(node_id, node)
+            db.delete(node_id, "nodes")
 
             # removes reference from cluster
-            cluster = db.get(node.cluster_id, GluuCluster)
+            cluster = db.get(node.cluster_id, "clusters")
             cluster.remove_node(node)
-            db.update(cluster)
+            db.update(cluster.id, cluster, "clusters")
         return {}, 204
