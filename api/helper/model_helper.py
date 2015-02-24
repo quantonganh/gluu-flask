@@ -29,6 +29,7 @@ from api.model import ldapNode
 from api.model import oxauthNode  # noqa
 from api.model import oxtrustNode  # noqa
 from api.helper.docker_helper import setup_container
+from api.helper.docker_helper import get_container_ip
 from api.helper.salt_helper import register_minion
 
 
@@ -59,9 +60,17 @@ class LdapModelHelper(object):
     def setup_node(self):
         # TODO - This should be in a try/except, with logging for both creation and errors to access log, and just errors to error log.
         cont_id = setup_container(self.name, self.image, self.dockerfile, self.salt_master_ipaddr)
+
         if cont_id:
+            # container ID in short format
             self.node.id = cont_id[:-(len(cont_id) - 12)]
+
+            # register the container as minion
             register_minion(self.node.id)
+            container_ip = get_container_ip(self.node.id)
+
+            self.node.local_hostname = container_ip
+            self.node.ip = container_ip
 
             db.persist(self.node, "nodes")
             self.cluster.add_node(self.node)

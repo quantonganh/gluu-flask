@@ -68,12 +68,12 @@ class ldapNode(BaseModel):
         'ldif_files': fields.List(fields.String, attribute='List of initial ldif files')
     }
 
-    def __init__(self, install_dir=None, cluster_name = None):
+    def __init__(self, install_dir=None, cluster_name=None):
         self.install_dir = install_dir
         self.ldap_type = "opendj"
 
-        self.local_hostname = None
-        self.ip = None
+        self.local_hostname = ""
+        self.ip = ""
         self.ldap_setup_properties = './templates/opendj-setup.properties'
         self.openDjCertFn = '/etc/certs/opendj.crt'
         self.ldap_binddn = 'cn=directory manager'

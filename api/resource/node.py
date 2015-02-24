@@ -195,10 +195,6 @@ status of the cluster node is available.""",
             # value won't be available immediately
             ldap.setup_node()
 
-            # # accept container cert in host salt-master
-            # sleep(10)
-            # run('salt-key -y -a {}'.format(scid))
-
         elif args.node_type == "oxauth":
             # (1) generate oxauth-ldap.properties, oxauth-config.xml
             # oxauth-static-conf.json; (2) Create or copy key material to /etc/certs;

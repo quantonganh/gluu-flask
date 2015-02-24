@@ -211,3 +211,11 @@ def _run_container(node=None):
     cid = run('docker run -d -P --name={0} {1}'.format(con_name, node.type))
     scid = cid.strip()[:-(len(cid) - 12)]
     node.id = scid
+
+
+def get_container_ip(container_id):
+    """Gets container IP.
+
+    :param container_id: Container ID; ideally the short format.
+    """
+    return docker_client.inspect_container(container_id)["NetworkSettings"]["IPAddress"]
