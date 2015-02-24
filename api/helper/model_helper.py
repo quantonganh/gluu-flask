@@ -33,7 +33,8 @@ from api.helper.salt_helper import register_minion
 
 
 class LdapModelHelper(object):
-    def __init__(self, cluster):
+    def __init__(self, cluster, salt_master_ipaddr):
+        self.salt_master_ipaddr = salt_master_ipaddr
         self.cluster = cluster
         self.node = ldapNode()
         self.node.cluster_id = cluster.id
@@ -57,7 +58,7 @@ class LdapModelHelper(object):
     @run_in_reactor
     def setup_node(self):
         # TODO - This should be in a try/except, with logging for both creation and errors to access log, and just errors to error log.
-        cont_id = setup_container(self.name, self.image, self.dockerfile)
+        cont_id = setup_container(self.name, self.image, self.dockerfile, self.salt_master_ipaddr)
         if cont_id:
             self.node.id = cont_id[:-(len(cont_id) - 12)]
             register_minion(self.node.id)

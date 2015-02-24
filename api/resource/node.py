@@ -21,9 +21,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 '''/node resource'''
-# from time import sleep
-
 from flask import abort
+from flask import current_app
 from flask.ext.restful import Resource
 from flask.ext.restful import reqparse
 from flask_restful_swagger import swagger
@@ -191,7 +190,7 @@ status of the cluster node is available.""",
             # except:
             #     logs.error("Error configuring salt minion for %s" % str(newLdapNode)
 
-            ldap = LdapModelHelper(cluster)
+            ldap = LdapModelHelper(cluster, current_app.config["SALT_MASTER_IPADDR"])
             # note, ``setup_node`` is a long-running task, hence the return
             # value won't be available immediately
             ldap.setup_node()

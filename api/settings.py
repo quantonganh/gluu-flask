@@ -15,6 +15,7 @@ class Config(object):
     CLUSTER_FILE = DATA_DIR + '/cluster.json'
     DB = os.path.join(PROJECT_ROOT, "db")
     DATABASE_URI = os.path.join(DATA_DIR, "db", "db.json")
+    SALT_MASTER_IPADDR = os_env.get("SALT_MASTER_IPADDR", "")
 
 
 class ProdConfig(Config):

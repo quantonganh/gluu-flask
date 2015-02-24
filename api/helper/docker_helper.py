@@ -22,16 +22,23 @@
 # SOFTWARE.
 import json
 import os.path
+import re
 import tempfile
+import shutil
 from random import randrange
 
 import docker.errors
 import requests
 from docker import Client
 
-from .salt_helper import run
+from api.helper.salt_helper import run
 
 docker_client = Client(base_url="unix://var/run/docker.sock")
+
+minion_master_re = re.compile(
+    r"^(master:) (\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b)$",
+    re.M,
+)
 
 
 def image_exists(name):
@@ -118,7 +125,7 @@ def get_remote_files(*files):
     return local_dir
 
 
-def _build_saltminion():
+def _build_saltminion(salt_master_ipaddr):
     """Builds saltminion image.
     """
     build_succeed = True
@@ -130,11 +137,26 @@ def _build_saltminion():
                      "/gluu-docker/master/ubuntu/14.04/saltminion/Dockerfile"
         files = [minion_file, dockerfile]
         build_dir = get_remote_files(*files)
+        saved_minion = os.path.join(build_dir, os.path.basename(minion_file))
+
+        # There's a line in minion file that says ``master: xxx.xxx.xxx.xxx``
+        # technically we need to replace the ``xxx.xxx.xxx.xxx`` part
+        # with salt-master IP address, so any salt-minion can connect to it
+        # properly.
+        content = ""
+        with open(saved_minion, "r") as fp:
+            content = fp.read()
+
+        new_content = minion_master_re.sub(r"\1 {}".format(salt_master_ipaddr), content)
+        with open(saved_minion, "w") as fp:
+            fp.write(new_content)
+
         build_succeed = build_image(build_dir, "saltminion")
+        shutil.rmtree(build_dir)
     return build_succeed
 
 
-def setup_container(name, image, dockerfile):
+def setup_container(name, image, dockerfile, salt_master_ipaddr):
     """Builds and runs a container.
 
     :param name: Container name.
@@ -144,9 +166,8 @@ def setup_container(name, image, dockerfile):
     :returns: Container ID in long format if container running successfully,
               otherwise an empty string.
     """
-    # TODO: does saltminion image must be build by this API?
-    # if not _build_saltminion():
-    #     return ""
+    if not _build_saltminion(salt_master_ipaddr):
+        return ""
 
     # a flag to determine whether build image process is succeed
     build_succeed = True
@@ -154,6 +175,7 @@ def setup_container(name, image, dockerfile):
     if not image_exists(image):
         build_dir = get_remote_files(dockerfile)
         build_succeed = build_image(build_dir, image)
+        shutil.rmtree(build_dir)
 
     if build_succeed:
         return run_container(name, image)
