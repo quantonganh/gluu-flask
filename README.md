@@ -51,7 +51,13 @@ $ env/bin/pip install -r requirements.txt
 ```
 
 ## Run
-`$ env/bin/python run.py`
+
+To run the application, type the following command in the shell,
+and make sure `SALT_MASTER_IPADDR` environment variable is set and
+pointed to salt-master IP address.
+
+    $ SALT_MASTER_IPADDR=xxx.xxx.xxx.xxx env/bin/python run.py
+
 
 ## Testing
 
