@@ -72,7 +72,7 @@ class ldapNode(BaseModel):
         'ldif_files': fields.List(fields.String, attribute='List of initial ldif files')
     }
 
-    def __init__(self, install_dir=None):
+    def __init__(self, install_dir=None, cluster_name = None):
         self.install_dir = install_dir
         self.ldap_type = "opendj"
 
@@ -127,4 +127,5 @@ class ldapNode(BaseModel):
                            self.ldif_scripts]
         self.id = ''
         self.name = ''
-        self.type = ''
+        self.type = 'gluuopendj'
+        self.cluster_name = cluster_name

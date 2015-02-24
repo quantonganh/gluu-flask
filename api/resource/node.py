@@ -30,35 +30,9 @@ from ..model.oxtrust_node import oxtrustNode
 from ..setup import nodeSetup
 from flask import g
 from flask import abort
-from random import randrange
 from flask.ext.restful import reqparse
-import subprocess
-import sys
-from time import sleep
-
 from api.database import db
-from api.model import ldapNode, GluuCluster
 
-
-def run(command, exit_on_error=True, cwd=None):
-    try:
-        return subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True, cwd=cwd)
-    except subprocess.CalledProcessError, e:
-        if exit_on_error:
-            sys.exit(e.returncode)
-        else:
-            raise
-
-
-def get_image(name='', docker_base_url='unix://var/run/docker.sock'):
-    try:
-        from docker import Client
-        c = Client(base_url=docker_base_url)
-        return c.images(name)
-    except:
-        # TODO add logging
-        print "Error making connection to Docker Server"
-    return None
 
 def get_node_object(node=''):
     node_map = {
@@ -179,9 +153,13 @@ class Node(Resource):
             # ldap hostname. For the four ports (ldap, ldaps, admin, jmx), try to use the default
             # ports unless they are already in use, at which point it should chose a random
             # port over 10,000. Note these ports will need to be open between the ldap docker instances
+            node = ldapNode(cluster_name = cluster.name)
             # (2) Start job to create docker instance
+            run_container(node)
             # (3) Render opendj-setup.properties
+            render_ldap_properties(node)
             # (4) Start job to run /opt/opendj/setup and dsconfig commands
+            run_ldap_setup(node)
             # (5) Start job to import data. If no ldap nodes exist, import auto-generated
             # base ldif data; otherwise initialize data from existing ldap node. Also to
             # create fully meshed replication, update the other ldap nodes to use this new
@@ -227,38 +205,6 @@ class Node(Resource):
         # get relevent dockerfile
         # build image
         image = get_image(args.node_type)
-
-        # an example response of get_image()
-        """
-            [{u'Created': 1422048669,
-            u'Id': u'e348da14b96d85f1dfec380b53dfb106ea1fb4723f93fa8619ad798fd9509f7c',
-            u'ParentId': u'26bc41e2ffeec6cff2d1880f378e308398662d5180adfda0689e37e081736200',
-            u'RepoTags': [u'gluuopendj:latest'],
-            u'Size': 0,
-            u'VirtualSize': 260371028}]
-            or
-            []
-        """
-        if not image:
-            run('mkdir /tmp/{}'.format(args.node_type))
-            raw_url = 'https://raw.githubusercontent.com/GluuFederation/gluu-docker/master/ubuntu/14.04/{}/Dockerfile'.format(args.node_type)
-            run('wget -q {} -P /tmp/{}'.format(raw_url, args.node_type))
-            run('docker build -q --rm --force-rm -t {} {}'.format(args.node_type, '/tmp/{}'.format(args.node_type)))
-            run('rm -rf /tmp/{}'.format(args.node_type))
-
-        # deploy container
-        con_name = '{0}_{1}_{2}'.format(args.node_type, args.cluster, randrange(101, 999))
-        cid = run('docker run -d -P --name={0} {1}'.format(con_name, args.node_type))
-        scid = cid.strip()[:-(len(cid) - 12)]
-        # accept container cert in host salt-master
-        sleep(10)
-        run('salt-key -y -a {}'.format(scid))
-        # create ldapNode() object
-        node = get_node_object(args.node_type)
-        # populate ldapNode object
-        node.id = scid
-        node.name = con_name
-        node.type = args.node_type
         # run setup using salt
         ns = nodeSetup(node)
         ns.setup()
