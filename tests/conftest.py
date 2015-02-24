@@ -26,7 +26,10 @@ def db(request, app):
     db.init_app(app)
 
     def teardown():
-        os.unlink(app.config["DATABASE_URI"])
+        try:
+            os.unlink(app.config["DATABASE_URI"])
+        except OSError:
+            pass
 
     request.addfinalizer(teardown)
     return db
