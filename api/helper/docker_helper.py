@@ -50,6 +50,7 @@ def build_image(path, tag):
 
     :param path: Path to a directory where ``Dockerfile`` is located.
     :param tag: Desired tag name.
+    :returns: ``True`` if image successfully built, otherwise ``False``
     """
     resp = docker_client.build(path, tag=tag, quiet=True,
                                rm=True, forcerm=True, pull=False)
@@ -107,6 +108,10 @@ def get_remote_files(*files):
     """Retrieves files from remote paths.
 
     All retrieved files will be stored under a same temporary directory.
+
+    :param files: List of files.
+    :returns: Absolute path to temporary directory where all files
+              were downloaded to.
     """
     local_dir = tempfile.mkdtemp()
 
@@ -121,6 +126,9 @@ def get_remote_files(*files):
 
 def _build_saltminion(salt_master_ipaddr):
     """Builds saltminion image.
+
+    :param salt_master_ipaddr: IP address of salt-master.
+    :returns: ``True`` if image successfully built, otherwise ``False``
     """
     build_succeed = True
 
@@ -176,7 +184,7 @@ def setup_container(name, image, dockerfile, salt_master_ipaddr):
     return ""
 
 
-def get_image(name='', docker_base_url='unix://var/run/docker.sock'):
+def get_image(name='', docker_base_url='unix://var/run/docker.sock'):  # pragma: no cover
     # DEPRECATED in favor of ``image_exists``.
     try:
         c = Client(base_url=docker_base_url)
@@ -187,7 +195,7 @@ def get_image(name='', docker_base_url='unix://var/run/docker.sock'):
     return None
 
 
-def _build_image(node_type=''):
+def _build_image(node_type=''):  # pragma: no cover
     # DEPRECATED in favor of ``build_image``.
     run('mkdir /tmp/{}'.format(node_type))
     raw_url = 'https://raw.githubusercontent.com/GluuFederation/gluu-docker/master/ubuntu/14.04/{}/Dockerfile'.format(node_type)
@@ -196,7 +204,7 @@ def _build_image(node_type=''):
     run('rm -rf /tmp/{}'.format(node_type))
 
 
-def _run_container(node=None):
+def _run_container(node=None):  # pragma: no cover
     # DEPRECATED in favor of ``run_container``.
     image = get_image(node.type)
     if not image:
@@ -211,5 +219,6 @@ def get_container_ip(container_id):
     """Gets container IP.
 
     :param container_id: Container ID; ideally the short format.
+    :returns: Container's IP address.
     """
     return docker_client.inspect_container(container_id)["NetworkSettings"]["IPAddress"]
