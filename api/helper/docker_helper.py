@@ -22,7 +22,6 @@
 # SOFTWARE.
 import json
 import os.path
-import re
 import tempfile
 import shutil
 from random import randrange
@@ -34,11 +33,6 @@ from docker import Client
 from api.helper.salt_helper import run
 
 docker_client = Client(base_url="unix://var/run/docker.sock")
-
-minion_master_re = re.compile(
-    r"^(master:) (\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b)$",
-    re.M,
-)
 
 
 def image_exists(name):
@@ -147,7 +141,7 @@ def _build_saltminion(salt_master_ipaddr):
         with open(saved_minion, "r") as fp:
             content = fp.read()
 
-        new_content = minion_master_re.sub(r"\1 {}".format(salt_master_ipaddr), content)
+        new_content = content.format(SALT_MASTER_IPADDR=salt_master_ipaddr)
         with open(saved_minion, "w") as fp:
             fp.write(new_content)
 
