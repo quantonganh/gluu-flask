@@ -21,19 +21,27 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 '''/node resource'''
-from flask.ext.restful import Resource
-from flask_restful_swagger import swagger
+# from time import sleep
+
 from flask import abort
+from flask.ext.restful import Resource
 from flask.ext.restful import reqparse
-<<<<<<< HEAD
+from flask_restful_swagger import swagger
+
 from api.database import db
+from api.helper.model_helper import LdapModelHelper
 
 
 def get_node_object(node=''):
+    # DEPRECATED
+    from api.model import ldapNode
+    from api.model import oxauthNode
+    from api.model import oxtrustNode
+
     node_map = {
-        'ldap' : ldapNode,
-        'oxauth' : oxauthNode,
-        'oxtrust' : oxtrustNode,
+        'ldap': ldapNode,
+        'oxauth': oxauthNode,
+        'oxtrust': oxtrustNode,
     }
     if node in node_map:
         node_obj = node_map[node]()
@@ -42,26 +50,6 @@ def get_node_object(node=''):
     return node_obj
 
 
-=======
-import subprocess
-import sys
-# from time import sleep
-
-from api.database import db
-from api.helper.model_helper import LdapModelHelper
-
-
-def run(command, exit_on_error=True, cwd=None):
-    try:
-        return subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True, cwd=cwd)
-    except subprocess.CalledProcessError, e:
-        if exit_on_error:
-            sys.exit(e.returncode)
-        else:
-            raise
-
-
->>>>>>> ade6254581fa83dbbb6c380213efecd916901a12
 class Node(Resource):
     """
     APIs for cluster node CRUD.
@@ -166,13 +154,17 @@ status of the cluster node is available.""",
             # ldap hostname. For the four ports (ldap, ldaps, admin, jmx), try to use the default
             # ports unless they are already in use, at which point it should chose a random
             # port over 10,000. Note these ports will need to be open between the ldap docker instances
-            node = ldapNode(cluster_name = cluster.name)
+            # node = ldapNode(cluster_name=cluster.name)
+
             # (2) Start job to create docker instance
-            run_container(node)
+            # run_container(node)
+
             # (3) Render opendj-setup.properties
-            render_ldap_properties(node)
+            # render_ldap_properties(node)
+
             # (4) Start job to run /opt/opendj/setup and dsconfig commands
-            run_ldap_setup(node)
+            # run_ldap_setup(node)
+
             # (5) Start job to import data. If no ldap nodes exist, import auto-generated
             # base ldif data; otherwise initialize data from existing ldap node. Also to
             # create fully meshed replication, update the other ldap nodes to use this new
