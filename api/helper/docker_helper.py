@@ -20,14 +20,16 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
 import json
 import os.path
 import tempfile
+from random import randrange
 
 import docker.errors
 import requests
 from docker import Client
+
+from .salt_helper import run
 
 docker_client = Client(base_url="unix://var/run/docker.sock")
 
@@ -142,9 +144,9 @@ def setup_container(name, image, dockerfile):
     :returns: Container ID in long format if container running successfully,
               otherwise an empty string.
     """
-    # saltminion image is required
-    if not _build_saltminion():
-        return ""
+    # TODO: does saltminion image must be build by this API?
+    # if not _build_saltminion():
+    #     return ""
 
     # a flag to determine whether build image process is succeed
     build_succeed = True
@@ -158,8 +160,8 @@ def setup_container(name, image, dockerfile):
     return ""
 
 
-
 def get_image(name='', docker_base_url='unix://var/run/docker.sock'):
+    # DEPRECATED in favor of ``image_exists``.
     try:
         c = Client(base_url=docker_base_url)
         return c.images(name)
@@ -169,7 +171,8 @@ def get_image(name='', docker_base_url='unix://var/run/docker.sock'):
     return None
 
 
-def build_image(node_type = ''):
+def _build_image(node_type=''):
+    # DEPRECATED in favor of ``build_image``.
     run('mkdir /tmp/{}'.format(node_type))
     raw_url = 'https://raw.githubusercontent.com/GluuFederation/gluu-docker/master/ubuntu/14.04/{}/Dockerfile'.format(node_type)
     run('wget -q {} -P /tmp/{}'.format(raw_url, node_type))
@@ -177,17 +180,8 @@ def build_image(node_type = ''):
     run('rm -rf /tmp/{}'.format(node_type))
 
 
-def run(command, exit_on_error=True, cwd=None):
-    try:
-        return subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True, cwd=cwd)
-    except subprocess.CalledProcessError, e:
-        if exit_on_error:
-            sys.exit(e.returncode)
-        else:
-            raise
-
-
-def run_container(node = None):
+def _run_container(node=None):
+    # DEPRECATED in favor of ``run_container``.
     image = get_image(node.type)
     if not image:
         build_image(node.type)
@@ -195,8 +189,3 @@ def run_container(node = None):
     cid = run('docker run -d -P --name={0} {1}'.format(con_name, node.type))
     scid = cid.strip()[:-(len(cid) - 12)]
     node.id = scid
-
-
-def register_minion(node):
-    run('salt-key -y -a {}'.format(node.scid))
-

@@ -29,20 +29,17 @@ from api.model import ldapNode
 from api.model import oxauthNode  # noqa
 from api.model import oxtrustNode  # noqa
 from api.helper.docker_helper import setup_container
+from api.helper.salt_helper import register_minion
 
 
 class LdapModelHelper(object):
     def __init__(self, cluster):
-        self._model = ldapNode()
-        self._model.cluster_id = cluster.id
-        self._model.name = "{}_{}_{}".format(self.image, self.model.cluster_id,
-                                             randrange(101, 999))
-        self._model.type = "ldap"
-        self._cluster = cluster
-
-    @property
-    def model(self):
-        return self._model
+        self.cluster = cluster
+        self.node = ldapNode()
+        self.node.cluster_id = cluster.id
+        self.node.type = "ldap"
+        self.node.name = "{}_{}_{}".format(self.image, self.cluster.id,
+                                           randrange(101, 999))
 
     @property
     def image(self):
@@ -55,15 +52,16 @@ class LdapModelHelper(object):
 
     @property
     def name(self):
-        return self.model.name
+        return self.node.name
 
     @run_in_reactor
     def setup_node(self):
         # TODO - This should be in a try/except, with logging for both creation and errors to access log, and just errors to error log.
         cont_id = setup_container(self.name, self.image, self.dockerfile)
         if cont_id:
-            # TODO: setup node using salt before saving it to database
-            self._model.id = cont_id[:-(len(cont_id) - 12)]
-            db.persist(self.model, "nodes")
-            self._cluster.add_node(self.model)
-            db.update(self._cluster.id, self._cluster, "clusters")
+            self.node.id = cont_id[:-(len(cont_id) - 12)]
+            register_minion(self.node.id)
+
+            db.persist(self.node, "nodes")
+            self.cluster.add_node(self.node)
+            db.update(self.cluster.id, self.cluster, "clusters")
