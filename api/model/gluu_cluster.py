@@ -28,8 +28,6 @@ from .base import BaseModel
 
 @swagger.model
 class GluuCluster(BaseModel):
-    __table_name__ = "clusters"
-
     # Swager Doc
     resource_fields = {
         'id': fields.String(attribute='GluuCluster unique identifier'),

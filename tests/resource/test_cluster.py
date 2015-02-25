@@ -4,7 +4,23 @@ import json
 def test_cluster_post(app, db):
     from api.model import GluuCluster
 
-    resp = app.test_client().post("/cluster")
+    resp = app.test_client().post(
+        "/cluster",
+        data={
+            "name": "test-cluster-1",
+            "description": "test cluster",
+            "hostname_ldap_cluster": "cluster-ldap-1",
+            "hostname_oxauth_cluster": "cluster-oxauth-1",
+            "hostname_oxtrust_cluster": "cluster-oxtrust-1",
+            "orgName": "Gluu Federation",
+            "orgShortName": "Gluu",
+            "countryCode": "US",
+            "city": "Austin",
+            "state": "Texas",
+            "admin_email": "john@example.com",
+            "ldaps_port": "1363",
+        },
+    )
     actual_data = json.loads(resp.data)
 
     assert resp.status_code == 201
@@ -68,11 +84,28 @@ def test_cluster_delete_failed(app):
 def test_cluster_update(app, db, cluster):
     db.persist(cluster, "clusters")
 
-    resp = app.test_client().put("/cluster/{}".format(cluster.id))
+    resp = app.test_client().put(
+        "/cluster/{}".format(cluster.id),
+        data={
+            "name": "test-cluster-1",
+            "description": "test cluster",
+            "hostname_ldap_cluster": "cluster-ldap-1",
+            "hostname_oxauth_cluster": "cluster-oxauth-1",
+            "hostname_oxtrust_cluster": "cluster-oxtrust-1",
+            "orgName": "Gluu Federation",
+            "orgShortName": "Gluu",
+            "countryCode": "US",
+            "city": "Austin",
+            "state": "Texas",
+            "admin_email": "john@example.com",
+            "ldaps_port": "1363",
+        },
+    )
     actual_data = json.loads(resp.data)
+    updated_cluster = db.get(cluster.id, "clusters")
 
     assert resp.status_code == 200
-    assert actual_data == cluster.as_dict()
+    assert actual_data == updated_cluster.as_dict()
 
 
 def test_cluster_update_cluster_not_found(app):
