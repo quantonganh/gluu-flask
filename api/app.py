@@ -6,6 +6,7 @@ from api.extensions import (
     restapi,
 )
 from api.resource.node import Node
+from api.resource.node import NodeList
 from api.resource.cluster import Cluster
 from api.resource.cluster import ClusterList
 from api.database import db
@@ -30,6 +31,7 @@ def register_extensions(app):
 
 
 def register_resources():
-    restapi.add_resource(Node, '/node', '/node/<string:node_id>')
+    restapi.add_resource(NodeList, '/node')
+    restapi.add_resource(Node, '/node/<string:node_id>')
     restapi.add_resource(ClusterList, '/cluster')
     restapi.add_resource(Cluster, '/cluster/<string:cluster_id>')

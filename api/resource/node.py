@@ -24,11 +24,11 @@
 from flask import abort
 from flask import current_app
 from flask.ext.restful import Resource
-from flask.ext.restful import reqparse
 from flask_restful_swagger import swagger
 
 from api.database import db
 from api.helper.model_helper import LdapModelHelper
+from api.reqparser import node_reqparser
 
 
 def get_node_object(node=''):
@@ -50,17 +50,14 @@ def get_node_object(node=''):
 
 
 class Node(Resource):
-    """
-    APIs for cluster node CRUD.
-    """
     @swagger.operation(
-        notes='Gives node or nodes info/state',
+        notes='Gives a node info/state',
         nickname='getnode',
         parameters=[],
         responseMessages=[
             {
               "code": 200,
-              "message": "List node information",
+              "message": "Node information",
             },
             {
                 "code": 404,
@@ -73,13 +70,60 @@ class Node(Resource):
         ],
         summary='TODO'
     )
-    def get(self, node_id=None):
-        if node_id:
-            obj = db.get(node_id, "nodes")
-            if not obj:
-                return {"code": 404, "message": "Node not found"}, 404
-            return obj.as_dict()
+    def get(self, node_id):
+        obj = db.get(node_id, "nodes")
+        if not obj:
+            return {"code": 404, "message": "Node not found"}, 404
+        return obj.as_dict()
 
+    @swagger.operation(
+        notes='delete a node',
+        nickname='delnode',
+        parameters=[],
+        responseMessages=[
+            {
+              "code": 204,
+              "message": "Node deleted",
+            },
+            {
+                "code": 500,
+                "message": "Internal Server Error",
+            },
+        ],
+        summary='TODO'
+    )
+    def delete(self, node_id):
+        node = db.get(node_id, "nodes")
+
+        if node:
+            # remove node
+            db.delete(node_id, "nodes")
+
+            # removes reference from cluster
+            cluster = db.get(node.cluster_id, "clusters")
+            cluster.remove_node(node)
+            db.update(cluster.id, cluster, "clusters")
+        return {}, 204
+
+
+class NodeList(Resource):
+    @swagger.operation(
+        notes='Gives node list info/state',
+        nickname='listnode',
+        parameters=[],
+        responseMessages=[
+            {
+              "code": 200,
+              "message": "List node information",
+            },
+            {
+                "code": 500,
+                "message": "Internal Server Error"
+            },
+        ],
+        summary='TODO'
+    )
+    def get(self):
         obj_list = db.all("nodes")
         return [item.as_dict() for item in obj_list]
 
@@ -89,6 +133,7 @@ is handled asyncronously by the Twisted reactor. It includes creating a new dock
 the necessary software components, and updating the configuration of the target node and any
 other dependent cluster nodes. Subsequent GET requests will be necessary to find out when the
 status of the cluster node is available.""",
+        nickname='postnode',
         parameters=[
             {
                 "name": "cluster",
@@ -96,7 +141,7 @@ status of the cluster node is available.""",
                 "required": True,
                 "allowMultiple": False,
                 "dataType": 'string',
-                "paramType": "body"
+                "paramType": "form"
             },
             {
                 "name": "node_type",
@@ -104,50 +149,41 @@ status of the cluster node is available.""",
                 "required": True,
                 "allowMultiple": False,
                 "dataType": 'string',
-                "paramType": "body"
+                "paramType": "form"
             }
         ],
         responseMessages=[
             {
-                "code": 201,
-                "message": "node created"
+                "code": 202,
+                "message": "Accepted",
             },
             {
                 "code": 400,
-                "message": "Bad Request"
+                "message": "Bad Request",
             },
             {
                 "code": 500,
-                "message": "Internal Server Error"
+                "message": "Internal Server Error",
             }
         ],
         summary='TODO'
     )
     def post(self):
-        post_parser = reqparse.RequestParser()
-        post_parser.add_argument(
-            'cluster', type=str, location='form',
-            required=True, help='Cluster id to which this node will be added.',
-        )
-        post_parser.add_argument(
-            'node_type', type=str, location='form',
-            required=True, help='ldap | oxauth | oxtrust',
-        )
-        args = post_parser.parse_args()
+        params = node_reqparser.parse_args()
 
         # check node type
-        if args.node_type not in ("ldap", "oxauth", "oxtrust"):
+        if params.node_type not in ("ldap", "oxauth", "oxtrust"):
             abort(400)
 
         # check that cluster id is valid else return with message and code
-        cluster = db.get(args.cluster, "clusters")
+        cluster = db.get(params.cluster, "clusters")
         if not cluster:
             abort(400)
 
         # MIKE: I think the business logic should be implemented in helper classes.
         # I'd like to see the code in this API be readable.
 
-        if args.node_type == "ldap":
+        if params.node_type == "ldap":
             # (1) Create the model for this new ldap node. For replication, you will need
             # to use the ip address of docker instance as hostname--not the cluster
             # ldap hostname. For the four ports (ldap, ldaps, admin, jmx), try to use the default
@@ -195,14 +231,14 @@ status of the cluster node is available.""",
             # value won't be available immediately
             ldap.setup_node()
 
-        elif args.node_type == "oxauth":
+        elif params.node_type == "oxauth":
             # (1) generate oxauth-ldap.properties, oxauth-config.xml
             # oxauth-static-conf.json; (2) Create or copy key material to /etc/certs;
             # (3) Configure apache httpd to proxy AJP:8009; (4) configure tomcat
             # to run oxauth war file.
             pass
 
-        elif args.node_type == "oxtrust":
+        elif params.node_type == "oxtrust":
             # (1) generate oxtrustLdap.properties, oxTrust.properties,
             # oxauth-static-conf.json, oxTrustLogRotationConfiguration.xml,
             # (2) Create or copy key material to /etc/certs
@@ -213,32 +249,3 @@ status of the cluster node is available.""",
         # Returns the HTTP response as ACCEPTED
         # TODO: what's the best way to monitor the result?
         return {}, 202
-
-    @swagger.operation(
-        notes='delete a node',
-        nickname='delnode',
-        parameters=[],
-        responseMessages=[
-            {
-              "code": 204,
-              "message": "Node deleted",
-            },
-            {
-                "code": 500,
-                "message": "Internal Server Error",
-            },
-        ],
-        summary='TODO'
-    )
-    def delete(self, node_id):
-        node = db.get(node_id, "nodes")
-
-        if node:
-            # remove node
-            db.delete(node_id, "nodes")
-
-            # removes reference from cluster
-            cluster = db.get(node.cluster_id, "clusters")
-            cluster.remove_node(node)
-            db.update(cluster.id, cluster, "clusters")
-        return {}, 204
