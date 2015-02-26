@@ -11,8 +11,8 @@ the design of the gluu-flask component.
 ### Ubuntu packages
 
 ```
-$ sudo apt-get install libssl-dev
-$ sudo apt-get install build-dep openssl
+$ sudo apt-get install libssl-dev python-dev swig
+$ sudo apt-get build-dep openssl
 ```
 
 ### Install docker.io
