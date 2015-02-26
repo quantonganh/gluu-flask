@@ -21,6 +21,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 import salt.client
+from ..helper.salt_helper import run
 
 class ldapSetup(object):
     def __init__(self, node = None):
@@ -42,7 +43,7 @@ class ldapSetup(object):
     def add_ldap_schema(self):
         try:
             for schemaFile in self.node.schemaFiles:
-                saltlocal.cmd(self.node.id, 'cp.get_file', [schemaFile, self.schemaFolder])
+                run('salt-cp {} {} {}'.format(self.node.id, schemaFile, self.schemaFolder))
         except:
             #self.logIt("Error adding schema")
 
@@ -50,7 +51,7 @@ class ldapSetup(object):
         self.add_ldap_schema()
         # Copy opendj-setup.properties so user ldap can find it in /opt/opendj
         setupPropsFN = os.path.join(self.node.ldapBaseFolder, 'opendj-setup.properties')
-        saltlocal.cmd(self.node.id, 'cp.get_file', [self.node.opendj_setup_properties_file_path, setupPropsFN])
+        run('salt-cp {} {} {}'.format(self.node.id, self.node.opendj_setup_properties_file_path, setupPropsFN))
         #change_ownership
         saltlocal.cmd(self.node.id, 'cmd.run', ['chown -R ldap:ldap {}'.format(self.node.ldapBaseFolder)])
         try:
@@ -142,7 +143,7 @@ class ldapSetup(object):
     def import_ldif(self):
         ldifFolder = '%s/ldif' % self.node.ldapBaseFolder
         for ldif_file_fn in self.node.ldif_files:
-            saltlocal.cmd(self.node.id, 'cp.get_file', [ldif_file_fn, ldifFolder])
+            run('salt-cp {} {} {}'.format(self.node.id, ldif_file_fn, ldifFolder))
             ldif_file_fullpath = "%s/ldif/%s" % (self.node.ldapBaseFolder,
                                                  os.path.split(ldif_file_fn)[-1])
             saltlocal.cmd(self.node.id, 'cmd.run', ['chown ldap:ldap {}'.format(ldif_file_fullpath)])
@@ -163,7 +164,7 @@ class ldapSetup(object):
                                   '--trustAll'])
             saltlocal.cmd(self.node.id, 'cmd.run', ['su ldap -c {}'.format(importCmd)])
 
-        saltlocal.cmd(self.node.id, 'cp.get_file', ['{}/static/cache-refresh/o_site.ldif'.format(self.node.install_dir), ldifFolder])
+        run('salt-cp {} {} {}'.format(self.node.id, '{}/static/cache-refresh/o_site.ldif'.format(self.node.install_dir), ldifFolder))
         site_ldif_fn = "%s/o_site.ldif" % ldifFolder
         saltlocal.cmd(self.node.id, 'cmd.run', ['chown ldap:ldap {}'.format(site_ldif_fn)])
         importCmd = " ".join([self.node.importLdifCommand,
