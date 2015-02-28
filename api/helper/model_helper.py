@@ -20,6 +20,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import time
 from random import randrange
 
 from crochet import run_in_reactor
@@ -31,6 +32,8 @@ from api.model import oxtrustNode  # noqa
 from api.helper.docker_helper import setup_container
 from api.helper.docker_helper import get_container_ip
 from api.helper.salt_helper import register_minion
+from api.helper.common_helper import get_random_chars
+from api.setup.ldap_setup import ldapSetup
 
 
 class LdapModelHelper(object):
@@ -40,6 +43,8 @@ class LdapModelHelper(object):
         self.node = ldapNode()
         self.node.cluster_id = cluster.id
         self.node.type = "ldap"
+        # TODO: encode password
+        self.node.ldapPass = get_random_chars()
         self.node.name = "{}_{}_{}".format(self.image, self.cluster.id,
                                            randrange(101, 999))
 
@@ -71,6 +76,12 @@ class LdapModelHelper(object):
 
             self.node.local_hostname = container_ip
             self.node.ip = container_ip
+
+            # delay the remote execution
+            # see https://github.com/saltstack/salt/issues/13561
+            time.sleep(15)
+            ldap_setup = ldapSetup(self.node)
+            ldap_setup.setup()
 
             db.persist(self.node, "nodes")
             self.cluster.add_node(self.node)

@@ -20,25 +20,29 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-import salt.client
-from ..helper.salt_helper import run
+import json
+import os.path
+
+from ..helper.common_helper import run
 
 class ldapSetup(object):
-    def __init__(self, node = None):
+    def __init__(self, node):
+        # salt supresses the flask logger, hence we import salt inside
+        # this function as a workaround
+        import salt.client
+
         self.saltlocal = salt.client.LocalClient()
         self.node = node
         #saltlocal.cmd(self.id, 'cmd.run', [dsconfigCmd])
         #saltlocal.cmd(self.id, 'cp.get_file', [schemaFile, self.schemaFolder])
 
-        
-    def writeLdapPW(self):
-        saltlocal.cmd(self.node.id, 'cmd.run', ['mkdir -p /home/ldap'])
-        saltlocal.cmd(self.node.id, 'cmd.run', ['echo {0} > {1}'.format(self.node.ldapPass, self.node.ldapPassFn)])
-        saltlocal.cmd(self.node.id, 'cmd.run', ['chown ldap:ldap {}'.format(self.node.ldapPassFn)])
+    def write_ldap_pw(self):
+        self.saltlocal.cmd(self.node.id, 'cmd.run', ['mkdir -p /home/ldap'])
+        self.saltlocal.cmd(self.node.id, 'cmd.run', ['echo {0} > {1}'.format(self.node.ldapPass, self.node.ldapPassFn)])
+        self.saltlocal.cmd(self.node.id, 'cmd.run', ['chown ldap:ldap {}'.format(self.node.ldapPassFn)])
 
-    def deleteLdapPW(self):
-        saltlocal.cmd(self.node.id, 'cmd.run', ['rm -f {}'.format(self.node.ldapPassFn)])
-
+    def delete_ldap_pw(self):
+        self.saltlocal.cmd(self.node.id, 'cmd.run', ['rm -f {}'.format(self.node.ldapPassFn)])
 
     def add_ldap_schema(self):
         try:
@@ -46,6 +50,7 @@ class ldapSetup(object):
                 run('salt-cp {} {} {}'.format(self.node.id, schemaFile, self.schemaFolder))
         except:
             #self.logIt("Error adding schema")
+            pass
 
     def setup_opendj(self):
         self.add_ldap_schema()
@@ -53,28 +58,29 @@ class ldapSetup(object):
         setupPropsFN = os.path.join(self.node.ldapBaseFolder, 'opendj-setup.properties')
         run('salt-cp {} {} {}'.format(self.node.id, self.node.opendj_setup_properties_file_path, setupPropsFN))
         #change_ownership
-        saltlocal.cmd(self.node.id, 'cmd.run', ['chown -R ldap:ldap {}'.format(self.node.ldapBaseFolder)])
+        self.saltlocal.cmd(self.node.id, 'cmd.run', ['chown -R ldap:ldap {}'.format(self.node.ldapBaseFolder)])
         try:
             setupCmd = " ".join([self.node.ldapSetupCommand,
-                                      '--no-prompt',
-                                      '--cli',
-                                      '--propertiesFilePath',
-                                      setupPropsFN,
-                                      '--acceptLicense'])
-            saltlocal.cmd(self.node.id, 'cmd.run', ['su ldap -c {}'.format(setupCmd)])
+                                 '--no-prompt',
+                                 '--cli',
+                                 '--propertiesFilePath',
+                                 setupPropsFN,
+                                 '--acceptLicense'])
+            self.saltlocal.cmd(self.node.id, 'cmd.run', ['su ldap -c {}'.format(setupCmd)])
         except:
             # log "Error running LDAP setup script"
+            pass
 
         try:
-            saltlocal.cmd(self.node.id, 'cmd.run', ['su ldap -c {}'.format(self.node.ldapDsJavaPropCommand)])
+            self.saltlocal.cmd(self.node.id, 'cmd.run', ['su ldap -c {}'.format(self.node.ldapDsJavaPropCommand)])
         except:
             #log "Error running dsjavaproperties"
-
+            pass
 
     def configure_opendj(self):
         try:
             config_changes = [['set-global-configuration-prop', '--set', 'single-structural-objectclass-behavior:accept'],
-                              ['set-attribute-syntax-prop', '--syntax-name', '"Directory String"',   '--set', 'allow-zero-length-values:true'],
+                              ['set-attribute-syntax-prop', '--syntax-name', '"Directory String"', '--set', 'allow-zero-length-values:true'],
                               ['set-password-policy-prop', '--policy-name', '"Default Password Policy"', '--set', 'allow-pre-encoded-passwords:true'],
                               ['set-log-publisher-prop', '--publisher-name', '"File-Based Audit Logger"', '--set', 'enabled:true'],
                               ['create-backend', '--backend-name', 'site', '--set', 'base-dn:o=site', '--type local-db', '--set', 'enabled:true']]
@@ -90,10 +96,10 @@ class ldapSetup(object):
                                         '"%s"' % self.node.ldap_binddn,
                                         '--bindPasswordFile',
                                         self.node.ldapPassFn] + changes)
-                saltlocal.cmd(self.node.id, 'cmd.run', ['su ldap -c {}'.format(dsconfigCmd)])
+                self.saltlocal.cmd(self.node.id, 'cmd.run', ['su ldap -c {}'.format(dsconfigCmd)])
         except:
             #log "Error executing config changes"
-
+            pass
 
     def index_opendj(self):
         try:
@@ -104,7 +110,8 @@ class ldapSetup(object):
                     index_json = json.load(fp)
             except:
                 #log "bad jason file"
-    
+                pass
+
             if index_json:
                 for attrDict in index_json:
                     attr_name = attrDict['attribute']
@@ -133,12 +140,13 @@ class ldapSetup(object):
                                              '--trustAll',
                                              '--noPropertiesFile',
                                              '--no-prompt'])
-                        saltlocal.cmd(self.node.id, 'cmd.run', ['su ldap -c {}'.format(indexCmd)])
+                        self.saltlocal.cmd(self.node.id, 'cmd.run', ['su ldap -c {}'.format(indexCmd)])
             else:
                 # log 'NO indexes found %s' % self.node.indexJson
+                pass
         except:
             #log "Error occured during LDAP indexing"
-
+            pass
 
     def import_ldif(self):
         ldifFolder = '%s/ldif' % self.node.ldapBaseFolder
@@ -146,7 +154,7 @@ class ldapSetup(object):
             run('salt-cp {} {} {}'.format(self.node.id, ldif_file_fn, ldifFolder))
             ldif_file_fullpath = "%s/ldif/%s" % (self.node.ldapBaseFolder,
                                                  os.path.split(ldif_file_fn)[-1])
-            saltlocal.cmd(self.node.id, 'cmd.run', ['chown ldap:ldap {}'.format(ldif_file_fullpath)])
+            self.saltlocal.cmd(self.node.id, 'cmd.run', ['chown ldap:ldap {}'.format(ldif_file_fullpath)])
             importCmd = " ".join([self.node.importLdifCommand,
                                   '--ldifFile',
                                   ldif_file_fullpath,
@@ -162,11 +170,11 @@ class ldapSetup(object):
                                   self.node.ldapPassFn,
                                   '--append',
                                   '--trustAll'])
-            saltlocal.cmd(self.node.id, 'cmd.run', ['su ldap -c {}'.format(importCmd)])
+            self.saltlocal.cmd(self.node.id, 'cmd.run', ['su ldap -c {}'.format(importCmd)])
 
         run('salt-cp {} {} {}'.format(self.node.id, '{}/static/cache-refresh/o_site.ldif'.format(self.node.install_dir), ldifFolder))
         site_ldif_fn = "%s/o_site.ldif" % ldifFolder
-        saltlocal.cmd(self.node.id, 'cmd.run', ['chown ldap:ldap {}'.format(site_ldif_fn)])
+        self.saltlocal.cmd(self.node.id, 'cmd.run', ['chown ldap:ldap {}'.format(site_ldif_fn)])
         importCmd = " ".join([self.node.importLdifCommand,
                               '--ldifFile',
                               site_ldif_fn,
@@ -182,7 +190,7 @@ class ldapSetup(object):
                               self.node.ldapPassFn,
                               '--append',
                               '--trustAll'])
-        saltlocal.cmd(self.node.id, 'cmd.run', ['su ldap -c {}'.format(importCmd)])
+        self.saltlocal.cmd(self.node.id, 'cmd.run', ['su ldap -c {}'.format(importCmd)])
 
     #TODO : need to deside how to port this function
     def export_opendj_public_cert(self):
@@ -197,6 +205,7 @@ class ldapSetup(object):
             f.close()
         except:
             #log "Error reding OpenDJ truststore"
+            pass
 
         # Export public OpenDJ certificate
         self.run([self.node.keytoolCommand,
@@ -214,15 +223,15 @@ class ldapSetup(object):
         # Import OpenDJ certificate into java truststore
         self.logIt("Import OpenDJ certificate")
 
-        self.run(["/usr/bin/keytool", "-import", "-trustcacerts", "-alias", "%s_opendj" % self.hostname, \
-                  "-file", self.openDjCertFn, "-keystore", self.defaultTrustStoreFN, \
+        self.run(["/usr/bin/keytool", "-import", "-trustcacerts", "-alias", "%s_opendj" % self.hostname,
+                  "-file", self.openDjCertFn, "-keystore", self.defaultTrustStoreFN,
                   "-storepass", "changeit", "-noprompt"])
 
     def setup(self):
-        writeLdapPW()
-        setup_opendj()
-        configure_opendj()
-        index_opendj()
-        import_ldif()
-        deleteLdapPw()
-        export_opendj_public_cert()
+        self.write_ldap_pw()
+        # self.setup_opendj()
+        # self.configure_opendj()
+        # self.index_opendj()
+        # self.import_ldif()
+        self.delete_ldap_pw()
+        # self.export_opendj_public_cert()

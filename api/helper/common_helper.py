@@ -20,24 +20,27 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-import time
+import random
+import string
+import subprocess
+import sys
+
+# Default charset
+_DEFAULT_CHARS = "".join([string.ascii_uppercase,
+                          string.digits,
+                          string.lowercase])
 
 
-def register_minion(key):
-    """Registers a minion.
+def run(command, exit_on_error=True, cwd=None):
+    try:
+        return subprocess.check_output(command, stderr=subprocess.STDOUT,
+                                       shell=True, cwd=cwd)
+    except subprocess.CalledProcessError, e:
+        if exit_on_error:
+            sys.exit(e.returncode)
+        else:
+            raise
 
-    :param key: Key used by minion; typically a container ID (short format)
-    """
-    # salt supresses the flask logger, hence we import salt inside
-    # this function as a workaround
-    import salt.config
-    import salt.key
 
-    # wait for 10 seconds to make sure minion connected
-    # and sent its key to master
-    time.sleep(10)
-
-    # accepts minion's key
-    salt_opts = salt.config.client_config("/etc/salt/master")
-    key_store = salt.key.Key(salt_opts)
-    key_store.accept(key)
+def get_random_chars(size=12, chars=_DEFAULT_CHARS):
+    return ''.join(random.choice(chars) for _ in range(size))
