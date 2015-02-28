@@ -28,6 +28,8 @@ from flask_restful_swagger import swagger
 
 from api.database import db
 from api.helper.model_helper import LdapModelHelper
+from api.helper.docker_helper import remove_container
+from api.helper.salt_helper import unregister_minion
 from api.reqparser import node_reqparser
 
 
@@ -96,6 +98,12 @@ class Node(Resource):
         node = db.get(node_id, "nodes")
 
         if node:
+            # remove container
+            remove_container(node.id)
+
+            # unregister minion
+            unregister_minion(node.id)
+
             # remove node
             db.delete(node_id, "nodes")
 

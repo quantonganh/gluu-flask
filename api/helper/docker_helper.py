@@ -199,3 +199,9 @@ def get_container_ip(container_id):
     :returns: Container's IP address.
     """
     return docker_client.inspect_container(container_id)["NetworkSettings"]["IPAddress"]
+
+
+def remove_container(container_id):
+    """Removes container.
+    """
+    return docker_client.remove_container(container_id, force=True)

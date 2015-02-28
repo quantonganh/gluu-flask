@@ -41,3 +41,19 @@ def register_minion(key):
     salt_opts = salt.config.client_config("/etc/salt/master")
     key_store = salt.key.Key(salt_opts)
     key_store.accept(key)
+
+
+def unregister_minion(key):
+    """Unregisters a minion.
+
+    :param key: Key used by minion; typically a container ID (short format)
+    """
+    # salt supresses the flask logger, hence we import salt inside
+    # this function as a workaround
+    import salt.config
+    import salt.key
+
+    # deletes minion's key
+    salt_opts = salt.config.client_config("/etc/salt/master")
+    key_store = salt.key.Key(salt_opts)
+    key_store.delete_key(key)
