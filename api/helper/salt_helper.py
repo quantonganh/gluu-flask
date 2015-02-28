@@ -35,6 +35,21 @@ def run(command, exit_on_error=True, cwd=None):
             raise
 
 
-def register_minion(node_id):
+def register_minion(key):
+    """Registers a minion.
+
+    :param key: Key used by minion; typically a container ID (short format)
+    """
+    # salt supresses the flask logger, hence we import salt inside
+    # this function as a workaround
+    import salt.config
+    import salt.key
+
+    # wait for 10 seconds to make sure minion connected
+    # and sent its key to master
     time.sleep(10)
-    run('salt-key -y -a {}'.format(node_id))
+
+    # accepts minion's key
+    salt_opts = salt.config.client_config("/etc/salt/master")
+    key_store = salt.key.Key(salt_opts)
+    key_store.accept(key)
