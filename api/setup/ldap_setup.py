@@ -60,10 +60,14 @@ class ldapSetup(object):
     def add_ldap_schema(self):
         try:
             # non-rendered schema files
-            schemaFiles = "api/templates/salt/ldap/opendj/schema/" \
-                          "{101-ox,77-customAttribute,96-eduperson}.ldif"
-            run('salt-cp {} {} {}'.format(self.node.id, schemaFiles,
-                                          self.node.schemaFolder))
+            schemaFiles = [
+                "api/templates/salt/ldap/opendj/schema/101-ox.ldif",
+                "api/templates/salt/ldap/opendj/schema/77-customAttributes.ldif",
+                "api/templates/salt/ldap/opendj/schema/96-eduperson.ldif",
+            ]
+            for schema in schemaFiles:
+                run('salt-cp {} {} {}'.format(self.node.id, schema,
+                                              self.node.schemaFolder))
 
             # rendered schema files
             with open("api/templates/salt/ldap/opendj/schema/100-user.ldif") as fp:
@@ -304,7 +308,7 @@ class ldapSetup(object):
 
     def setup(self):
         self.write_ldap_pw()
-        # self.setup_opendj()
+        self.setup_opendj()
         # self.configure_opendj()
         # self.index_opendj()
         # self.import_ldif()
