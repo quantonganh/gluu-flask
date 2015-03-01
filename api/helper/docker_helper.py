@@ -204,4 +204,10 @@ def get_container_ip(container_id):
 def remove_container(container_id):
     """Removes container.
     """
-    return docker_client.remove_container(container_id, force=True)
+    try:
+        return docker_client.remove_container(container_id, force=True)
+    except docker.errors.APIError as exc:
+        err_code = exc.response.status_code
+        if err_code == 404:
+            # container doesn't exist
+            pass

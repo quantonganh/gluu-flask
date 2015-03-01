@@ -68,13 +68,7 @@ def test_node_get_list_empty(app):
     assert actual_data == []
 
 
-def test_node_delete(app, db, cluster, ldap_node, monkeypatch):
-    monkeypatch.setattr(
-        "docker.client.Client.remove_container",
-        lambda cls, container, force: None,
-    )
-    monkeypatch.setattr("salt.key.Key.delete_key", lambda cls, match: "")
-
+def test_node_delete(app, db, cluster, ldap_node):
     db.persist(ldap_node, "nodes")
     cluster.add_node(ldap_node)
     db.persist(cluster, "clusters")

@@ -33,24 +33,6 @@ from api.helper.salt_helper import unregister_minion
 from api.reqparser import node_reqparser
 
 
-def get_node_object(node=''):
-    # DEPRECATED
-    from api.model import ldapNode
-    from api.model import oxauthNode
-    from api.model import oxtrustNode
-
-    node_map = {
-        'ldap': ldapNode,
-        'oxauth': oxauthNode,
-        'oxtrust': oxtrustNode,
-    }
-    if node in node_map:
-        node_obj = node_map[node]()
-    else:
-        node_obj = None
-    return node_obj
-
-
 class Node(Resource):
     @swagger.operation(
         notes='Gives a node info/state',
