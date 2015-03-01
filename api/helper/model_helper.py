@@ -80,7 +80,7 @@ class LdapModelHelper(object):
             # delay the remote execution
             # see https://github.com/saltstack/salt/issues/13561
             time.sleep(15)
-            ldap_setup = ldapSetup(self.node)
+            ldap_setup = ldapSetup(self.node, self.cluster)
             ldap_setup.setup()
 
             db.persist(self.node, "nodes")

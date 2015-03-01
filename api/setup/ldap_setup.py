@@ -23,42 +23,102 @@
 import json
 import os.path
 
-from ..helper.common_helper import run
+from api.helper.common_helper import run
+
 
 class ldapSetup(object):
-    def __init__(self, node):
+    def __init__(self, node, cluster):
         # salt supresses the flask logger, hence we import salt inside
         # this function as a workaround
         import salt.client
 
         self.saltlocal = salt.client.LocalClient()
         self.node = node
+        self.cluster = cluster
         #saltlocal.cmd(self.id, 'cmd.run', [dsconfigCmd])
         #saltlocal.cmd(self.id, 'cp.get_file', [schemaFile, self.schemaFolder])
 
     def write_ldap_pw(self):
-        self.saltlocal.cmd(self.node.id, 'cmd.run', ['mkdir -p /home/ldap'])
-        self.saltlocal.cmd(self.node.id, 'cmd.run', ['echo {0} > {1}'.format(self.node.ldapPass, self.node.ldapPassFn)])
-        self.saltlocal.cmd(self.node.id, 'cmd.run', ['chown ldap:ldap {}'.format(self.node.ldapPassFn)])
+        self.saltlocal.cmd(
+            self.node.id,
+            ["cmd.run", "cmd.run", "cmd.run"],
+            [
+                ["mkdir -p {}".format(os.path.dirname(self.node.ldapPassFn))],
+                ["echo {} > {}".format(self.node.ldapPass,
+                                       self.node.ldapPassFn)],
+                ["chown ldap:ldap {}".format(self.node.ldapPassFn)],
+            ],
+        )
 
     def delete_ldap_pw(self):
-        self.saltlocal.cmd(self.node.id, 'cmd.run', ['rm -f {}'.format(self.node.ldapPassFn)])
+        self.saltlocal.cmd(
+            self.node.id,
+            'cmd.run',
+            ['rm -f {}'.format(self.node.ldapPassFn)],
+        )
 
     def add_ldap_schema(self):
         try:
-            for schemaFile in self.node.schemaFiles:
-                run('salt-cp {} {} {}'.format(self.node.id, schemaFile, self.schemaFolder))
-        except:
-            #self.logIt("Error adding schema")
-            pass
+            # non-rendered schema files
+            schemaFiles = "api/templates/salt/ldap/opendj/schema/" \
+                          "{101-ox,77-customAttribute,96-eduperson}.ldif"
+            run('salt-cp {} {} {}'.format(self.node.id, schemaFiles,
+                                          self.node.schemaFolder))
+
+            # rendered schema files
+            with open("api/templates/salt/ldap/opendj/schema/100-user.ldif") as fp:
+                content = fp.read().format(inumOrgFN=self.cluster.inumOrgFN)
+                dest = os.path.join(self.node.schemaFolder, "100-user.ldif")
+                self.saltlocal.cmd(
+                    self.node.id,
+                    "cmd.run",
+                    ["echo '{}' > {}".format(content, dest)],
+                )
+        except Exception as exc:
+            print(exc)
+            raise
 
     def setup_opendj(self):
         self.add_ldap_schema()
-        # Copy opendj-setup.properties so user ldap can find it in /opt/opendj
-        setupPropsFN = os.path.join(self.node.ldapBaseFolder, 'opendj-setup.properties')
-        run('salt-cp {} {} {}'.format(self.node.id, self.node.opendj_setup_properties_file_path, setupPropsFN))
-        #change_ownership
-        self.saltlocal.cmd(self.node.id, 'cmd.run', ['chown -R ldap:ldap {}'.format(self.node.ldapBaseFolder)])
+
+        # opendj-setup.properties template source
+        setup_prop_tmpl = "api/templates/salt/ldap/opendj" \
+                          "/opendj-setup.properties"
+
+        # opendj-setup.properties template destination
+        setupPropsFN = os.path.join(self.node.ldapBaseFolder,
+                                    'opendj-setup.properties')
+
+        try:
+            with open(setup_prop_tmpl, "r") as fp:
+                content = fp.read().format(
+                    ldap_hostname=self.node.local_hostname,
+                    ldap_port=self.node.ldap_port,
+                    ldaps_port=self.node.ldaps_port,
+                    ldap_jmx_port=self.node.ldap_jmx_port,
+                    ldap_admin_port=self.node.ldap_admin_port,
+                    ldap_binddn=self.node.ldap_binddn,
+                    ldapPassFn=self.node.ldapPassFn,
+                )
+
+            # Copy opendj-setup.properties so user ldap can find it
+            # in /opt/opendj
+            self.saltlocal.cmd(
+                self.node.id,
+                "cmd.run",
+                ["echo '{}' > {}".format(content, setupPropsFN)],
+            )
+        except Exception as exc:
+            print(exc)
+            raise
+
+        # change_ownership
+        self.saltlocal.cmd(
+            self.node.id,
+            'cmd.run',
+            ['chown -R ldap:ldap {}'.format(self.node.ldapBaseFolder)],
+        )
+
         try:
             setupCmd = " ".join([self.node.ldapSetupCommand,
                                  '--no-prompt',
@@ -66,16 +126,31 @@ class ldapSetup(object):
                                  '--propertiesFilePath',
                                  setupPropsFN,
                                  '--acceptLicense'])
-            self.saltlocal.cmd(self.node.id, 'cmd.run', ['su ldap -c {}'.format(setupCmd)])
-        except:
-            # log "Error running LDAP setup script"
-            pass
 
-        try:
-            self.saltlocal.cmd(self.node.id, 'cmd.run', ['su ldap -c {}'.format(self.node.ldapDsJavaPropCommand)])
-        except:
-            #log "Error running dsjavaproperties"
-            pass
+            # FIXME:
+            #
+            # 1 - missing ``/opt/opendj/./config/config.ldif``
+            # 2 - missing ``/opt/opendj/config/java.properties``
+            self.saltlocal.cmd(
+                self.node.id,
+                'cmd.run',
+                ["su ldap -c 'cd /opt && {}'".format(setupCmd)],
+            )
+        except Exception as exc:
+            print(exc)
+            # log "Error running LDAP setup script"
+            raise
+
+        # try:
+        #     self.saltlocal.cmd(
+        #         self.node.id,
+        #         'cmd.run',
+        #         ['su ldap -c {}'.format(self.node.ldapDsJavaPropCommand)],
+        #     )
+        # except Exception as exc:
+        #     #log "Error running dsjavaproperties"
+        #     print(exc)
+        #     raise
 
     def configure_opendj(self):
         try:
