@@ -276,35 +276,30 @@ class ldapSetup(object):
         # Load password to acces OpenDJ truststore
         openDjPinFn = '%s/config/keystore.pin' % self.node.ldapBaseFolder
         openDjTruststoreFn = '%s/config/truststore' % self.node.ldapBaseFolder
-
-        openDjPin = None
-        try:
-            f = open(openDjPinFn)
-            openDjPin = f.read().splitlines()[0]
-            f.close()
-        except:
-            #log "Error reding OpenDJ truststore"
-            pass
-
+            
+        outd = self.saltlocal.cmd(self.node.id, 'cmd.run', ['cat {}'.format(openDjPinFn)])
+        openDjPin = outd[self.node.id].strip()
         # Export public OpenDJ certificate
-        self.run([self.node.keytoolCommand,
-                  '-exportcert',
-                  '-keystore',
-                  openDjTruststoreFn,
-                  '-storepass',
-                  openDjPin,
-                  '-file',
-                  self.node.openDjCertFn,
-                  '-alias',
-                  'server-cert',
-                  '-rfc'])
+        cmdsrt = ' '.join([self.node.keytoolCommand,
+                            '-exportcert',
+                            '-keystore',
+                            openDjTruststoreFn,
+                            '-storepass',
+                            openDjPin,
+                            '-file',
+                            self.node.openDjCertFn,
+                            '-alias',
+                            'server-cert',
+                            '-rfc'])
 
         # Import OpenDJ certificate into java truststore
-        self.logIt("Import OpenDJ certificate")
+        # log "Import OpenDJ certificate"
+        self.saltlocal.cmd(self.node.id, 'cmd.run', ['cat {}'.format(cmdsrt)])
 
-        self.run(["/usr/bin/keytool", "-import", "-trustcacerts", "-alias", "%s_opendj" % self.hostname,
-                  "-file", self.openDjCertFn, "-keystore", self.defaultTrustStoreFN,
-                  "-storepass", "changeit", "-noprompt"])
+        cmdstr = ' '.join(["/usr/bin/keytool", "-import", "-trustcacerts", "-alias", "%s_opendj" % self.hostname,
+                          "-file", self.openDjCertFn, "-keystore", self.defaultTrustStoreFN,
+                          "-storepass", "changeit", "-noprompt"])
+        self.saltlocal.cmd(self.node.id, 'cmd.run', ['cat {}'.format(cmdsrt)])
 
     def setup(self):
         self.write_ldap_pw()
