@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # The MIT License (MIT)
 #
-# Copyright (c) 2014 Gluu
+# Copyright (c) 2015 Gluu
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,6 +20,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import tempfile
 import time
 from random import randrange
 
@@ -29,11 +30,11 @@ from api.database import db
 from api.model import ldapNode
 from api.model import oxauthNode  # noqa
 from api.model import oxtrustNode  # noqa
-from api.helper.docker_helper import setup_container
-from api.helper.docker_helper import get_container_ip
+from api.helper.docker_helper import DockerHelper
 from api.helper.salt_helper import register_minion
 from api.helper.common_helper import get_random_chars
 from api.setup.ldap_setup import ldapSetup
+from api.log import create_file_logger
 
 
 class LdapModelHelper(object):
@@ -47,6 +48,10 @@ class LdapModelHelper(object):
         self.node.ldapPass = get_random_chars()
         self.node.name = "{}_{}_{}".format(self.image, self.cluster.id,
                                            randrange(101, 999))
+
+        self.logpath = tempfile.mkstemp()[1]
+        self.logger = create_file_logger(self.logpath)
+        self.docker = DockerHelper(logger=self.logger)
 
     @property
     def image(self):
@@ -63,8 +68,12 @@ class LdapModelHelper(object):
 
     @run_in_reactor
     def setup_node(self):
-        # TODO - This should be in a try/except, with logging for both creation and errors to access log, and just errors to error log.
-        cont_id = setup_container(self.name, self.image, self.dockerfile, self.salt_master_ipaddr)
+        # return
+        # TODO - This should be in a try/except, with logging for
+        # both creation and errors to access log, and just errors
+        # to error log.
+        cont_id = self.docker.setup_container(
+            self.name, self.image, self.dockerfile, self.salt_master_ipaddr)
 
         if cont_id:
             # container ID in short format
@@ -72,7 +81,7 @@ class LdapModelHelper(object):
 
             # register the container as minion
             register_minion(self.node.id)
-            container_ip = get_container_ip(self.node.id)
+            container_ip = self.docker.get_container_ip(self.node.id)
 
             self.node.local_hostname = container_ip
             self.node.ip = container_ip
@@ -80,7 +89,7 @@ class LdapModelHelper(object):
             # delay the remote execution
             # see https://github.com/saltstack/salt/issues/13561
             time.sleep(15)
-            ldap_setup = ldapSetup(self.node, self.cluster)
+            ldap_setup = ldapSetup(self.node, self.cluster, self.logger)
             ldap_setup.setup()
 
             db.persist(self.node, "nodes")
