@@ -1,0 +1,12 @@
+name=test-cluster-1
+description=test cluster
+hostname_ldap_cluster=cluster-ldap-1
+hostname_oxauth_cluster=cluster-oxauth-1
+hostname_oxtrust_cluster=cluster-oxtrust-1
+orgName=Gluu Federation
+orgShortName=Gluu
+countryCode=US
+city=Austin
+state=Texas
+admin_email=john@example.com
+ldaps_port=1363
