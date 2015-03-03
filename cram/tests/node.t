@@ -15,5 +15,25 @@ Create POST parameter string from params.txt
 Create a cluster, save ID
   $ ID=`echo $PAR | post $SERVER/cluster | jq -r .id`
 
-Create a node
-$ echo node_type=ldap\&cluster="$ID" | post $SERVER/node
+Create a node with invalid data
+  $ echo node_type=ldap | post $SERVER/node | jq -r .message
+  Cluster ID to which this node will be added
+
+  $ echo cluster=invalid-id | post $SERVER/node | jq -r .message
+  ldap | oxauth | oxtrust
+
+Delete all nodes
+  $ NODES=`get $SERVER/node | jq -a -r '.[] | .id'`
+  $ for i in $NODES
+  > do
+  >   delete $SERVER/node/$i
+  > done
+
+There should be no nodes left
+  $ get $SERVER/node
+  []
+
+  $ PAR2="cluster=$ID&node_type=ldap&"
+
+  $ echo $PAR2 | post $SERVER/node -i | head -n 1
+  HTTP/1.0 202 ACCEPTED
