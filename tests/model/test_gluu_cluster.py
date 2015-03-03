@@ -77,7 +77,13 @@ def test_cluster_remove_unsupported_node():
         cluster.remove_node(node)
 
 
-def test_cluster_update_fields(db, cluster):
+def test_cluster_set_fields(cluster):
     data = {"name": "hello"}
     cluster.set_fields(data)
     assert cluster.name == "hello"
+
+
+def test_cluster_set_none_fields(cluster):
+    data = {"random": None}
+    cluster.set_fields(data)
+    assert hasattr(cluster, "random") is False
