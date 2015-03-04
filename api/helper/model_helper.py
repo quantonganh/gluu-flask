@@ -49,7 +49,8 @@ class LdapModelHelper(object):
         self.node.name = "{}_{}_{}".format(self.image, self.cluster.id,
                                            randrange(101, 999))
 
-        self.logpath = tempfile.mkstemp()[1]
+        _, self.logpath = tempfile.mkstemp(suffix=".build.log",
+                                           prefix=self.image + "-")
         self.logger = create_file_logger(self.logpath)
         self.docker = DockerHelper(logger=self.logger)
 
