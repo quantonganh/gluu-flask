@@ -79,4 +79,4 @@ def test_node_delete(app, db, cluster, ldap_node):
 
 def test_node_delete_failed(app):
     resp = app.test_client().delete("/node/random-invalid-id")
-    assert resp.status_code == 204
+    assert resp.status_code == 404
