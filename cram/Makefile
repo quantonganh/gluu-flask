@@ -2,6 +2,8 @@
 #$(error Please set SALT_MASTER_IPADDR)
 #endif
 
+SERVER=localhost:8080
+
 usage:
 	@echo "Usage:"
 	@echo "'make get' to install the dependencies (apt-get & pip)"
@@ -12,14 +14,10 @@ get:
 	sudo pip install cram
 
 test:
-	@SERVER="localhost:8080" cram tests
-
-test2:
-	@SERVER="localhost:8080" cram tests-failing
+	@SERVER="$(SERVER)" cram tests
 
 echo:
 	@echo $(SALT_MASTER_IPADDR)
 
 clean:
 	@rm -rf tests/*.err
-	@rm -rf tests-failing/*.err
