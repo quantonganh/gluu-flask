@@ -28,7 +28,7 @@ from flask_restful_swagger import swagger
 
 from api.database import db
 from api.helper.model_helper import LdapModelHelper
-from api.helper.docker_helper import remove_container
+from api.helper.docker_helper import DockerHelper
 from api.helper.salt_helper import unregister_minion
 from api.reqparser import node_reqparser
 
@@ -86,7 +86,8 @@ class Node(Resource):
         if node:
             try:
                 # remove container
-                remove_container(node.id)
+                docker = DockerHelper()
+                docker.remove_container(node.id)
 
                 # unregister minion
                 unregister_minion(node.id)
@@ -226,6 +227,8 @@ status of the cluster node is available.""",
             #     logs.error("Error configuring salt minion for %s" % str(newLdapNode)
 
             ldap = LdapModelHelper(cluster, current_app.config["SALT_MASTER_IPADDR"])
+            # TODO: expose as JSON response?
+            print("build logpath: %s" % ldap.logpath)
             # note, ``setup_node`` is a long-running task, hence the return
             # value won't be available immediately
             ldap.setup_node()
