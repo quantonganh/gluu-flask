@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # The MIT License (MIT)
 #
-# Copyright (c) 2014 Gluu
+# Copyright (c) 2015 Gluu
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -70,6 +70,10 @@ class Node(Resource):
               "message": "Node deleted",
             },
             {
+                "code": 404,
+                "message": "Node not found",
+            },
+            {
                 "code": 500,
                 "message": "Internal Server Error",
             },
@@ -98,8 +102,7 @@ class Node(Resource):
             except Exception as exc:
                 print(exc)
         else:
-            return {}, 404
-
+            return {"code": 404, "message": "Node not found"}, 404
 
 
 class NodeList(Resource):
