@@ -78,7 +78,7 @@ def test_cluster_delete(app, db, cluster):
 
 def test_cluster_delete_failed(app):
     resp = app.test_client().delete("/cluster/random-invalid-id")
-    assert resp.status_code == 204
+    assert resp.status_code == 404
 
 
 def test_cluster_update(app, db, cluster):

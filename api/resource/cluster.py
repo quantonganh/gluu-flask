@@ -48,6 +48,10 @@ class Cluster(Resource):
                 "message": "Cluster deleted"
             },
             {
+                "code": 404,
+                "message": "Cluster not found",
+            },
+            {
                 "code": 500,
                 "message": "Internal Server Error",
             },
@@ -55,6 +59,10 @@ class Cluster(Resource):
         summary='TODO'
     )
     def delete(self, cluster_id):
+        cluster = db.get(cluster_id, "clusters")
+        if not cluster:
+            return {"code": 404, "message": "Cluster not found"}, 404
+
         db.delete(cluster_id, "clusters")
         return {}, 204
 
