@@ -80,20 +80,26 @@ class Node(Resource):
         node = db.get(node_id, "nodes")
 
         if node:
-            # remove container
-            remove_container(node.id)
+            try:
+                # remove container
+                remove_container(node.id)
 
-            # unregister minion
-            unregister_minion(node.id)
+                # unregister minion
+                unregister_minion(node.id)
 
-            # remove node
-            db.delete(node_id, "nodes")
+                # remove node
+                db.delete(node_id, "nodes")
 
-            # removes reference from cluster
-            cluster = db.get(node.cluster_id, "clusters")
-            cluster.remove_node(node)
-            db.update(cluster.id, cluster, "clusters")
-        return {}, 204
+                # removes reference from cluster
+                cluster = db.get(node.cluster_id, "clusters")
+                cluster.remove_node(node)
+                db.update(cluster.id, cluster, "clusters")
+                return {}, 204
+            except Exception as exc:
+                print(exc)
+        else:
+            return {}, 404
+
 
 
 class NodeList(Resource):
