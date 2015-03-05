@@ -1,6 +1,6 @@
-#ifndef SALT_MASTER_IPADDR
-#$(error Please set SALT_MASTER_IPADDR)
-#endif
+ifndef SALT_MASTER_IPADDR
+$(error Please export SALT_MASTER_IPADDR)
+endif
 
 usage:
 	@echo "Usage:"
@@ -12,14 +12,10 @@ get:
 	sudo pip install cram
 
 test:
-	@SERVER="localhost:8080" cram tests
-
-test2:
-	@SERVER="localhost:8080" cram tests-failing
+	@SERVER="$(SALT_MASTER_IPADDR):8080" cram tests
 
 echo:
 	@echo $(SALT_MASTER_IPADDR)
 
 clean:
 	@rm -rf tests/*.err
-	@rm -rf tests-failing/*.err

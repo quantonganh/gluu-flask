@@ -49,7 +49,8 @@ class LdapModelHelper(object):
         self.node.name = "{}_{}_{}".format(self.image, self.cluster.id,
                                            randrange(101, 999))
 
-        self.logpath = tempfile.mkstemp()[1]
+        _, self.logpath = tempfile.mkstemp(suffix=".build.log",
+                                           prefix=self.image + "-")
         self.logger = create_file_logger(self.logpath)
         self.docker = DockerHelper(logger=self.logger)
 
@@ -68,7 +69,6 @@ class LdapModelHelper(object):
 
     @run_in_reactor
     def setup_node(self):
-        # return
         # TODO - This should be in a try/except, with logging for
         # both creation and errors to access log, and just errors
         # to error log.
@@ -77,7 +77,7 @@ class LdapModelHelper(object):
 
         if cont_id:
             # container ID in short format
-            self.node.id = cont_id[:-(len(cont_id) - 12)]
+            self.node.id = cont_id[:12]
 
             # register the container as minion
             register_minion(self.node.id)

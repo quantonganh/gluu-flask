@@ -105,6 +105,23 @@ class Node(Resource):
         else:
             return {"code": 404, "message": "Node not found"}, 404
 
+        # remove container
+        docker = DockerHelper()
+        docker.remove_container(node.id)
+
+        # unregister minion
+        unregister_minion(node.id)
+
+        # remove node
+        db.delete(node_id, "nodes")
+
+        # removes reference from cluster, if any
+        cluster = db.get(node.cluster_id, "clusters")
+        if cluster:
+            cluster.remove_node(node)
+            db.update(cluster.id, cluster, "clusters")
+        return {}, 204
+
 
 class NodeList(Resource):
     @swagger.operation(
