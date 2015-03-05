@@ -19,6 +19,11 @@ $ sudo apt-get build-dep openssl
 
 Follow these instructions to install the Docker managed package for Ubuntu Trusty 14.04
 [http://docs.docker.com/installation/ubuntulinux](http://docs.docker.com/installation/ubuntulinux/#docker-maintained-package-installation)
+For the impatient, just type:
+
+```
+$ curl -sSL https://get.docker.com/ubuntu/ | sudo sh
+```
 
 ### Install salt-master
 
