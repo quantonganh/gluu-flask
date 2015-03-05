@@ -79,6 +79,10 @@ class LdapModelHelper(object):
             # container ID in short format
             self.node.id = cont_id[:12]
 
+            # wait for 10 seconds to make sure minion connected
+            # and sent its key to master
+            time.sleep(10)
+
             # register the container as minion
             register_minion(self.node.id)
             container_ip = self.docker.get_container_ip(self.node.id)
