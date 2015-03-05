@@ -101,7 +101,7 @@ class Node(Resource):
                 db.update(cluster.id, cluster, "clusters")
                 return {}, 204
             except Exception as exc:
-                print(exc)
+                print exc
         else:
             return {"code": 404, "message": "Node not found"}, 404
 
@@ -228,7 +228,7 @@ status of the cluster node is available.""",
 
             ldap = LdapModelHelper(cluster, current_app.config["SALT_MASTER_IPADDR"])
             # TODO: expose as JSON response?
-            print("build logpath: %s" % ldap.logpath)
+            print "build logpath: %s" % ldap.logpath
             # note, ``setup_node`` is a long-running task, hence the return
             # value won't be available immediately
             ldap.setup_node()

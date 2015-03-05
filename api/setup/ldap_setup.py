@@ -160,7 +160,7 @@ class ldapSetup(object):
         #     )
         # except Exception as exc:
         #     #log "Error running dsjavaproperties"
-        #     print(exc)
+        #     print exc
         #     raise
 
     def configure_opendj(self):
