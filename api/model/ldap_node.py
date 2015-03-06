@@ -125,3 +125,4 @@ class ldapNode(BaseModel):
         self.name = ''
         self.type = 'gluuopendj'
         self.cluster_name = cluster_name
+        self.defaultTrustStoreFN = '/usr/lib/jvm/java-7-openjdk-amd64/jre/lib/security/cacerts'

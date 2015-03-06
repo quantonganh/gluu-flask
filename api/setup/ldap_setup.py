@@ -123,11 +123,11 @@ class ldapSetup(object):
             raise
 
         # change_ownership
-        self.saltlocal.cmd(
-            self.node.id,
-            'cmd.run',
-            ['chown -R ldap:ldap {}'.format(self.node.ldapBaseFolder)],
-        )
+        #self.saltlocal.cmd(
+        #    self.node.id,
+        #    'cmd.run',
+        #    ['chown -R ldap:ldap {}'.format(self.node.ldapBaseFolder)],
+        #)
 
         try:
             setupCmd = " ".join([self.node.ldapSetupCommand,
@@ -137,31 +137,26 @@ class ldapSetup(object):
                                  '--propertiesFilePath',
                                  setupPropsFN,
                                  ])
-
-            # FIXME:
-            #
-            # 1 - missing ``/opt/opendj/./config/config.ldif``
-            # 2 - missing ``/opt/opendj/config/java.properties``
             self.saltlocal.cmd(
                 self.node.id,
                 'cmd.run',
-                ["su ldap -c 'cd /opt/opendj && {}'".format(setupCmd)],
+                ["{}".format(setupCmd)],
             )
         except Exception as exc:
             self.logger.error(exc)
             # log "Error running LDAP setup script"
             raise
 
-        # try:
-        #     self.saltlocal.cmd(
-        #         self.node.id,
-        #         'cmd.run',
-        #         ['su ldap -c {}'.format(self.node.ldapDsJavaPropCommand)],
-        #     )
-        # except Exception as exc:
-        #     #log "Error running dsjavaproperties"
-        #     print exc
-        #     raise
+        try:
+            self.saltlocal.cmd(
+                self.node.id,
+                'cmd.run',
+                [self.node.ldapDsJavaPropCommand],
+            )
+        except Exception as exc:
+            #log "Error running dsjavaproperties"
+            print exc
+            raise
 
     def configure_opendj(self):
         try:
@@ -182,7 +177,7 @@ class ldapSetup(object):
                                         '"%s"' % self.node.ldap_binddn,
                                         '--bindPasswordFile',
                                         self.node.ldapPassFn] + changes)
-                self.saltlocal.cmd(self.node.id, 'cmd.run', ['su ldap -c {}'.format(dsconfigCmd)])
+                self.saltlocal.cmd(self.node.id, 'cmd.run', [dsconfigCmd])
         except:
             #log "Error executing config changes"
             pass
@@ -226,7 +221,7 @@ class ldapSetup(object):
                                              '--trustAll',
                                              '--noPropertiesFile',
                                              '--no-prompt'])
-                        self.saltlocal.cmd(self.node.id, 'cmd.run', ['su ldap -c {}'.format(indexCmd)])
+                        self.saltlocal.cmd(self.node.id, 'cmd.run', [indexCmd])
             else:
                 # log 'NO indexes found %s' % self.node.indexJson
                 pass
@@ -256,7 +251,7 @@ class ldapSetup(object):
                                   self.node.ldapPassFn,
                                   '--append',
                                   '--trustAll'])
-            self.saltlocal.cmd(self.node.id, 'cmd.run', ['su ldap -c {}'.format(importCmd)])
+            self.saltlocal.cmd(self.node.id, 'cmd.run', [importCmd])
 
         run('salt-cp {} {} {}'.format(self.node.id, '{}/static/cache-refresh/o_site.ldif'.format(self.node.install_dir), ldifFolder))
         site_ldif_fn = "%s/o_site.ldif" % ldifFolder
@@ -276,9 +271,9 @@ class ldapSetup(object):
                               self.node.ldapPassFn,
                               '--append',
                               '--trustAll'])
-        self.saltlocal.cmd(self.node.id, 'cmd.run', ['su ldap -c {}'.format(importCmd)])
+        self.saltlocal.cmd(self.node.id, 'cmd.run', [importCmd])
 
-    #TODO : need to deside how to port this function
+
     def export_opendj_public_cert(self):
         # Load password to acces OpenDJ truststore
         openDjPinFn = '%s/config/keystore.pin' % self.node.ldapBaseFolder
@@ -301,18 +296,19 @@ class ldapSetup(object):
 
         # Import OpenDJ certificate into java truststore
         # log "Import OpenDJ certificate"
-        self.saltlocal.cmd(self.node.id, 'cmd.run', ['cat {}'.format(cmdsrt)])
+        self.saltlocal.cmd(self.node.id, 'cmd.run', [cmdsrt])
 
-        cmdstr = ' '.join(["/usr/bin/keytool", "-import", "-trustcacerts", "-alias", "%s_opendj" % self.hostname,
-                           "-file", self.openDjCertFn, "-keystore", self.defaultTrustStoreFN,
+        cmdstr = ' '.join(["/usr/bin/keytool", "-import", "-trustcacerts", "-alias", "{}_opendj".format(self.node.ldap_hostname),
+                           "-file", self.node.openDjCertFn, "-keystore", self.node.defaultTrustStoreFN,
                            "-storepass", "changeit", "-noprompt"])
-        self.saltlocal.cmd(self.node.id, 'cmd.run', ['cat {}'.format(cmdstr)])
+        self.saltlocal.cmd(self.node.id, 'cmd.run', [cmdstr])
+
 
     def setup(self):
         self.write_ldap_pw()
         self.setup_opendj()
-        # self.configure_opendj()
-        # self.index_opendj()
-        # self.import_ldif()
+        self.configure_opendj()
+        self.index_opendj()
+        self.import_ldif()
         self.delete_ldap_pw()
-        # self.export_opendj_public_cert()
+        self.export_opendj_public_cert()
