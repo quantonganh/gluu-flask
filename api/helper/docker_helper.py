@@ -134,11 +134,16 @@ class DockerHelper(object):
 
         if not self.image_exists("saltminion"):
             self.logger.info("building saltminion image")
+            # There must be a better way than to hard code every file one by one
             minion_file = "https://raw.githubusercontent.com/GluuFederation" \
                           "/gluu-docker/master/ubuntu/14.04/saltminion/minion"
+            minion_file_stub = "https://raw.githubusercontent.com/GluuFederation" \
+                          "/gluu-docker/master/ubuntu/14.04/saltminion/minion-stub"
+            docker_entrypoint = "https://raw.githubusercontent.com/GluuFederation" \
+                          "/gluu-docker/master/ubuntu/14.04/saltminion/docker-entrypoint.sh"
             dockerfile = "https://raw.githubusercontent.com/GluuFederation" \
                          "/gluu-docker/master/ubuntu/14.04/saltminion/Dockerfile"
-            files = [minion_file, dockerfile]
+            files = [minion_file, minion_file_stub, docker_entrypoint, dockerfile]
             build_dir = self.get_remote_files(*files)
             saved_minion = os.path.join(build_dir, os.path.basename(minion_file))
 
