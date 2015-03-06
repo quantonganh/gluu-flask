@@ -65,13 +65,7 @@ class ldapSetup(object):
     def add_ldap_schema(self):
         self.logger.info("copying LDAP schema files")
         try:
-            # non-rendered schema files
-            schemaFiles = [
-                "api/templates/salt/ldap/opendj/schema/101-ox.ldif",
-                "api/templates/salt/ldap/opendj/schema/77-customAttributes.ldif",
-                "api/templates/salt/ldap/opendj/schema/96-eduperson.ldif",
-            ]
-            for schema in schemaFiles:
+            for schema in self.node.schemaFiles:
                 run('salt-cp {} {} {}'.format(self.node.id, schema,
                                               self.node.schemaFolder))
 
@@ -91,16 +85,12 @@ class ldapSetup(object):
     def setup_opendj(self):
         self.add_ldap_schema()
 
-        # opendj-setup.properties template source
-        setup_prop_tmpl = "api/templates/salt/ldap/opendj" \
-                          "/opendj-setup.properties"
-
         # opendj-setup.properties template destination
         setupPropsFN = os.path.join(self.node.ldapBaseFolder,
                                     'opendj-setup.properties')
 
         try:
-            with open(setup_prop_tmpl, "r") as fp:
+            with open(self.node.ldap_setup_properties, "r") as fp:
                 content = fp.read().format(
                     ldap_hostname=self.node.local_hostname,
                     ldap_port=self.node.ldap_port,
@@ -113,6 +103,7 @@ class ldapSetup(object):
 
             # Copy opendj-setup.properties so user ldap can find it
             # in /opt/opendj
+            self.logger.info("copying opendj-setup.properties")
             self.saltlocal.cmd(
                 self.node.id,
                 "cmd.run",
@@ -137,6 +128,8 @@ class ldapSetup(object):
                                  '--propertiesFilePath',
                                  setupPropsFN,
                                  ])
+
+            self.logger.info("running opendj setup")
             self.saltlocal.cmd(
                 self.node.id,
                 'cmd.run',
@@ -148,6 +141,7 @@ class ldapSetup(object):
             raise
 
         try:
+            self.logger.info("running dsjavaproperties")
             self.saltlocal.cmd(
                 self.node.id,
                 'cmd.run',
@@ -155,43 +149,46 @@ class ldapSetup(object):
             )
         except Exception as exc:
             #log "Error running dsjavaproperties"
-            print exc
+            self.logger.error(exc)
             raise
 
     def configure_opendj(self):
+        config_changes = [
+            ['set-global-configuration-prop', '--set', 'single-structural-objectclass-behavior:accept'],
+            ['set-attribute-syntax-prop', '--syntax-name', '"Directory String"', '--set', 'allow-zero-length-values:true'],
+            ['set-password-policy-prop', '--policy-name', '"Default Password Policy"', '--set', 'allow-pre-encoded-passwords:true'],
+            ['set-log-publisher-prop', '--publisher-name', '"File-Based Audit Logger"', '--set', 'enabled:true'],
+            ['create-backend', '--backend-name', 'site', '--set', 'base-dn:o=site', '--type local-db', '--set', 'enabled:true'],
+        ]
+
         try:
-            config_changes = [['set-global-configuration-prop', '--set', 'single-structural-objectclass-behavior:accept'],
-                              ['set-attribute-syntax-prop', '--syntax-name', '"Directory String"', '--set', 'allow-zero-length-values:true'],
-                              ['set-password-policy-prop', '--policy-name', '"Default Password Policy"', '--set', 'allow-pre-encoded-passwords:true'],
-                              ['set-log-publisher-prop', '--publisher-name', '"File-Based Audit Logger"', '--set', 'enabled:true'],
-                              ['create-backend', '--backend-name', 'site', '--set', 'base-dn:o=site', '--type local-db', '--set', 'enabled:true']]
             for changes in config_changes:
                 dsconfigCmd = " ".join([self.node.ldapDsconfigCommand,
                                         '--trustAll',
                                         '--no-prompt',
                                         '--hostname',
-                                        self.node.ldap_hostname,
+                                        self.node.local_hostname,
                                         '--port',
                                         self.node.ldap_admin_port,
                                         '--bindDN',
                                         '"%s"' % self.node.ldap_binddn,
                                         '--bindPasswordFile',
                                         self.node.ldapPassFn] + changes)
+                self.logger.info("configuring opendj config changes: {}".format(dsconfigCmd))
                 self.saltlocal.cmd(self.node.id, 'cmd.run', [dsconfigCmd])
-        except:
+        except Exception as exc:
+            self.logger.error(exc)
             #log "Error executing config changes"
             pass
 
     def index_opendj(self):
         try:
-            # This json file contains a mapping of the required indexes.
-            # [ { "attribute": "inum", "type": "string", "index": ["equality"] }, ...}
             try:
                 with open(self.node.indexJson, 'r') as fp:
                     index_json = json.load(fp)
-            except:
-                #log "bad jason file"
-                pass
+            except Exception as exc:
+                self.logger.error(exc)
+                index_json = []
 
             if index_json:
                 for attrDict in index_json:
@@ -212,7 +209,7 @@ class ldapSetup(object):
                                              '--set',
                                              'index-entry-limit:4000',
                                              '--hostName',
-                                             self.node.ldap_hostname,
+                                             self.node.local_hostname,
                                              '--port',
                                              self.node.ldap_admin_port,
                                              '--bindDN',
@@ -242,7 +239,7 @@ class ldapSetup(object):
                                   '--backendID',
                                   'userRoot',
                                   '--hostname',
-                                  self.node.ldap_hostname,
+                                  self.node.local_hostname,
                                   '--port',
                                   self.node.ldap_admin_port,
                                   '--bindDN',
@@ -262,7 +259,7 @@ class ldapSetup(object):
                               '--backendID',
                               'site',
                               '--hostname',
-                              self.node.ldap_hostname,
+                              self.node.local_hostname,
                               '--port',
                               self.node.ldap_admin_port,
                               '--bindDN',
@@ -272,7 +269,6 @@ class ldapSetup(object):
                               '--append',
                               '--trustAll'])
         self.saltlocal.cmd(self.node.id, 'cmd.run', [importCmd])
-
 
     def export_opendj_public_cert(self):
         # Load password to acces OpenDJ truststore
@@ -298,17 +294,16 @@ class ldapSetup(object):
         # log "Import OpenDJ certificate"
         self.saltlocal.cmd(self.node.id, 'cmd.run', [cmdsrt])
 
-        cmdstr = ' '.join(["/usr/bin/keytool", "-import", "-trustcacerts", "-alias", "{}_opendj".format(self.node.ldap_hostname),
+        cmdstr = ' '.join(["/usr/bin/keytool", "-import", "-trustcacerts", "-alias", "{}_opendj".format(self.node.local_hostname),
                            "-file", self.node.openDjCertFn, "-keystore", self.node.defaultTrustStoreFN,
                            "-storepass", "changeit", "-noprompt"])
         self.saltlocal.cmd(self.node.id, 'cmd.run', [cmdstr])
-
 
     def setup(self):
         self.write_ldap_pw()
         self.setup_opendj()
         self.configure_opendj()
         self.index_opendj()
-        self.import_ldif()
-        self.delete_ldap_pw()
-        self.export_opendj_public_cert()
+        # self.import_ldif()
+        # self.delete_ldap_pw()
+        # self.export_opendj_public_cert()
