@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # The MIT License (MIT)
 #
-# Copyright (c) 2014 Gluu
+# Copyright (c) 2015 Gluu
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,17 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-import time
+
+
+def create_key_store():
+    # salt supresses the flask logger, hence we import salt inside
+    # this function as a workaround
+    import salt.config
+    import salt.key
+
+    salt_opts = salt.config.client_config("/etc/salt/master")
+    key_store = salt.key.Key(salt_opts)
+    return key_store
 
 
 def register_minion(key):
@@ -28,19 +38,9 @@ def register_minion(key):
 
     :param key: Key used by minion; typically a container ID (short format)
     """
-    # salt supresses the flask logger, hence we import salt inside
-    # this function as a workaround
-    import salt.config
-    import salt.key
-
-    # wait for 10 seconds to make sure minion connected
-    # and sent its key to master
-    time.sleep(10)
-
     # accepts minion's key
-    salt_opts = salt.config.client_config("/etc/salt/master")
-    key_store = salt.key.Key(salt_opts)
-    key_store.accept(key)
+    key_store = create_key_store()
+    return key_store.accept(key)
 
 
 def unregister_minion(key):
@@ -48,12 +48,6 @@ def unregister_minion(key):
 
     :param key: Key used by minion; typically a container ID (short format)
     """
-    # salt supresses the flask logger, hence we import salt inside
-    # this function as a workaround
-    import salt.config
-    import salt.key
-
     # deletes minion's key
-    salt_opts = salt.config.client_config("/etc/salt/master")
-    key_store = salt.key.Key(salt_opts)
-    key_store.delete_key(key)
+    key_store = create_key_store()
+    return key_store.delete_key(key)
