@@ -74,7 +74,8 @@ class ldapNode(BaseModel):
 
         self.local_hostname = ""
         self.ip = ""
-        self.ldap_setup_properties = './templates/opendj-setup.properties'
+        self.ldap_setup_properties = "api/templates/salt/ldap/opendj" \
+                                     "/opendj-setup.properties"
         self.openDjCertFn = '/etc/certs/opendj.crt'
         self.ldap_binddn = 'cn=directory manager'
         self.ldap_port = '1389'
@@ -92,10 +93,12 @@ class ldapNode(BaseModel):
         self.ldapPassFn = '/home/ldap/.pw'
         self.schemaFolder = "%s/template/config/schema" % self.ldapBaseFolder
         self.org_custom_schema = "%s/config/schema/100-user.ldif" % self.ldapBaseFolder
-        self.schemaFiles = ["%s/static/%s/96-eduperson.ldif" % (self.install_dir, self.ldap_type),
-                            "%s/static/%s/101-ox.ldif" % (self.install_dir, self.ldap_type),
-                            "%s/static/%s/77-customAttributes.ldif" % (self.install_dir, self.ldap_type),
-                            "%s/output/100-user.ldif" % self.install_dir]
+        self.schemaFiles = [
+            "api/templates/salt/ldap/opendj/schema/101-ox.ldif",
+            "api/templates/salt/ldap/opendj/schema/77-customAttributes.ldif",
+            "api/templates/salt/ldap/opendj/schema/96-eduperson.ldif",
+            "api/templates/salt/ldap/opendj/schema/100-user.ldif",
+        ]
         self.init_file = '%s/static/opendj/opendj' % self.install_dir
         self.ldap_start_script = '/etc/init.d/opendj'
 
@@ -126,3 +129,4 @@ class ldapNode(BaseModel):
         self.type = 'gluuopendj'
         self.cluster_name = cluster_name
         self.defaultTrustStoreFN = '/usr/lib/jvm/java-7-openjdk-amd64/jre/lib/security/cacerts'
+        self.indexJson = "api/templates/salt/ldap/opendj/opendj_index.json"
