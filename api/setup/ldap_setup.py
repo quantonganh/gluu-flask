@@ -50,7 +50,7 @@ class ldapSetup(object):
                 ["mkdir -p {}".format(os.path.dirname(self.node.ldapPassFn))],
                 ["echo {} > {}".format(self.node.ldapPass,
                                        self.node.ldapPassFn)],
-                ["chown ldap:ldap {}".format(self.node.ldapPassFn)],
+                #["chown ldap:ldap {}".format(self.node.ldapPassFn)],
             ],
         )
 
@@ -235,7 +235,7 @@ class ldapSetup(object):
             run('salt-cp {} {} {}'.format(self.node.id, ldif_file_fn, ldifFolder))
             ldif_file_fullpath = "%s/ldif/%s" % (self.node.ldapBaseFolder,
                                                  os.path.split(ldif_file_fn)[-1])
-            self.saltlocal.cmd(self.node.id, 'cmd.run', ['chown ldap:ldap {}'.format(ldif_file_fullpath)])
+            #self.saltlocal.cmd(self.node.id, 'cmd.run', ['chown ldap:ldap {}'.format(ldif_file_fullpath)])
             importCmd = " ".join([self.node.importLdifCommand,
                                   '--ldifFile',
                                   ldif_file_fullpath,
@@ -255,7 +255,7 @@ class ldapSetup(object):
 
         run('salt-cp {} {} {}'.format(self.node.id, '{}/static/cache-refresh/o_site.ldif'.format(self.node.install_dir), ldifFolder))
         site_ldif_fn = "%s/o_site.ldif" % ldifFolder
-        self.saltlocal.cmd(self.node.id, 'cmd.run', ['chown ldap:ldap {}'.format(site_ldif_fn)])
+        #self.saltlocal.cmd(self.node.id, 'cmd.run', ['chown ldap:ldap {}'.format(site_ldif_fn)])
         importCmd = " ".join([self.node.importLdifCommand,
                               '--ldifFile',
                               site_ldif_fn,
