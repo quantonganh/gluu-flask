@@ -152,6 +152,8 @@ class DockerHelper(object):
             # technically we need to replace the ``xxx.xxx.xxx.xxx`` part
             # with salt-master IP address, so any salt-minion can connect to it
             # properly.
+
+            # TODO: The alternative is in place, so this can be removed.
             content = ""
             with open(saved_minion, "r") as fp:
                 content = fp.read()
