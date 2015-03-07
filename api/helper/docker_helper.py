@@ -87,7 +87,8 @@ class DockerHelper(object):
         try:
             self.logger.info("creating container named {!r}".format(name))
             container = self.docker.create_container(image=image, name=name,
-                                                     detach=True, command=[])
+                                                     detach=True, command=[],
+                                                     environment={"SALT_MASTER_IPADDR": os.environ.get("SALT_MASTER_IPADDR")})
             container_id = container["Id"]
             self.logger.info("container named {!r} has been created".format(name))
         except docker.errors.APIError as exc:
