@@ -5,5 +5,5 @@ objectClass: top
 objectClass: ldapSubentry
 objectClass: subschema
 cn: schema
-objectClasses: ( ox-{inumOrgFN}-oid NAME 'ox-{inumOrgFN}'
+objectClasses: ( ox-%(inumOrgFN)s-oid NAME 'ox-%(inumOrgFN)s'
   SUP top STRUCTURAL MUST objectClass X-ORIGIN 'gluu' )

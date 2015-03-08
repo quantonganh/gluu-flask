@@ -20,6 +20,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import codecs
 import json
 import os.path
 
@@ -36,6 +37,7 @@ class ldapSetup(object):
         import salt.client
 
         self.saltlocal = salt.client.LocalClient()
+
         self.node = node
         self.cluster = cluster
         #saltlocal.cmd(self.id, 'cmd.run', [dsconfigCmd])
@@ -63,24 +65,39 @@ class ldapSetup(object):
         )
 
     def add_ldap_schema(self):
-        self.logger.info("copying LDAP schema files")
-        try:
-            for schema in self.node.schemaFiles:
-                run('salt-cp {} {} {}'.format(self.node.id, schema,
-                                              self.node.schemaFolder))
+        ctx = {
+            "inumOrgFN": self.cluster.inumOrgFN,
+        }
 
-            # rendered schema files
-            with open("api/templates/salt/ldap/opendj/schema/100-user.ldif") as fp:
-                content = fp.read().format(inumOrgFN=self.cluster.inumOrgFN)
-                dest = os.path.join(self.node.schemaFolder, "100-user.ldif")
-                self.saltlocal.cmd(
-                    self.node.id,
-                    "cmd.run",
-                    ["echo '{}' > {}".format(content, dest)],
-                )
-        except Exception as exc:
-            self.logger.error(exc)
-            raise
+        for schema_file in self.node.schemaFiles:
+            # render templates
+            rendered_content = ""
+
+            try:
+                with codecs.open(schema_file, "r", encoding="utf-8") as fp:
+                    rendered_content = fp.read() % ctx
+            except Exception as exc:
+                self.logger.error(exc)
+
+            try:
+                file_basename = os.path.basename(schema_file)
+
+                # save to temporary file
+                local_dest = os.path.join("api/templates/salt/_build",
+                                          file_basename)
+                with codecs.open(local_dest, "w", encoding="utf-8") as fp:
+                    fp.write(rendered_content)
+
+                # copy to minion
+                remote_dest = os.path.join(self.node.schemaFolder,
+                                           file_basename)
+                self.logger.info("copying {}".format(local_dest))
+                run("salt-cp {} {} {}".format(self.node.id, local_dest,
+                                              remote_dest))
+            except Exception as exc:
+                self.logger.error(exc)
+            finally:
+                os.unlink(local_dest)
 
     def setup_opendj(self):
         self.add_ldap_schema()
@@ -227,48 +244,104 @@ class ldapSetup(object):
             pass
 
     def import_ldif(self):
-        ldifFolder = '%s/ldif' % self.node.ldapBaseFolder
-        for ldif_file_fn in self.node.ldif_files:
-            run('salt-cp {} {} {}'.format(self.node.id, ldif_file_fn, ldifFolder))
-            ldif_file_fullpath = "%s/ldif/%s" % (self.node.ldapBaseFolder,
-                                                 os.path.split(ldif_file_fn)[-1])
-            self.saltlocal.cmd(self.node.id, 'cmd.run', ['chown ldap:ldap {}'.format(ldif_file_fullpath)])
-            importCmd = " ".join([self.node.importLdifCommand,
-                                  '--ldifFile',
-                                  ldif_file_fullpath,
-                                  '--backendID',
-                                  'userRoot',
-                                  '--hostname',
-                                  self.node.local_hostname,
-                                  '--port',
-                                  self.node.ldap_admin_port,
-                                  '--bindDN',
-                                  '"%s"' % self.node.ldap_binddn,
-                                  '-j',
-                                  self.node.ldapPassFn,
-                                  '--append',
-                                  '--trustAll'])
-            self.saltlocal.cmd(self.node.id, 'cmd.run', [importCmd])
+        # template's context
+        ctx = {
+            # FIXME: these keys are left-blank
+            # to avoid error for now; they will be
+            # populated eventually
+            "encoded_ox_ldap_pw": "",
+            "oxauth_client_id": "",
+            "oxauthClient_encoded_pw": "",
+            "encoded_ldap_pw": "",
 
-        run('salt-cp {} {} {}'.format(self.node.id, '{}/static/cache-refresh/o_site.ldif'.format(self.node.install_dir), ldifFolder))
-        site_ldif_fn = "%s/o_site.ldif" % ldifFolder
-        self.saltlocal.cmd(self.node.id, 'cmd.run', ['chown ldap:ldap {}'.format(site_ldif_fn)])
-        importCmd = " ".join([self.node.importLdifCommand,
-                              '--ldifFile',
-                              site_ldif_fn,
-                              '--backendID',
-                              'site',
-                              '--hostname',
-                              self.node.local_hostname,
-                              '--port',
-                              self.node.ldap_admin_port,
-                              '--bindDN',
-                              '"%s"' % self.node.ldap_binddn,
-                              '-j',
-                              self.node.ldapPassFn,
-                              '--append',
-                              '--trustAll'])
-        self.saltlocal.cmd(self.node.id, 'cmd.run', [importCmd])
+            "inumAppliance": self.cluster.inumAppliance,
+            "hostname": self.node.local_hostname,
+            "ldaps_port": self.node.ldaps_port,
+            "ldap_binddn": self.node.ldap_binddn,
+            "inumOrg": self.cluster.inumOrg,
+            "inumOrgFN": self.cluster.inumOrgFN,
+            "orgName": self.cluster.orgName,
+        }
+
+        ldifFolder = '%s/ldif' % self.node.ldapBaseFolder
+        self.saltlocal.cmd(
+            self.node.id,
+            "cmd.run",
+            ["mkdir -p {}".format(ldifFolder)]
+        )
+
+        for ldif_file in self.node.ldif_files:
+            # render templates
+            rendered_content = ""
+            try:
+                with codecs.open(ldif_file, "r", encoding="utf-8") as fp:
+                    rendered_content = fp.read() % ctx
+            except Exception as exc:
+                self.logger.error(exc)
+
+            try:
+                file_basename = os.path.basename(ldif_file)
+
+                # save to temporary file
+                local_dest = os.path.join("api/templates/salt/_build",
+                                          file_basename)
+                with codecs.open(local_dest, "w", encoding="utf-8") as fp:
+                    fp.write(rendered_content)
+
+                # copy to minion
+                remote_dest = os.path.join(ldifFolder, file_basename)
+                self.logger.info("copying {}".format(local_dest))
+                run("salt-cp {} {} {}".format(self.node.id, local_dest,
+                                              remote_dest))
+
+                # self.saltlocal.cmd(
+                #     self.node.id,
+                #     'cmd.run',
+                #     ['chown ldap:ldap {}'.format(remote_dest)],
+                # )
+
+                if file_basename != "o_site.ldif":
+                    importCmd = " ".join([
+                        self.node.importLdifCommand,
+                        '--ldifFile',
+                        remote_dest,
+                        '--backendID',
+                        'userRoot',
+                        '--hostname',
+                        self.node.local_hostname,
+                        '--port',
+                        self.node.ldap_admin_port,
+                        '--bindDN',
+                        '"%s"' % self.node.ldap_binddn,
+                        '-j',
+                        self.node.ldapPassFn,
+                        '--append',
+                        '--trustAll',
+                    ])
+                else:
+                    importCmd = " ".join([
+                        self.node.importLdifCommand,
+                        '--ldifFile',
+                        remote_dest,
+                        '--backendID',
+                        'site',
+                        '--hostname',
+                        self.node.local_hostname,
+                        '--port',
+                        self.node.ldap_admin_port,
+                        '--bindDN',
+                        '"%s"' % self.node.ldap_binddn,
+                        '-j',
+                        self.node.ldapPassFn,
+                        '--append',
+                        '--trustAll',
+                    ])
+                self.saltlocal.cmd(self.node.id, 'cmd.run', [importCmd])
+            except Exception as exc:
+                self.logger.error(exc)
+            finally:
+                # remove temporary file
+                os.unlink(local_dest)
 
     def export_opendj_public_cert(self):
         # Load password to acces OpenDJ truststore
@@ -303,7 +376,13 @@ class ldapSetup(object):
         self.write_ldap_pw()
         self.setup_opendj()
         self.configure_opendj()
+
+        # FIXME: sometime, salt command returns error about
+        #        unable to connect to port 4444
         self.index_opendj()
-        # self.import_ldif()
+
+        # FIXME: error on importing ldif, for example there's an error message
+        #        that says I/O error occurred while opening the LDIF stream
+        self.import_ldif()
         # self.delete_ldap_pw()
         # self.export_opendj_public_cert()
