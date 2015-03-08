@@ -74,7 +74,7 @@ class ldapNode(BaseModel):
 
         self.local_hostname = ""
         self.ip = ""
-        self.ldap_setup_properties = "api/templates/salt/ldap/opendj" \
+        self.ldap_setup_properties = "api/templates/salt/opendj" \
                                      "/opendj-setup.properties"
         self.openDjCertFn = '/etc/certs/opendj.crt'
         self.ldap_binddn = 'cn=directory manager'
@@ -94,10 +94,10 @@ class ldapNode(BaseModel):
         self.schemaFolder = "%s/template/config/schema" % self.ldapBaseFolder
         self.org_custom_schema = "%s/config/schema/100-user.ldif" % self.ldapBaseFolder
         self.schemaFiles = [
-            "api/templates/salt/ldap/opendj/schema/101-ox.ldif",
-            "api/templates/salt/ldap/opendj/schema/77-customAttributes.ldif",
-            "api/templates/salt/ldap/opendj/schema/96-eduperson.ldif",
-            "api/templates/salt/ldap/opendj/schema/100-user.ldif",
+            "api/templates/salt/opendj/schema/101-ox.ldif",
+            "api/templates/salt/opendj/schema/77-customAttributes.ldif",
+            "api/templates/salt/opendj/schema/96-eduperson.ldif",
+            "api/templates/salt/opendj/schema/100-user.ldif",
         ]
         self.init_file = '%s/static/opendj/opendj' % self.install_dir
         self.ldap_start_script = '/etc/init.d/opendj'
@@ -106,27 +106,30 @@ class ldapNode(BaseModel):
         self.opensslCommand = '/usr/bin/openssl'
 
         self.outputFolder = '/tmp'
-        self.ldif_base = '%s/base.ldif' % self.outputFolder
-        self.ldif_appliance = '%s/appliance.ldif' % self.outputFolder
-        self.ldif_attributes = '%s/attributes.ldif' % self.outputFolder
-        self.ldif_scopes = '%s/scopes.ldif' % self.outputFolder
-        self.ldif_clients = '%s/clients.ldif' % self.outputFolder
-        self.ldif_people = '%s/people.ldif' % self.outputFolder
-        self.ldif_groups = '%s/groups.ldif' % self.outputFolder
-        self.ldif_site = '%s/static/cache-refresh/o_site.ldif' % self.install_dir
-        self.ldif_scripts = '%s/scripts.ldif' % self.outputFolder
-        self.ldif_files = [self.ldif_base,
-                           self.ldif_appliance,
-                           self.ldif_attributes,
-                           self.ldif_scopes,
-                           self.ldif_clients,
-                           self.ldif_people,
-                           self.ldif_groups,
-                           self.ldif_site,
-                           self.ldif_scripts]
+        self.ldif_base = 'api/templates/salt/opendj/ldif/base.ldif'
+        self.ldif_appliance = 'api/templates/salt/opendj/ldif/appliance.ldif'
+        self.ldif_attributes = 'api/templates/salt/opendj/ldif/attributes.ldif'
+        self.ldif_scopes = 'api/templates/salt/opendj/ldif/scopes.ldif'
+        self.ldif_clients = 'api/templates/salt/opendj/ldif/clients.ldif'
+        self.ldif_people = 'api/templates/salt/opendj/ldif/people.ldif'
+        self.ldif_groups = 'api/templates/salt/opendj/ldif/groups.ldif'
+        self.ldif_site = 'api/templates/salt/opendj/ldif/o_site.ldif'
+        self.ldif_scripts = 'api/templates/salt/opendj/ldif/scripts.ldif'
+        self.ldif_files = [
+            self.ldif_base,
+            self.ldif_appliance,
+            self.ldif_attributes,
+            self.ldif_scopes,
+            self.ldif_clients,
+            self.ldif_people,
+            self.ldif_groups,
+            self.ldif_site,
+            self.ldif_scripts,
+        ]
+
         self.id = ''
         self.name = ''
         self.type = 'gluuopendj'
         self.cluster_name = cluster_name
         self.defaultTrustStoreFN = '/usr/lib/jvm/java-7-openjdk-amd64/jre/lib/security/cacerts'
-        self.indexJson = "api/templates/salt/ldap/opendj/opendj_index.json"
+        self.indexJson = "api/templates/salt/opendj/opendj_index.json"

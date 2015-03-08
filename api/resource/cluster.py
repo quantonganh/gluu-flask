@@ -158,16 +158,39 @@ class Cluster(Resource):
                 "dataType": 'string',
                 "paramType": "form"
             },
+            # {
+            #     "name": "ldaps_port",
+            #     "description": "Hostname to use for the ldaps service for respective hostname_ldap_cluster",
+            #     "required": True,
+            #     "allowMultiple": False,
+            #     "dataType": 'string',
+            #     "paramType": "form"
+            # },
             {
-                "name": "ldaps_port",
-                "description": "Hostname to use for the ldaps service for respective hostname_ldap_cluster",
+                "name": "inumOrg",
+                "description": "Unique identifier for domain",
                 "required": True,
                 "allowMultiple": False,
                 "dataType": 'string',
                 "paramType": "form"
-            }
+            },
+            {
+                "name": "inumOrgFN",
+                "description": "Unique organization identifier sans special characters",
+                "required": True,
+                "allowMultiple": False,
+                "dataType": 'string',
+                "paramType": "form"
+            },
+            {
+                "name": "inumAppliance",
+                "description": "Unique cluster identifier for cluster",
+                "required": True,
+                "allowMultiple": False,
+                "dataType": 'string',
+                "paramType": "form"
+            },
         ],
-
         responseMessages=[
             {
                 "code": 200,
@@ -315,9 +338,33 @@ class ClusterList(Resource):
                 "dataType": 'string',
                 "paramType": "form"
             },
+            # {
+            #     "name": "ldaps_port",
+            #     "description": "Hostname to use for the ldaps service for respective hostname_ldap_cluster",
+            #     "required": True,
+            #     "allowMultiple": False,
+            #     "dataType": 'string',
+            #     "paramType": "form"
+            # },
             {
-                "name": "ldaps_port",
-                "description": "Hostname to use for the ldaps service for respective hostname_ldap_cluster",
+                "name": "inumOrg",
+                "description": "Unique identifier for domain",
+                "required": True,
+                "allowMultiple": False,
+                "dataType": 'string',
+                "paramType": "form"
+            },
+            {
+                "name": "inumOrgFN",
+                "description": "Unique organization identifier sans special characters",
+                "required": True,
+                "allowMultiple": False,
+                "dataType": 'string',
+                "paramType": "form"
+            },
+            {
+                "name": "inumAppliance",
+                "description": "Unique cluster identifier for cluster",
                 "required": True,
                 "allowMultiple": False,
                 "dataType": 'string',

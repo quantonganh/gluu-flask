@@ -1,0 +1,32 @@
+[
+    {
+        "attribute": "inum",
+        "type": "string",
+        "index": ["equality"]
+    },
+
+    {
+        "attribute": "uniqueIdentifier",
+        "type": "string",
+        "index": ["equality"]
+    },
+
+    {
+        "attribute": "oxID",
+        "type": "string",
+        "index": ["equality"]
+    },
+
+    {
+        "attribute": "lastModifiedTime",
+        "type": "date",
+        "index": ["ordering"]
+    },
+
+    {
+        "attribute": "oxAuthExpiration",
+        "type": "date",
+        "index": ["ordering"]
+    }
+
+]

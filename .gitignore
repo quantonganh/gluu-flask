@@ -53,3 +53,4 @@ gluu-flask.iml
 # exclude data
 db
 dbtest
+api/templates/salt/_build
