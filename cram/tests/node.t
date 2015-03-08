@@ -33,6 +33,16 @@ There should be no nodes left
   $ get $SERVER/node
   []
 
+Get invalid data
+  $ get $SERVER/node/random-invalid-id -i | head -n 1
+  HTTP/1.0 404 NOT FOUND
+
+  $ get $SERVER/node/random-invalid-id | jq -r .code
+  404
+
+  $ get $SERVER/node/random-invalid-id | jq -r .message
+  Node not found
+
   $ PAR2="cluster=$ID&node_type=ldap&"
 
   $ echo $PAR2 | post $SERVER/node -i | head -n 1
