@@ -102,7 +102,8 @@ class ldapNode(BaseModel):
         self.init_file = '%s/static/opendj/opendj' % self.install_dir
         self.ldap_start_script = '/etc/init.d/opendj'
 
-        self.keytoolCommand = '/usr/java/latest/bin/keytool'
+        # self.keytoolCommand = '/usr/java/latest/bin/keytool'
+        self.keytoolCommand = '/usr/bin/keytool'
         self.opensslCommand = '/usr/bin/openssl'
 
         self.outputFolder = '/tmp'

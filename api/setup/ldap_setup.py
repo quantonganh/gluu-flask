@@ -23,6 +23,7 @@
 import codecs
 import json
 import os.path
+import tempfile
 
 from api.helper.common_helper import run
 from api.log import create_file_logger
@@ -31,6 +32,7 @@ from api.log import create_file_logger
 class ldapSetup(object):
     def __init__(self, node, cluster, logger=None):
         self.logger = logger or create_file_logger()
+        self.build_dir = tempfile.mkdtemp()
 
         # salt supresses the flask logger, hence we import salt inside
         # this function as a workaround
@@ -47,7 +49,11 @@ class ldapSetup(object):
         self.logger.info("writing temporary LDAP password")
         self.saltlocal.cmd(
             self.node.id,
-            ["cmd.run", "cmd.run", "cmd.run"],
+            [
+                "cmd.run",
+                "cmd.run",
+                # "cmd.run",
+            ],
             [
                 ["mkdir -p {}".format(os.path.dirname(self.node.ldapPassFn))],
                 ["echo {} > {}".format(self.node.ldapPass,
@@ -83,8 +89,7 @@ class ldapSetup(object):
                 file_basename = os.path.basename(schema_file)
 
                 # save to temporary file
-                local_dest = os.path.join("api/templates/salt/_build",
-                                          file_basename)
+                local_dest = os.path.join(self.build_dir, file_basename)
                 with codecs.open(local_dest, "w", encoding="utf-8") as fp:
                     fp.write(rendered_content)
 
@@ -128,7 +133,6 @@ class ldapSetup(object):
             )
         except Exception as exc:
             self.logger.error(exc)
-            raise
 
         # change_ownership
         #self.saltlocal.cmd(
@@ -153,9 +157,7 @@ class ldapSetup(object):
                 ["{}".format(setupCmd)],
             )
         except Exception as exc:
-            self.logger.error(exc)
-            # log "Error running LDAP setup script"
-            raise
+            self.logger.error("error running LDAP setup script: %s" % exc)
 
         try:
             self.logger.info("running dsjavaproperties")
@@ -165,9 +167,7 @@ class ldapSetup(object):
                 [self.node.ldapDsJavaPropCommand],
             )
         except Exception as exc:
-            #log "Error running dsjavaproperties"
-            self.logger.error(exc)
-            raise
+            self.logger.error("error running dsjavaproperties: %s" % exc)
 
     def configure_opendj(self):
         config_changes = [
@@ -194,9 +194,7 @@ class ldapSetup(object):
                 self.logger.info("configuring opendj config changes: {}".format(dsconfigCmd))
                 self.saltlocal.cmd(self.node.id, 'cmd.run', [dsconfigCmd])
         except Exception as exc:
-            self.logger.error(exc)
-            #log "Error executing config changes"
-            pass
+            self.logger.error("error executing config changes: %s" % exc)
 
     def index_opendj(self):
         try:
@@ -211,8 +209,9 @@ class ldapSetup(object):
                 for attrDict in index_json:
                     attr_name = attrDict['attribute']
                     index_types = attrDict['index']
+
                     for index_type in index_types:
-                        # log "Creating %s index for attribute %s" % (index_type, attr_name)
+                        self.logger.info("creating %s index for attribute %s" % (index_type, attr_name))
                         indexCmd = " ".join([self.node.ldapDsconfigCommand,
                                              'create-local-db-index',
                                              '--backend-name',
@@ -237,11 +236,9 @@ class ldapSetup(object):
                                              '--no-prompt'])
                         self.saltlocal.cmd(self.node.id, 'cmd.run', [indexCmd])
             else:
-                # log 'NO indexes found %s' % self.node.indexJson
-                pass
-        except:
-            #log "Error occured during LDAP indexing"
-            pass
+                self.logger.warn("no indexes found %s" % self.node.indexJson)
+        except Exception as exc:
+            self.logger.error("error occured during LDAP indexing: %s" % exc)
 
     def import_ldif(self):
         # template's context
@@ -283,8 +280,7 @@ class ldapSetup(object):
                 file_basename = os.path.basename(ldif_file)
 
                 # save to temporary file
-                local_dest = os.path.join("api/templates/salt/_build",
-                                          file_basename)
+                local_dest = os.path.join(self.build_dir, file_basename)
                 with codecs.open(local_dest, "w", encoding="utf-8") as fp:
                     fp.write(rendered_content)
 
@@ -348,9 +344,21 @@ class ldapSetup(object):
         openDjPinFn = '%s/config/keystore.pin' % self.node.ldapBaseFolder
         openDjTruststoreFn = '%s/config/truststore' % self.node.ldapBaseFolder
 
-        outd = self.saltlocal.cmd(self.node.id, 'cmd.run', ['cat {}'.format(openDjPinFn)])
-        openDjPin = outd[self.node.id].strip()
+        # outd = self.saltlocal.cmd(self.node.id, 'cmd.run', ['cat {}'.format(openDjPinFn)])
+        # openDjPin = outd[self.node.id].strip()
+        openDjPin = "`cat {}`".format(openDjPinFn)
+
+        self.saltlocal.cmd(
+            self.node.id,
+            ["cmd.run", "cmd.run"],
+            [
+                ["mkdir -p {}".format(os.path.dirname(self.node.openDjCertFn))],
+                ["touch {}".format(self.node.openDjCertFn)],
+            ],
+        )
+
         # Export public OpenDJ certificate
+        self.logger.info("exporting OpenDJ certificate")
         cmdsrt = ' '.join([self.node.keytoolCommand,
                            '-exportcert',
                            '-keystore',
@@ -362,29 +370,29 @@ class ldapSetup(object):
                            '-alias',
                            'server-cert',
                            '-rfc'])
-
-        # Import OpenDJ certificate into java truststore
-        # log "Import OpenDJ certificate"
         self.saltlocal.cmd(self.node.id, 'cmd.run', [cmdsrt])
 
-        cmdstr = ' '.join(["/usr/bin/keytool", "-import", "-trustcacerts", "-alias", "{}_opendj".format(self.node.local_hostname),
-                           "-file", self.node.openDjCertFn, "-keystore", self.node.defaultTrustStoreFN,
-                           "-storepass", "changeit", "-noprompt"])
+        # Import OpenDJ certificate into java truststore
+        cmdstr = ' '.join([
+            "/usr/bin/keytool", "-import", "-trustcacerts", "-alias",
+            "{}_opendj".format(self.node.local_hostname),
+            "-file", self.node.openDjCertFn,
+            "-keystore", self.node.defaultTrustStoreFN,
+            "-storepass", "changeit", "-noprompt",
+        ])
+        self.logger.info("importing OpenDJ certificate into Java truststore")
         self.saltlocal.cmd(self.node.id, 'cmd.run', [cmdstr])
 
     def setup(self):
         self.write_ldap_pw()
         self.setup_opendj()
         self.configure_opendj()
-
         # FIXME: sometime, salt command returns error about
         #        unable to connect to port 4444
         self.index_opendj()
-
         self.import_ldif()
+        self.export_opendj_public_cert()
 
         # FIXME: deleting temporary LDAP password file raises error
         # in importing
         # self.delete_ldap_pw()
-
-        # self.export_opendj_public_cert()
