@@ -383,6 +383,14 @@ class ldapSetup(object):
 
         # FIXME: error on importing ldif, for example there's an error message
         #        that says I/O error occurred while opening the LDIF stream
+
+        # FIXME: importing o_site.ldif
+        # - An error occurred while trying to decode the response from the
+        #   server:\nNone of the Directory Server backends are configured with
+        #   the requested\nbackend ID or base DNs that include the specified
+        #   branches
         self.import_ldif()
+
+        # FIXME: deleting temporary LDAP password file raises error in importing
         # self.delete_ldap_pw()
         # self.export_opendj_public_cert()
