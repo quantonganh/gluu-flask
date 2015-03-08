@@ -81,6 +81,9 @@ class LdapModelHelper(object):
 
             # wait for 10 seconds to make sure minion connected
             # and sent its key to master
+
+            # There must be a way around this
+            print "Sleeping for 10 seconds"
             time.sleep(10)
 
             # register the container as minion
@@ -92,6 +95,9 @@ class LdapModelHelper(object):
 
             # delay the remote execution
             # see https://github.com/saltstack/salt/issues/13561
+
+            # There must be a way around this
+            print "Sleeping for 15 seconds"
             time.sleep(15)
             ldap_setup = ldapSetup(self.node, self.cluster, self.logger)
             ldap_setup.setup()
