@@ -99,6 +99,7 @@ class LdapModelHelper(object):
             # There must be a way around this
             print "Sleeping for 15 seconds"
             time.sleep(15)
+            print "Continuing"
             ldap_setup = ldapSetup(self.node, self.cluster, self.logger)
             ldap_setup.setup()
 
