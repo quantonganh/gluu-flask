@@ -148,19 +148,7 @@ class DockerHelper(object):
             build_dir = self.get_remote_files(*files)
             saved_minion = os.path.join(build_dir, os.path.basename(minion_file))
 
-            # There's a line in minion file that says ``master: xxx.xxx.xxx.xxx``
-            # technically we need to replace the ``xxx.xxx.xxx.xxx`` part
-            # with salt-master IP address, so any salt-minion can connect to it
-            # properly.
-
-            # TODO: The alternative is in place, so this can be removed.
-            content = ""
-            with open(saved_minion, "r") as fp:
-                content = fp.read()
-
-            new_content = content.format(SALT_MASTER_IPADDR=salt_master_ipaddr)
-            with open(saved_minion, "w") as fp:
-                fp.write(new_content)
+            #removed, details https://github.com/GluuFederation/gluu-flask/issues/5
 
             build_succeed = self.build_image(build_dir, "saltminion")
             shutil.rmtree(build_dir)
