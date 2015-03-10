@@ -384,15 +384,16 @@ class ldapSetup(object):
         self.saltlocal.cmd(self.node.id, 'cmd.run', [cmdstr])
 
     def setup(self):
+        self.logger.info("LDAP setup is started")
         self.write_ldap_pw()
         self.setup_opendj()
-        self.configure_opendj()
+
         # FIXME: sometime, salt command returns error about
         #        unable to connect to port 4444
+        self.configure_opendj()
+
         self.index_opendj()
         self.import_ldif()
         self.export_opendj_public_cert()
-
-        # FIXME: deleting temporary LDAP password file raises error
-        # in importing
-        # self.delete_ldap_pw()
+        self.delete_ldap_pw()
+        self.logger.info("LDAP setup is finished")
