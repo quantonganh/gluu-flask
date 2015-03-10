@@ -33,6 +33,7 @@ from api.model import oxtrustNode  # noqa
 from api.helper.docker_helper import DockerHelper
 from api.helper.salt_helper import register_minion
 from api.helper.common_helper import get_random_chars
+from api.helper.common_helper import run
 from api.setup.ldap_setup import ldapSetup
 from api.log import create_file_logger
 
@@ -106,3 +107,12 @@ class LdapModelHelper(object):
             db.persist(self.node, "nodes")
             self.cluster.add_node(self.node)
             db.update(self.cluster.id, self.cluster, "clusters")
+
+
+def stop_ldap(node):
+    try:
+        run("salt {} cmd.run '{}/bin/stop-ds'".format(node.id, node.ldapBaseFolder))
+    except SystemExit as exc:
+        if exc.code == 2:
+            # executable may not exist or minion is unreachable
+            pass

@@ -28,6 +28,7 @@ from flask_restful_swagger import swagger
 
 from api.database import db
 from api.helper.model_helper import LdapModelHelper
+from api.helper.model_helper import stop_ldap
 from api.helper.docker_helper import DockerHelper
 from api.helper.salt_helper import unregister_minion
 from api.reqparser import node_reqparser
@@ -83,27 +84,11 @@ class Node(Resource):
     def delete(self, node_id):
         node = db.get(node_id, "nodes")
 
-        if node:
-            try:
-                # remove container
-                docker = DockerHelper()
-                docker.remove_container(node.id)
-
-                # unregister minion
-                unregister_minion(node.id)
-
-                # remove node
-                db.delete(node_id, "nodes")
-
-                # removes reference from cluster
-                cluster = db.get(node.cluster_id, "clusters")
-                cluster.remove_node(node)
-                db.update(cluster.id, cluster, "clusters")
-                return {}, 204
-            except Exception as exc:
-                print exc
-        else:
+        if not node:
             return {"code": 404, "message": "Node not found"}, 404
+
+        if node.type == "ldap":
+            stop_ldap(node)
 
         # remove container
         docker = DockerHelper()
