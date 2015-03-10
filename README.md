@@ -66,7 +66,7 @@ pointed to salt-master IP address.
 
 ## Testing
 
-`$ env/bin/python py.test --cov api --cov-report term-missing`
+`$ env/bin/py.test tests --cov api --cov-report term-missing`
 
 ## Flask Swagger Docs
 
