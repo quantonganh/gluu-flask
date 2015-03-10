@@ -24,3 +24,10 @@ def test_run_error():
 
     with pytest.raises(subprocess.CalledProcessError):
         run("random-command", exit_on_error=False)
+
+
+def test_encrypt_password():
+    from api.helper.common_helper import encrypt_password
+
+    passwd = "secret"
+    assert encrypt_password(passwd).startswith("{SSHA}")

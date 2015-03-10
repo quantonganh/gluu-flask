@@ -26,6 +26,7 @@ import os.path
 import tempfile
 
 from api.helper.common_helper import run
+from api.helper.common_helper import encrypt_password
 from api.log import create_file_logger
 
 
@@ -249,7 +250,7 @@ class ldapSetup(object):
             "encoded_ox_ldap_pw": "",
             "oxauth_client_id": "",
             "oxauthClient_encoded_pw": "",
-            "encoded_ldap_pw": "",
+            "encoded_ldap_pw": encrypt_password(self.node.ldapPass),
 
             "inumAppliance": self.cluster.inumAppliance,
             "hostname": self.node.local_hostname,
