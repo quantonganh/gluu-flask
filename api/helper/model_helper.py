@@ -28,13 +28,14 @@ from crochet import run_in_reactor
 
 from api.database import db
 from api.model import ldapNode
-from api.model import oxauthNode  # noqa
+from api.model import oxauthNode
 from api.model import oxtrustNode  # noqa
 from api.helper.docker_helper import DockerHelper
 from api.helper.salt_helper import register_minion
 from api.helper.common_helper import get_random_chars
 from api.helper.common_helper import run
 from api.setup.ldap_setup import ldapSetup
+from api.setup.oxauth_setup import OxAuthSetup
 from api.log import create_file_logger
 
 
@@ -116,3 +117,82 @@ def stop_ldap(node):
         if exc.code == 2:
             # executable may not exist or minion is unreachable
             pass
+
+
+class OxAuthModelHelper(object):
+    setup_class = OxAuthSetup
+    node_class = oxauthNode
+
+    def __init__(self, cluster, salt_master_ipaddr):
+        self.salt_master_ipaddr = salt_master_ipaddr
+        self.cluster = cluster
+
+        self.node = self.node_class()
+        self.node.cluster_id = cluster.id
+        self.node.name = "{}_{}_{}".format(self.image, self.cluster.id,
+                                           randrange(101, 999))
+
+        _, self.logpath = tempfile.mkstemp(
+            suffix=".log", prefix=self.image + "-build-")
+        self.logger = create_file_logger(self.logpath)
+        self.docker = DockerHelper(logger=self.logger)
+
+    @property
+    def image(self):
+        return "gluuoxauth"
+
+    @property
+    def dockerfile(self):
+        return "https://raw.githubusercontent.com/GluuFederation" \
+               "/gluu-docker/master/ubuntu/14.04/gluuoxauth/Dockerfile"
+
+    @property
+    def name(self):
+        return self.node.name
+
+    @run_in_reactor
+    def setup(self):
+        # runs callback before setup and continue if succeed
+        if self.before_setup():
+            setup_obj = self.setup_class(self.node, self.cluster, self.logger)
+
+            # runs callback after setup succeed
+            if setup_obj.setup():
+                self.after_setup()
+
+    def before_setup(self):
+        container_id = self.docker.setup_container(
+            self.name, self.image, self.dockerfile, self.salt_master_ipaddr)
+
+        if not container_id:
+            self.logger.error("Failed to start "
+                              "the {!r} container".format(self.name))
+            return False
+
+        # container ID in short format
+        self.node.id = container_id[:12]
+
+        # wait for 10 seconds to make sure minion connected
+        # and sent its key to master
+        # TODO: there must be a way around this
+        self.logger.info("Waiting for minion to connect; "
+                         "sleeping for 10 seconds")
+        time.sleep(10)
+
+        # register the container as minion
+        register_minion(self.node.id)
+
+        # delay the remote execution
+        # see https://github.com/saltstack/salt/issues/13561
+        # TODO: there must be a way around this
+        self.logger.info("Preparing remote execution; sleeping for 15 seconds")
+        time.sleep(15)
+
+        self.logger.info("Continuing")
+        return True
+
+    def after_setup(self):
+        db.persist(self.node, "nodes")
+        self.cluster.add_node(self.node)
+        db.update(self.cluster.id, self.cluster, "clusters")
+        return True
