@@ -39,11 +39,10 @@ sudo apt-get install -y salt-master
 ### Install pip and virtualenv
 
 ```
-# wget -q -O- https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py | python -
-# wget -q -O- https://raw.github.com/pypa/pip/master/contrib/get-pip.py | python -
-# export PATH="/usr/local/bin:$PATH"
-# pip install virtualenv
-
+$ wget -q -O- https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py | python -
+$ wget -q -O- https://raw.github.com/pypa/pip/master/contrib/get-pip.py | python -
+$ export PATH="/usr/local/bin:$PATH"
+$ pip install virtualenv
 ```
 ### Clone the project
 
@@ -52,7 +51,37 @@ $ git clone https://github.com/GluuFederation/gluu-flask.git
 $ cd gluu-flask
 $ virtualenv env
 $ env/bin/pip install -r requirements.txt
+```
 
+#### Pyenv
+You can use pyenv as an alternative for virtualenv
+
+```
+$ sudo apt-get install curl git-core gcc make zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev libssl-dev
+$ curl -L https://raw.github.com/yyuu/pyenv-installer/master/bin/pyenv-installer | bash
+```
+
+Shell commands that should be added to ~/.bashrc or equivalent
+
+```
+export PYENV_ROOT="${HOME}/.pyenv"
+
+if [ -d "${PYENV_ROOT}" ]; then
+  export PATH="${PYENV_ROOT}/bin:${PATH}"
+  eval "$(pyenv init -)"
+fi
+```
+
+And then
+
+```
+$ . ~/.bashrc
+$ pyenv install 2.7.6
+$ pyenv global 2.7.6
+$ pyenv virtualenv gluu-flask
+$ cd gluu-flask/
+$ pyenv local gluu-flask
+$ pip install -r requirements.txt
 ```
 
 ## Run
@@ -61,12 +90,16 @@ To run the application, type the following command in the shell,
 and make sure `SALT_MASTER_IPADDR` environment variable is set and
 pointed to salt-master IP address.
 
-    $ SALT_MASTER_IPADDR=xxx.xxx.xxx.xxx env/bin/python run.py
+```
+$ SALT_MASTER_IPADDR=xxx.xxx.xxx.xxx env/bin/python run.py
+```
 
 
 ## Testing
 
-`$ env/bin/py.test tests --cov api --cov-report term-missing`
+```
+$ env/bin/py.test tests --cov api --cov-report term-missing
+```
 
 ## Flask Swagger Docs
 
