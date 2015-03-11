@@ -28,6 +28,7 @@ from flask_restful_swagger import swagger
 
 from api.database import db
 from api.helper.model_helper import LdapModelHelper
+from api.helper.model_helper import OxAuthModelHelper
 from api.helper.model_helper import stop_ldap
 from api.helper.docker_helper import DockerHelper
 from api.helper.salt_helper import unregister_minion
@@ -240,7 +241,16 @@ status of the cluster node is available.""",
             # oxauth-static-conf.json; (2) Create or copy key material to /etc/certs;
             # (3) Configure apache httpd to proxy AJP:8009; (4) configure tomcat
             # to run oxauth war file.
-            pass
+            oxauth = OxAuthModelHelper(cluster, current_app.config["SALT_MASTER_IPADDR"])
+            # TODO: expose as JSON response?
+            print "build logpath: %s" % oxauth.logpath
+
+            # note, ``setup_node`` is a long-running task, hence the return
+            # value won't be available immediately
+
+            # commented out until we have resolve the issue
+            # see this thread https://github.com/GluuFederation/gluu-flask/issues/13#issuecomment-78368282
+            # oxauth.setup()
 
         elif params.node_type == "oxtrust":
             # (1) generate oxtrustLdap.properties, oxTrust.properties,

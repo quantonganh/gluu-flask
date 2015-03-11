@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # The MIT License (MIT)
 #
 # Copyright (c) 2015 Gluu
@@ -19,33 +20,15 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-from flask_restful_swagger import swagger
-from flask.ext.restful import fields
-
-from .base import BaseModel
+from api.log import create_file_logger
 
 
-@swagger.model
-class oxauthNode(BaseModel):
-    # Swager Doc
-    resource_fields = {
-        "id": fields.String(attribute="Node unique identifier"),
-        "name": fields.String(attribute="Node name"),
-        "type": fields.String(attribute="Node type"),
-        "cluster_id": fields.String(attribute="Cluster ID"),
-    }
+class OxAuthSetup(object):
+    def __init__(self, node, cluster, logger=None):
+        self.logger = logger or create_file_logger()
+        self.node = node
+        self.cluster = cluster
 
-    def __init__(self):
-        self.id = ""
-        self.cluster_id = ""
-        self.name = ""
-        self.type = "oxauth"
-
-        self.oxauth_lib = "/opt/tomcat/webapps/oxauth/WEB-INF/lib"
-        self.oxauth_client_id = ""
-        self.oxauth_client_pw = ""
-        self.oxauth_client_encoded_pw = ""
-        self.oxauth_error_json = "api/templates/salt/oxauth/oxauth-errors.json"
-        self.oxauth_ldap_properties = "/opt/tomcat/conf/oxauth-ldap.properties"
-        self.oxauth_config_xml = "/opt/tomcat/conf/oxauth-config.xml"
-        self.tomcat_oxauth_static_conf_json = "/opt/tomcat/conf/oxauth-static-conf.json"
+    def setup(self):
+        # TODO: run the actual oxauth setup
+        return True
