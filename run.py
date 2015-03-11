@@ -14,14 +14,14 @@ if os.environ.get("API_ENV") == 'prod':
 else:
     app = create_app(DevConfig)
 
+if not os.environ.get("SALT_MASTER_IPADDR"):
+    raise SystemExit("Unable to get salt-master IP address. "
+		   "Make sure the SALT_MASTER_IPADDR "
+		   "environment variable is set.")
 
 @app.before_first_request
 def bootstrap():
-    if not app.config["SALT_MASTER_IPADDR"]:
-        raise RuntimeError("Unable to get salt-master IP address. "
-                           "Make sure the SALT_MASTER_IPADDR "
-                           "environment variable is set.")
-
+    1+1 #nothing here
 
 if __name__ == '__main__':
     crochet_setup()
