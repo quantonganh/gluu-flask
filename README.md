@@ -15,14 +15,29 @@ $ sudo apt-get install libssl-dev python-dev swig
 $ sudo apt-get build-dep openssl
 ```
 
-### Install docker.io
+### Install docker
 
-Follow these instructions to install the Docker managed package for Ubuntu Trusty 14.04
+Follow these instructions to install the package for Ubuntu Trusty 14.04 managed by docker.com:
 [http://docs.docker.com/installation/ubuntulinux](http://docs.docker.com/installation/ubuntulinux/#docker-maintained-package-installation)
+
 For the impatient, just type:
 
 ```
 $ curl -sSL https://get.docker.com/ubuntu/ | sudo sh
+```
+After install, you should see
+
+```
+$ sudo docker version
+Client version: 1.5.0
+Client API version: 1.17
+Go version (client): go1.4.1
+Git commit (client): a8a31ef
+OS/Arch (client): linux/amd64
+Server version: 1.5.0
+Server API version: 1.17
+Go version (server): go1.4.1
+Git commit (server): a8a31ef
 ```
 
 ### Install salt-master
