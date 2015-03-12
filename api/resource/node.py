@@ -173,6 +173,7 @@ status of the cluster node is available.""",
     )
     def post(self):
         params = node_reqparser.parse_args()
+        salt_master_ipaddr = current_app.config["SALT_MASTER_IPADDR"]
 
         # check node type
         if params.node_type not in ("ldap", "oxauth", "oxtrust"):
@@ -207,28 +208,6 @@ status of the cluster node is available.""",
             # base ldif data; otherwise initialize data from existing ldap node. Also to
             # create fully meshed replication, update the other ldap nodes to use this new
             # ldap node as a master.
-            #
-            # from helpers import *
-            #
-            # newLdapNode = None
-            #
-            # try:
-            #     newLdapNode = LdapModelHelper(args.cluster)
-            # except:
-            #     logs.error("could not create new ldap model for %s" % args.cluster
-            #     abort(400)
-            #
-            # try:
-            #     d = dockerHelper(newLdapNode)
-            # except:
-            #     logs.error("could not new docker instance for ldap node %s" % str(newLdapNode)
-            #     abort(400)
-            #
-            # try:
-            #     s = saltHelper(newLdapNode)
-            # except:
-            #     logs.error("Error configuring salt minion for %s" % str(newLdapNode)
-
             ldap = LdapModelHelper(cluster, current_app.config["SALT_MASTER_IPADDR"])
             # TODO: expose as JSON response?
             print "build logpath: %s" % ldap.logpath
@@ -237,20 +216,9 @@ status of the cluster node is available.""",
             ldap.setup_node()
 
         elif params.node_type == "oxauth":
-            # (1) generate oxauth-ldap.properties, oxauth-config.xml
-            # oxauth-static-conf.json; (2) Create or copy key material to /etc/certs;
-            # (3) Configure apache httpd to proxy AJP:8009; (4) configure tomcat
-            # to run oxauth war file.
-            oxauth = OxAuthModelHelper(cluster, current_app.config["SALT_MASTER_IPADDR"])
-            # TODO: expose as JSON response?
-            print "build logpath: %s" % oxauth.logpath
-
-            # note, ``setup_node`` is a long-running task, hence the return
-            # value won't be available immediately
-
-            # commented out until we have resolve the issue
-            # see this thread https://github.com/GluuFederation/gluu-flask/issues/13#issuecomment-78368282
-            # oxauth.setup()
+            helper = OxAuthModelHelper(cluster, salt_master_ipaddr)
+            print "build logpath: %s" % helper.logpath
+            helper.setup()
 
         elif params.node_type == "oxtrust":
             # (1) generate oxtrustLdap.properties, oxTrust.properties,

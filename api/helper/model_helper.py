@@ -172,6 +172,8 @@ class OxAuthModelHelper(object):
         # container ID in short format
         self.node.id = container_id[:12]
 
+        self.node.hostname = self.docker.get_container_ip(self.node.id)
+
         # wait for 10 seconds to make sure minion connected
         # and sent its key to master
         # TODO: there must be a way around this
@@ -179,16 +181,17 @@ class OxAuthModelHelper(object):
                          "sleeping for 10 seconds")
         time.sleep(10)
 
+        # FIXME: gluuoxauth container stopped after it has been created
         # register the container as minion
-        register_minion(self.node.id)
+        if not register_minion(self.node.id):
+            self.logger.error("Stopping; unable to find minion {!r}".format(self.node.id))
+            return False
 
         # delay the remote execution
         # see https://github.com/saltstack/salt/issues/13561
         # TODO: there must be a way around this
         self.logger.info("Preparing remote execution; sleeping for 15 seconds")
         time.sleep(15)
-
-        self.logger.info("Continuing")
         return True
 
     def after_setup(self):
