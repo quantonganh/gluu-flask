@@ -32,6 +32,7 @@ class oxauthNode(BaseModel):
         "id": fields.String(attribute="Node unique identifier"),
         "name": fields.String(attribute="Node name"),
         "type": fields.String(attribute="Node type"),
+        "ip": fields.String(attribute="Node IP address"),
         "cluster_id": fields.String(attribute="Cluster ID"),
     }
 

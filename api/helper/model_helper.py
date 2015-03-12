@@ -172,7 +172,9 @@ class OxAuthModelHelper(object):
         # container ID in short format
         self.node.id = container_id[:12]
 
-        self.node.hostname = self.docker.get_container_ip(self.node.id)
+        container_ip = self.docker.get_container_ip(self.node.id)
+        self.node.hostname = container_ip
+        self.node.ip = container_ip
 
         # wait for 10 seconds to make sure minion connected
         # and sent its key to master
