@@ -40,16 +40,17 @@ class oxauthNode(BaseModel):
         self.cluster_id = ""
         self.name = ""
         self.hostname = ""
+        self.ip = ""
         self.type = "oxauth"
         self.defaultTrustStoreFN = '/usr/lib/jvm/java-7-openjdk-amd64/jre/lib/security/cacerts'
 
         self.tomcat_home = "/opt/tomcat"
-        self.tomcat_conf = "/opt/tomcat/conf"
+        self.tomcat_conf_dir = "/opt/tomcat/conf"
 
         self.openssl_cmd = "/usr/bin/openssl"
         self.cert_folder = "/etc/certs"
         self.httpd_key = "/etc/certs/httpd.key"
-        self.httpd_keypass = "/etc/certs/httpd.key.orig"
+        self.httpd_key_orig = "/etc/certs/httpd.key.orig"
         self.httpd_csr = "/etc/certs/httpd.csr"
         self.httpd_crt = "/etc/certs/httpd.crt"
 
@@ -59,10 +60,15 @@ class oxauthNode(BaseModel):
         self.oxauth_client_encoded_pw = ""
 
         # the following template should be copied to tomcat conf directory
-        self.oxauth_errors_json = "api/templates/salt/oxauth/conf/oxauth-errors.json"
+        self.oxauth_errors_json = "api/templates/salt/oxauth/oxauth-errors.json"
 
         # the following templates should be rendered and copied
         # to tomcat conf directory
-        self.oxauth_ldap_properties = "api/templates/salt/oxauth/conf/oxauth-ldap.properties"
-        self.oxauth_config_xml = "api/templates/salt/oxauth/conf/oxauth-config.xml"
-        self.oxauth_static_conf_json = "api/templates/salt/oxauth/conf/oxauth-static-conf.json"
+        self.oxauth_ldap_properties = "api/templates/salt/oxauth/oxauth-ldap.properties"
+        self.oxauth_config_xml = "api/templates/salt/oxauth/oxauth-config.xml"
+        self.oxauth_static_conf_json = "api/templates/salt/oxauth/oxauth-static-conf.json"
+        self.tomcat_server_xml = "api/templates/salt/oxauth/server.xml"
+
+        # the following template should be rendered and copied
+        # to apache2 conf directory
+        self.apache2_ssl_conf = "api/templates/salt/oxauth/https_gluu.conf"
