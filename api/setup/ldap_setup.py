@@ -157,6 +157,7 @@ class ldapSetup(object):
                 'cmd.run',
                 ["{}".format(setupCmd)],
             )
+            self.logger.debug("{}".format(setupCmd))
         except Exception as exc:
             self.logger.error("error running LDAP setup script: %s" % exc)
 
@@ -167,6 +168,7 @@ class ldapSetup(object):
                 'cmd.run',
                 [self.node.ldapDsJavaPropCommand],
             )
+            self.logger.debug("{}".format(self.node.ldapDsJavaPropCommand))
         except Exception as exc:
             self.logger.error("error running dsjavaproperties: %s" % exc)
 
@@ -193,6 +195,7 @@ class ldapSetup(object):
                                         '--bindPasswordFile',
                                         self.node.ldapPassFn] + changes)
                 self.logger.info("configuring opendj config changes: {}".format(dsconfigCmd))
+                self.logger.debug("{}".format(dsconfigCmd))
                 self.saltlocal.cmd(self.node.id, 'cmd.run', [dsconfigCmd])
         except Exception as exc:
             self.logger.error("error executing config changes: %s" % exc)
@@ -236,6 +239,7 @@ class ldapSetup(object):
                                              '--noPropertiesFile',
                                              '--no-prompt'])
                         self.saltlocal.cmd(self.node.id, 'cmd.run', [indexCmd])
+                        self.logger.debug("{}".format(indexCmd))
             else:
                 self.logger.warn("no indexes found %s" % self.node.indexJson)
         except Exception as exc:
@@ -334,6 +338,7 @@ class ldapSetup(object):
                         '--trustAll',
                     ])
                 self.saltlocal.cmd(self.node.id, 'cmd.run', [importCmd])
+                self.logger.debug("{}".format(importCmd))
             except Exception as exc:
                 self.logger.error(exc)
             finally:
@@ -372,6 +377,7 @@ class ldapSetup(object):
                            'server-cert',
                            '-rfc'])
         self.saltlocal.cmd(self.node.id, 'cmd.run', [cmdsrt])
+        self.logger.debug("{}".format(cmdsrt))
 
         # Import OpenDJ certificate into java truststore
         cmdstr = ' '.join([
@@ -383,6 +389,7 @@ class ldapSetup(object):
         ])
         self.logger.info("importing OpenDJ certificate into Java truststore")
         self.saltlocal.cmd(self.node.id, 'cmd.run', [cmdstr])
+        self.logger.debug("{}".format(cmdsrt))
 
     def setup(self):
         self.logger.info("LDAP setup is started")

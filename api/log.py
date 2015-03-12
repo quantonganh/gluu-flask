@@ -24,7 +24,7 @@ import logging
 import tempfile
 
 
-def create_file_logger(filepath="", log_level=logging.INFO):
+def create_file_logger(filepath="", log_level=logging.DEBUG):
     filepath = filepath or tempfile.mkstemp()[1]
     logger = logging.getLogger(__name__)
     logger.setLevel(log_level)
