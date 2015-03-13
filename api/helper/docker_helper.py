@@ -125,7 +125,7 @@ class DockerHelper(object):
                     fp.write(resp.text)
         return local_dir
 
-    def _build_saltminion(self, salt_master_ipaddr):
+    def _build_saltminion(self):
         """Builds saltminion image.
 
         :param salt_master_ipaddr: IP address of salt-master.
@@ -136,20 +136,14 @@ class DockerHelper(object):
         if not self.image_exists("saltminion"):
             self.logger.info("building saltminion image")
             # There must be a better way than to hard code every file one by one
-            minion_file = "https://raw.githubusercontent.com/GluuFederation" \
-                          "/gluu-docker/master/ubuntu/14.04/saltminion/minion"
-            minion_file_stub = "https://raw.githubusercontent.com/GluuFederation" \
-                          "/gluu-docker/master/ubuntu/14.04/saltminion/minion-stub"
-            docker_entrypoint = "https://raw.githubusercontent.com/GluuFederation" \
-                          "/gluu-docker/master/ubuntu/14.04/saltminion/docker-entrypoint.sh"
-            dockerfile = "https://raw.githubusercontent.com/GluuFederation" \
-                         "/gluu-docker/master/ubuntu/14.04/saltminion/Dockerfile"
-            files = [minion_file, minion_file_stub, docker_entrypoint, dockerfile]
+            DOCKER_REPO = 'https://raw.githubusercontent.com/GluuFederation/gluu-docker/master/ubuntu/14.04'
+            minion_file = DOCKER_REPO + '/saltminion/minion'
+            supervisor_conf = DOCKER_REPO + '/saltminion/supervisord.conf'
+            render = DOCKER_REPO + '/saltminion/render.sh'
+            dockerfile = DOCKER_REPO + '/saltminion/Dockerfile'
+            files = [minion_file, supervisor_conf, render, dockerfile]
             build_dir = self.get_remote_files(*files)
-            saved_minion = os.path.join(build_dir, os.path.basename(minion_file))
-
             #removed, details https://github.com/GluuFederation/gluu-flask/issues/5
-
             build_succeed = self.build_image(build_dir, "saltminion")
             shutil.rmtree(build_dir)
         return build_succeed
@@ -164,7 +158,7 @@ class DockerHelper(object):
         :returns: Container ID in long format if container running successfully,
                 otherwise an empty string.
         """
-        if not self._build_saltminion(salt_master_ipaddr):
+        if not self._build_saltminion():
             return ""
 
         # a flag to determine whether build image process is succeed
