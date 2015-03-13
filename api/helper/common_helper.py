@@ -35,6 +35,7 @@ _DEFAULT_CHARS = "".join([string.ascii_uppercase,
 
 def run(command, exit_on_error=True, cwd=None):
     try:
+        print("Shell command called (blocking): {}".format(command))
         return subprocess.check_output(command, stderr=subprocess.STDOUT,
                                        shell=True, cwd=cwd)
     except subprocess.CalledProcessError, e:
