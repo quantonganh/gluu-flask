@@ -24,6 +24,7 @@ import codecs
 import os.path
 import shutil
 import tempfile
+import time
 
 from api.log import create_file_logger
 from api.helper.common_helper import run
@@ -46,13 +47,13 @@ class OxAuthSetup(object):
 
     def copy_tomcat_conf(self):
         # static template
-        self.logger.info("copying {}".format(self.node.oxauth_error_json))
+        self.logger.info("copying {}".format(self.node.oxauth_errors_json))
         run("salt-cp {} {} {}".format(
             self.node.id,
             self.node.oxauth_errors_json,
             os.path.join(
                 self. node.tomcat_conf_dir,
-                os.path.basename(self.node.oxauth_error_json),
+                os.path.basename(self.node.oxauth_errors_json),
             ),
         ))
 
@@ -62,6 +63,8 @@ class OxAuthSetup(object):
             "ldaps_port": self.cluster.ldaps_port,
             "certFolder": self.node.cert_folder,
             "hostname": self.node.hostname,
+            "inumAppliance": self.cluster.inumAppliance,
+            "ldap_binddn": self.node.ldap_binddn,
 
             # FIXME: the following keys are left blank
             #        it will be populated eventually
@@ -113,11 +116,11 @@ class OxAuthSetup(object):
         # command to create key file
         key_cmd = " ".join([self.node.openssl_cmd, "rsa", "-in",
                             self.node.httpd_key_orig, "-passin",
-                            "pass:{}".format(passwd), "-out", self.httpd_key])
+                            "pass:{}".format(passwd), "-out", self.node.httpd_key])
 
         # command to create csr file
         csr_cmd = " ".join([self.node.openssl_cmd, "req", "-new",
-                            "-key", self.httpd_key, "-out", self.httpd_csr,
+                            "-key", self.node.httpd_key, "-out", self.node.httpd_csr,
                             "-subj", "/CN=%s/O=%s/C=%s/ST=%s/L=%s" % (
                                 self.node.hostname,
                                 self.cluster.orgName,
@@ -131,7 +134,7 @@ class OxAuthSetup(object):
                             "-days", "365",
                             "-in", self.node.httpd_csr,
                             "-signkey", self.node.httpd_key,
-                            "-out", self.httpd_crt])
+                            "-out", self.node.httpd_crt])
 
         self.logger.info("generating certificates for {}".format(suffix))
         self.saltlocal.cmd(
@@ -145,8 +148,8 @@ class OxAuthSetup(object):
             self.node.id,
             ["cmd.run", "cmd.run", "cmd.run", "cmd.run"],
             [
-                ["/bin/chown {0}:{0} {1}".format(user, self.node.httpd_keypass)],
-                ["/bin/chmod 700 {}".format(self.node.httpd_keypass)],
+                ["/bin/chown {0}:{0} {1}".format(user, self.node.httpd_key_orig)],
+                ["/bin/chmod 700 {}".format(self.node.httpd_key_orig)],
                 ["/bin/chown {0}:{0} {1}".format(user, self.node.httpd_key)],
                 ["/bin/chmod 700 {}".format(self.node.httpd_key)],
             ],
@@ -181,6 +184,15 @@ class OxAuthSetup(object):
         tmpl = self.node.apache2_ssl_conf
         rendered_content = ""
 
+        self.saltlocal.cmd(
+            self.node.id,
+            ["cmd.run", "cmd.run"],
+            [
+                ["mkdir -p /etc/apache2/sites-available"],
+                ["mkdir -p /etc/apache2/sites-enabled"],
+            ],
+        )
+
         try:
             with codecs.open(tmpl, "r", encoding="utf-8") as fp:
                 rendered_content = fp.read() % ctx
@@ -205,21 +217,27 @@ class OxAuthSetup(object):
         # TODO: when to run httpd service?
         symlink_cmd = "ln -s /etc/apache2/sites-available/{0} " \
                       "/etc/apache2/sites-enabled/{0}".format(file_basename)
+        self.logger.info("symlinking {}".format(file_basename))
         self.saltlocal.cmd(self.node.id, "cmd.run", [symlink_cmd])
 
     def setup(self):
+        start = time.time()
+
+        self.logger.info("oxAuth setup is started")
         # copy rendered templates: oxauth-ldap.properties,
         # oxauth-config.xml, oxauth-static-conf.json
-        # self.copy_tomcat_conf()
+        self.copy_tomcat_conf()
 
         # create or copy key material to /etc/certs
-        # self.gen_cert()
+        self.gen_cert()
 
         # configure apache httpd to proxy AJP:8009
-        # self.copy_httpd_conf()
+        self.copy_httpd_conf()
 
-        # configure tomcat to run oxauth war file
+        # TODO: configure tomcat to run oxauth war file
 
         # cleanup build directory
         shutil.rmtree(self.build_dir)
+        elapsed = time.time() - start
+        self.logger.info("oxAuth setup is finished ({} seconds)".format(elapsed))
         return True

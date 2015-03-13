@@ -153,12 +153,15 @@ class OxAuthModelHelper(object):
     @run_in_reactor
     def setup(self):
         # runs callback before setup and continue if succeed
-        if self.before_setup():
-            setup_obj = self.setup_class(self.node, self.cluster, self.logger)
+        try:
+            if self.before_setup():
+                setup_obj = self.setup_class(self.node, self.cluster, self.logger)
 
-            # runs callback after setup succeed
-            if setup_obj.setup():
-                self.after_setup()
+                # runs callback after setup succeed
+                if setup_obj.setup():
+                    self.after_setup()
+        except Exception as exc:
+            self.logger.error(exc)
 
     def before_setup(self):
         container_id = self.docker.setup_container(

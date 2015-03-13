@@ -43,7 +43,9 @@ class oxauthNode(BaseModel):
         self.hostname = ""
         self.ip = ""
         self.type = "oxauth"
+
         self.defaultTrustStoreFN = '/usr/lib/jvm/java-7-openjdk-amd64/jre/lib/security/cacerts'
+        self.ldap_binddn = 'cn=directory manager'
 
         self.tomcat_home = "/opt/tomcat"
         self.tomcat_conf_dir = "/opt/tomcat/conf"
