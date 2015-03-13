@@ -24,6 +24,7 @@ import codecs
 import json
 import os.path
 import tempfile
+import time
 
 from api.helper.common_helper import run
 from api.helper.common_helper import encrypt_password
@@ -393,6 +394,9 @@ class ldapSetup(object):
 
     def setup(self):
         self.logger.info("LDAP setup is started")
+        # Echo important events to the main Flask log too
+        print("LDAP setup is started")
+        start = time.time()
         self.write_ldap_pw()
         self.setup_opendj()
 
@@ -405,3 +409,5 @@ class ldapSetup(object):
         self.export_opendj_public_cert()
         self.delete_ldap_pw()
         self.logger.info("LDAP setup is finished")
+        seconds = time.time() - start
+        print("LDAP setup is finished ({} seconds)".format(seconds))
