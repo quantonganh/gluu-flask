@@ -53,7 +53,7 @@ class LdapModelHelper(object):
 
         _, self.logpath = tempfile.mkstemp(suffix=".build.log",
                                            prefix=self.image + "-")
-        self.logger = create_file_logger(self.logpath)
+        self.logger = create_file_logger(self.logpath, name=self.node.name)
         self.docker = DockerHelper(logger=self.logger)
 
     @property
@@ -134,7 +134,7 @@ class OxAuthModelHelper(object):
 
         _, self.logpath = tempfile.mkstemp(
             suffix=".log", prefix=self.image + "-build-")
-        self.logger = create_file_logger(self.logpath)
+        self.logger = create_file_logger(self.logpath, name=self.node.name)
         self.docker = DockerHelper(logger=self.logger)
 
     @property
