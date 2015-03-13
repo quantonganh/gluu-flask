@@ -183,11 +183,8 @@ class OxAuthModelHelper(object):
                          "sleeping for 10 seconds")
         time.sleep(10)
 
-        # FIXME: gluuoxauth container stopped after it has been created
         # register the container as minion
-        if not register_minion(self.node.id):
-            self.logger.error("Stopping; unable to find minion {!r}".format(self.node.id))
-            return False
+        register_minion(self.node.id)
 
         # delay the remote execution
         # see https://github.com/saltstack/salt/issues/13561
