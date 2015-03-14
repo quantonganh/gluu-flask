@@ -208,13 +208,9 @@ status of the cluster node is available.""",
             # base ldif data; otherwise initialize data from existing ldap node. Also to
             # create fully meshed replication, update the other ldap nodes to use this new
             # ldap node as a master.
-            ldap = LdapModelHelper(cluster, current_app.config["SALT_MASTER_IPADDR"])
-            # TODO: expose as JSON response?
-            print "build logpath: %s" % ldap.logpath
-            # note, ``setup_node`` is a long-running task, hence the return
-            # value won't be available immediately
-            ldap.setup_node()
-
+            helper = LdapModelHelper(cluster, salt_master_ipaddr)
+            print "build logpath: %s" % helper.logpath
+            helper.setup()
         elif params.node_type == "oxauth":
             helper = OxAuthModelHelper(cluster, salt_master_ipaddr)
             print "build logpath: %s" % helper.logpath

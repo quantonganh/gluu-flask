@@ -130,7 +130,7 @@ class ldapNode(BaseModel):
 
         self.id = ''
         self.name = ''
-        self.type = 'gluuopendj'
+        self.type = 'ldap'
         self.cluster_name = cluster_name
         self.defaultTrustStoreFN = '/usr/lib/jvm/java-7-openjdk-amd64/jre/lib/security/cacerts'
         self.indexJson = "api/templates/salt/opendj/opendj_index.json"
