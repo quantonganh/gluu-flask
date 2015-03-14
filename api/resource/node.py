@@ -174,6 +174,7 @@ status of the cluster node is available.""",
     def post(self):
         params = node_reqparser.parse_args()
         salt_master_ipaddr = current_app.config["SALT_MASTER_IPADDR"]
+        docker_base_url = current_app.config["DOCKER_SOCKET"]
 
         # check node type
         if params.node_type not in ("ldap", "oxauth", "oxtrust"):
@@ -191,7 +192,7 @@ status of the cluster node is available.""",
         elif params.node_type == "oxtrust":
             helper_class = OxTrustModelHelper
 
-        helper = helper_class(cluster, salt_master_ipaddr)
+        helper = helper_class(cluster, salt_master_ipaddr, docker_base_url)
         print "build logpath: %s" % helper.logpath
         helper.setup()
 
