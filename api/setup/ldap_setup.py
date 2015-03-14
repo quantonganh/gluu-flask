@@ -403,9 +403,14 @@ class ldapSetup(object):
         # FIXME: sometime, salt command returns error about
         #        unable to connect to port 4444
         self.configure_opendj()
-
         self.index_opendj()
+
+        # If no ldap nodes exist, import auto-generated
+        # base ldif data; otherwise initialize data from existing ldap node.
+        # Also to create fully meshed replication, update the other ldap
+        # nodes to use this new ldap node as a master.
         self.import_ldif()
+
         self.export_opendj_public_cert()
         self.delete_ldap_pw()
         self.logger.info("LDAP setup is finished")

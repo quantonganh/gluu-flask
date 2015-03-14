@@ -144,6 +144,13 @@ class LdapModelHelper(BaseModelHelper):
                  "/gluu-docker/master/ubuntu/14.04/gluuopendj/Dockerfile"
 
     def prepare_node_attrs(self):
+        # For replication, you will need
+        # to use the ip address of docker instance as hostname--not the cluster
+        # ldap hostname. For the four ports (ldap, ldaps, admin, jmx),
+        # try to use the default
+        # ports unless they are already in use, at which point it should chose
+        # a random port over 10,000. Note these ports will need to be
+        # open between the ldap docker instances
         container_ip = self.docker.get_container_ip(self.node.id)
         self.node.local_hostname = container_ip
         self.node.ip = container_ip

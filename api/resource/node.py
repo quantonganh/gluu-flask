@@ -184,42 +184,16 @@ status of the cluster node is available.""",
         if not cluster:
             abort(400)
 
-        # MIKE: I think the business logic should be implemented in helper classes.
-        # I'd like to see the code in this API be readable.
-
         if params.node_type == "ldap":
-            # (1) Create the model for this new ldap node. For replication, you will need
-            # to use the ip address of docker instance as hostname--not the cluster
-            # ldap hostname. For the four ports (ldap, ldaps, admin, jmx), try to use the default
-            # ports unless they are already in use, at which point it should chose a random
-            # port over 10,000. Note these ports will need to be open between the ldap docker instances
-            # node = ldapNode(cluster_name=cluster.name)
-
-            # (2) Start job to create docker instance
-            # run_container(node)
-
-            # (3) Render opendj-setup.properties
-            # render_ldap_properties(node)
-
-            # (4) Start job to run /opt/opendj/setup and dsconfig commands
-            # run_ldap_setup(node)
-
-            # (5) Start job to import data. If no ldap nodes exist, import auto-generated
-            # base ldif data; otherwise initialize data from existing ldap node. Also to
-            # create fully meshed replication, update the other ldap nodes to use this new
-            # ldap node as a master.
-            helper = LdapModelHelper(cluster, salt_master_ipaddr)
-            print "build logpath: %s" % helper.logpath
-            helper.setup()
+            helper_class = LdapModelHelper
         elif params.node_type == "oxauth":
-            helper = OxAuthModelHelper(cluster, salt_master_ipaddr)
-            print "build logpath: %s" % helper.logpath
-            helper.setup()
-
+            helper_class = OxAuthModelHelper
         elif params.node_type == "oxtrust":
-            helper = OxTrustModelHelper(cluster, salt_master_ipaddr)
-            print "build logpath: %s" % helper.logpath
-            helper.setup()
+            helper_class = OxTrustModelHelper
+
+        helper = helper_class(cluster, salt_master_ipaddr)
+        print "build logpath: %s" % helper.logpath
+        helper.setup()
 
         # Returns the HTTP response as ACCEPTED
         # TODO: what's the best way to monitor the result?
