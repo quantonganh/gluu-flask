@@ -33,7 +33,7 @@ from api.log import create_file_logger
 
 
 class DockerHelper(object):
-    def __init__(self, logger=None, base_url=""):
+    def __init__(self, logger=None, base_url="unix://var/run/docker.sock"):
         self.logger = logger or create_file_logger()
         self.docker = Client(base_url=base_url)
 
