@@ -18,7 +18,7 @@ class Config(object):
     SALT_MASTER_IPADDR = os_env.get("SALT_MASTER_IPADDR", "")
     # Is there any better place to put this path
     #DOCKER_REPO = 'https://raw.githubusercontent.com/GluuFederation/gluu-docker/master/ubuntu/14.04'
-    DOCKER_SOCKET = os_env.get("DOCKET_SOCKET", 'unix://var/run/docker.sock')
+    DOCKER_SOCKET = os_env.get("DOCKER_SOCKET", 'unix://var/run/docker.sock')
 
 
 class ProdConfig(Config):
