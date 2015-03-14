@@ -40,170 +40,6 @@ from api.setup.oxtrust_setup import OxTrustSetup
 from api.log import create_file_logger
 
 
-class LdapModelHelper(object):
-    def __init__(self, cluster, salt_master_ipaddr):
-        self.salt_master_ipaddr = salt_master_ipaddr
-        self.cluster = cluster
-        self.node = ldapNode()
-        self.node.cluster_id = cluster.id
-        self.node.type = "ldap"
-        # TODO: encode password
-        self.node.ldapPass = get_random_chars()
-        self.node.name = "{}_{}_{}".format(self.image, self.cluster.id,
-                                           randrange(101, 999))
-
-        _, self.logpath = tempfile.mkstemp(suffix=".build.log",
-                                           prefix=self.image + "-")
-        self.logger = create_file_logger(self.logpath, name=self.node.name)
-        self.docker = DockerHelper(logger=self.logger)
-
-    @property
-    def image(self):
-        return "gluuopendj"
-
-    @property
-    def dockerfile(self):
-        return "https://raw.githubusercontent.com/GluuFederation" \
-               "/gluu-docker/master/ubuntu/14.04/gluuopendj/Dockerfile"
-
-    @property
-    def name(self):
-        return self.node.name
-
-    @run_in_reactor
-    def setup_node(self):
-        # TODO - This should be in a try/except, with logging for
-        # both creation and errors to access log, and just errors
-        # to error log.
-        cont_id = self.docker.setup_container(
-            self.node.name, self.image, self.dockerfile, self.salt_master_ipaddr)
-
-        if cont_id:
-            # container ID in short format
-            self.node.id = cont_id[:12]
-
-            # wait for 10 seconds to make sure minion connected
-            # and sent its key to master
-
-            # There must be a way around this
-            print "Sleeping for 10 seconds"
-            time.sleep(10)
-
-            # register the container as minion
-            register_minion(self.node.id)
-            container_ip = self.docker.get_container_ip(self.node.id)
-
-            self.node.local_hostname = container_ip
-            self.node.ip = container_ip
-
-            # delay the remote execution
-            # see https://github.com/saltstack/salt/issues/13561
-
-            # There must be a way around this
-            print "Sleeping for 15 seconds"
-            time.sleep(15)
-            print "Continuing"
-            ldap_setup = ldapSetup(self.node, self.cluster, self.logger)
-            ldap_setup.setup()
-
-            db.persist(self.node, "nodes")
-            self.cluster.add_node(self.node)
-            db.update(self.cluster.id, self.cluster, "clusters")
-
-
-def stop_ldap(node):
-    try:
-        run("salt {} cmd.run '{}/bin/stop-ds'".format(node.id, node.ldapBaseFolder))
-    except SystemExit as exc:
-        if exc.code == 2:
-            # executable may not exist or minion is unreachable
-            pass
-
-
-class OxAuthModelHelper(object):
-    setup_class = OxAuthSetup
-    node_class = oxauthNode
-
-    def __init__(self, cluster, salt_master_ipaddr):
-        self.salt_master_ipaddr = salt_master_ipaddr
-        self.cluster = cluster
-
-        self.node = self.node_class()
-        self.node.cluster_id = cluster.id
-        self.node.name = "{}_{}_{}".format(self.image, self.cluster.id,
-                                           randrange(101, 999))
-
-        _, self.logpath = tempfile.mkstemp(
-            suffix=".log", prefix=self.image + "-build-")
-        self.logger = create_file_logger(self.logpath, name=self.node.name)
-        self.docker = DockerHelper(logger=self.logger)
-
-    @property
-    def image(self):
-        return "gluuoxauth"
-
-    @property
-    def dockerfile(self):
-        return "https://raw.githubusercontent.com/GluuFederation" \
-               "/gluu-docker/master/ubuntu/14.04/gluuoxauth/Dockerfile"
-
-    @property
-    def name(self):
-        return self.node.name
-
-    @run_in_reactor
-    def setup(self):
-        # runs callback before setup and continue if succeed
-        try:
-            if self.before_setup():
-                setup_obj = self.setup_class(self.node, self.cluster, self.logger)
-
-                # runs callback after setup succeed
-                if setup_obj.setup():
-                    self.after_setup()
-        except Exception as exc:
-            self.logger.error(exc)
-
-    def before_setup(self):
-        container_id = self.docker.setup_container(
-            self.name, self.image, self.dockerfile, self.salt_master_ipaddr)
-
-        if not container_id:
-            self.logger.error("Failed to start "
-                              "the {!r} container".format(self.name))
-            return False
-
-        # container ID in short format
-        self.node.id = container_id[:12]
-
-        container_ip = self.docker.get_container_ip(self.node.id)
-        self.node.hostname = container_ip
-        self.node.ip = container_ip
-
-        # wait for 10 seconds to make sure minion connected
-        # and sent its key to master
-        # TODO: there must be a way around this
-        self.logger.info("Waiting for minion to connect; "
-                         "sleeping for 10 seconds")
-        time.sleep(10)
-
-        # register the container as minion
-        register_minion(self.node.id)
-
-        # delay the remote execution
-        # see https://github.com/saltstack/salt/issues/13561
-        # TODO: there must be a way around this
-        self.logger.info("Preparing remote execution; sleeping for 15 seconds")
-        time.sleep(15)
-        return True
-
-    def after_setup(self):
-        db.persist(self.node, "nodes")
-        self.cluster.add_node(self.node)
-        db.update(self.cluster.id, self.cluster, "clusters")
-        return True
-
-
 class BaseModelHelper(object):
     #: Node setup class. Must be overriden in subclass.
     setup_class = None
@@ -285,10 +121,6 @@ class BaseModelHelper(object):
                 # container ID in short format
                 self.node.id = container_id[:12]
 
-                container_ip = self.docker.get_container_ip(self.node.id)
-                self.node.hostname = container_ip
-                self.node.ip = container_ip
-
                 # runs callback to prepare node attributes;
                 # warning: don't override node.id attribute!
                 self.prepare_node_attrs()
@@ -304,9 +136,107 @@ class BaseModelHelper(object):
             self.logger.error(exc)
 
 
+class LdapModelHelper(object):
+    def __init__(self, cluster, salt_master_ipaddr):
+        self.salt_master_ipaddr = salt_master_ipaddr
+        self.cluster = cluster
+        self.node = ldapNode()
+        self.node.cluster_id = cluster.id
+        self.node.type = "ldap"
+        # TODO: encode password
+        self.node.ldapPass = get_random_chars()
+        self.node.name = "{}_{}_{}".format(self.image, self.cluster.id,
+                                           randrange(101, 999))
+
+        _, self.logpath = tempfile.mkstemp(suffix=".build.log",
+                                           prefix=self.image + "-")
+        self.logger = create_file_logger(self.logpath, name=self.node.name)
+        self.docker = DockerHelper(logger=self.logger)
+
+    @property
+    def image(self):
+        return "gluuopendj"
+
+    @property
+    def dockerfile(self):
+        return "https://raw.githubusercontent.com/GluuFederation" \
+               "/gluu-docker/master/ubuntu/14.04/gluuopendj/Dockerfile"
+
+    @property
+    def name(self):
+        return self.node.name
+
+    @run_in_reactor
+    def setup_node(self):
+        # TODO - This should be in a try/except, with logging for
+        # both creation and errors to access log, and just errors
+        # to error log.
+        cont_id = self.docker.setup_container(
+            self.node.name, self.image, self.dockerfile, self.salt_master_ipaddr)
+
+        if cont_id:
+            # container ID in short format
+            self.node.id = cont_id[:12]
+
+            # wait for 10 seconds to make sure minion connected
+            # and sent its key to master
+
+            # There must be a way around this
+            print "Sleeping for 10 seconds"
+            time.sleep(10)
+
+            # register the container as minion
+            register_minion(self.node.id)
+            container_ip = self.docker.get_container_ip(self.node.id)
+
+            self.node.local_hostname = container_ip
+            self.node.ip = container_ip
+
+            # delay the remote execution
+            # see https://github.com/saltstack/salt/issues/13561
+
+            # There must be a way around this
+            print "Sleeping for 15 seconds"
+            time.sleep(15)
+            print "Continuing"
+            ldap_setup = ldapSetup(self.node, self.cluster, self.logger)
+            ldap_setup.setup()
+
+            db.persist(self.node, "nodes")
+            self.cluster.add_node(self.node)
+            db.update(self.cluster.id, self.cluster, "clusters")
+
+
+def stop_ldap(node):
+    try:
+        run("salt {} cmd.run '{}/bin/stop-ds'".format(node.id, node.ldapBaseFolder))
+    except SystemExit as exc:
+        if exc.code == 2:
+            # executable may not exist or minion is unreachable
+            pass
+
+
+class OxAuthModelHelper(BaseModelHelper):
+    setup_class = OxAuthSetup
+    node_class = oxauthNode
+    image = "gluuoxauth"
+    dockerfile = "https://raw.githubusercontent.com/GluuFederation" \
+                 "/gluu-docker/master/ubuntu/14.04/gluuoxauth/Dockerfile"
+
+    def prepare_node_attrs(self):
+        container_ip = self.docker.get_container_ip(self.node.id)
+        self.node.hostname = container_ip
+        self.node.ip = container_ip
+
+
 class OxTrustModelHelper(BaseModelHelper):
     setup_class = OxTrustSetup
     node_class = oxtrustNode
     image = "gluuoxtrust"
     dockerfile = "https://raw.githubusercontent.com/GluuFederation" \
                  "/gluu-docker/master/ubuntu/14.04/gluuoxtrust/Dockerfile"
+
+    def prepare_node_attrs(self):
+        container_ip = self.docker.get_container_ip(self.node.id)
+        self.node.hostname = container_ip
+        self.node.ip = container_ip
