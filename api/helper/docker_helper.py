@@ -30,12 +30,13 @@ import requests
 from docker import Client
 
 from api.log import create_file_logger
+from flask import current_app
 
 
 class DockerHelper(object):
     def __init__(self, logger=None):
         self.logger = logger or create_file_logger()
-        self.docker = Client(base_url="unix://var/run/docker.sock")
+        self.docker = Client(base_url=current_app.config["DOCKER_SOCKET"])
 
     def image_exists(self, name):
         """Checks whether a docker image exists.

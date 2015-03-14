@@ -19,6 +19,11 @@ if not os.environ.get("SALT_MASTER_IPADDR"):
 		   "Make sure the SALT_MASTER_IPADDR "
 		   "environment variable is set.")
 
+socket = os.environ.get("DOCKER_SOCKET")
+
+if socket:
+    app.config["DOCKER_SOCKET"] = socket
+
 @app.before_first_request
 def bootstrap():
     1+1 #nothing here
