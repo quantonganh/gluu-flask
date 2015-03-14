@@ -16,18 +16,15 @@ else:
 
 if not os.environ.get("SALT_MASTER_IPADDR"):
     raise SystemExit("Unable to get salt-master IP address. "
-		   "Make sure the SALT_MASTER_IPADDR "
-		   "environment variable is set.")
+                     "Make sure the SALT_MASTER_IPADDR "
+                     "environment variable is set.")
 
-socket = os.environ.get("DOCKER_SOCKET")
-
-if socket:
-    app.config["DOCKER_SOCKET"] = socket
 
 @app.before_first_request
 def bootstrap():
-    1+1 #nothing here
+    pass
+
 
 if __name__ == '__main__':
     crochet_setup()
-    app.run(host='0.0.0.0',port=app.config['PORT'])
+    app.run(host='0.0.0.0', port=app.config['PORT'])
