@@ -1,6 +1,7 @@
+# -*- coding: utf-8 -*-
 # The MIT License (MIT)
 #
-# Copyright (c) 2014 Gluu
+# Copyright (c) 2015 Gluu
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -19,27 +20,23 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-from flask_restful_swagger import swagger
-from flask.ext.restful import fields
+import tempfile
 
-from .base import BaseModel
+from api.log import create_file_logger
 
 
-@swagger.model
-class oxtrustNode(BaseModel):
-    # Swager Doc
-    resource_fields = {
-        "id": fields.String(attribute="Node unique identifier"),
-        "name": fields.String(attribute="Node name"),
-        "type": fields.String(attribute="Node type"),
-        "ip": fields.String(attribute="Node IP address"),
-        "cluster_id": fields.String(attribute="Cluster ID"),
-    }
+class BaseSetup(object):
+    def __init__(self, node, cluster, logger=None):
+        self.logger = logger or create_file_logger()
+        self.build_dir = tempfile.mkdtemp()
 
-    def __init__(self):
-        self.id = ""
-        self.cluster_id = ""
-        self.name = ""
-        self.hostname = ""
-        self.ip = ""
-        self.type = "oxtrust"
+        # salt supresses the flask logger, hence we import salt inside
+        # this function as a workaround
+        import salt.client
+        self.saltlocal = salt.client.LocalClient()
+
+        self.node = node
+        self.cluster = cluster
+
+    def setup(self):
+        pass

@@ -20,7 +20,6 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-'''/node resource'''
 from flask import abort
 from flask import current_app
 from flask.ext.restful import Resource
@@ -29,6 +28,7 @@ from flask_restful_swagger import swagger
 from api.database import db
 from api.helper.model_helper import LdapModelHelper
 from api.helper.model_helper import OxAuthModelHelper
+from api.helper.model_helper import OxTrustModelHelper
 from api.helper.model_helper import stop_ldap
 from api.helper.docker_helper import DockerHelper
 from api.helper.salt_helper import unregister_minion
@@ -221,12 +221,9 @@ status of the cluster node is available.""",
             helper.setup()
 
         elif params.node_type == "oxtrust":
-            # (1) generate oxtrustLdap.properties, oxTrust.properties,
-            # oxauth-static-conf.json, oxTrustLogRotationConfiguration.xml,
-            # (2) Create or copy key material to /etc/certs
-            # (3) Configure apache httpd to proxy AJP:8009; (4) configure tomcat
-            # to run oxtrust war file
-            pass
+            helper = OxTrustModelHelper(cluster, salt_master_ipaddr)
+            print "build logpath: %s" % helper.logpath
+            helper.setup()
 
         # Returns the HTTP response as ACCEPTED
         # TODO: what's the best way to monitor the result?

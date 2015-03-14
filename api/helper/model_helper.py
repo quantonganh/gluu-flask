@@ -29,13 +29,14 @@ from crochet import run_in_reactor
 from api.database import db
 from api.model import ldapNode
 from api.model import oxauthNode
-from api.model import oxtrustNode  # noqa
+from api.model import oxtrustNode
 from api.helper.docker_helper import DockerHelper
 from api.helper.salt_helper import register_minion
 from api.helper.common_helper import get_random_chars
 from api.helper.common_helper import run
 from api.setup.ldap_setup import ldapSetup
 from api.setup.oxauth_setup import OxAuthSetup
+from api.setup.oxtrust_setup import OxTrustSetup
 from api.log import create_file_logger
 
 
@@ -75,7 +76,7 @@ class LdapModelHelper(object):
         # both creation and errors to access log, and just errors
         # to error log.
         cont_id = self.docker.setup_container(
-            self.name, self.image, self.dockerfile, self.salt_master_ipaddr)
+            self.node.name, self.image, self.dockerfile, self.salt_master_ipaddr)
 
         if cont_id:
             # container ID in short format
@@ -201,3 +202,111 @@ class OxAuthModelHelper(object):
         self.cluster.add_node(self.node)
         db.update(self.cluster.id, self.cluster, "clusters")
         return True
+
+
+class BaseModelHelper(object):
+    #: Node setup class. Must be overriden in subclass.
+    setup_class = None
+
+    #: Node model class. Must be overriden in subclass.
+    node_class = None
+
+    #: Docker image name. Must be overriden in subclass.
+    image = ""
+
+    #: URL to image's Dockerfile. Must be overriden in subclass.
+    dockerfile = ""
+
+    def __init__(self, cluster, salt_master_ipaddr):
+        assert self.setup_class, "setup_class must be set"
+        assert self.node_class, "node_class must be set"
+        assert self.image, "image attribute cannot be empty"
+        assert self.dockerfile, "dockerfile attribute cannot be empty"
+
+        self.salt_master_ipaddr = salt_master_ipaddr
+        self.cluster = cluster
+
+        self.node = self.node_class()
+        self.node.cluster_id = cluster.id
+        self.node.name = "{}_{}_{}".format(self.image, self.cluster.id,
+                                           randrange(101, 999))
+
+        _, self.logpath = tempfile.mkstemp(
+            suffix=".log", prefix=self.image + "-build-")
+        self.logger = create_file_logger(self.logpath, name=self.node.name)
+        self.docker = DockerHelper(logger=self.logger)
+
+    def prepare_node_attrs(self):
+        """Prepares changes to node's attributes (if any).
+
+        It's worth noting that changing ``id`` attribute in this method
+        should be avoided.
+        """
+        pass
+
+    def prepare_minion(self):
+        """Waits for minion to connect before doing any remote execution.
+        """
+        # wait for 10 seconds to make sure minion connected
+        # and sent its key to master
+        # TODO: there must be a way around this
+        self.logger.info("Waiting for minion to connect; "
+                         "sleeping for 10 seconds")
+        time.sleep(10)
+
+        # register the container as minion
+        register_minion(self.node.id)
+
+        # delay the remote execution
+        # see https://github.com/saltstack/salt/issues/13561
+        # TODO: there must be a way around this
+        self.logger.info("Preparing remote execution; "
+                         "sleeping for 15 seconds")
+        time.sleep(15)
+
+    def save_to_db(self):
+        """Saves node and updates the cluster where node belongs to.
+        """
+        db.persist(self.node, "nodes")
+        self.cluster.add_node(self.node)
+        db.update(self.cluster.id, self.cluster, "clusters")
+
+    @run_in_reactor
+    def setup(self):
+        """Runs the node setup.
+        """
+        try:
+            container_id = self.docker.setup_container(
+                self.node.name, self.image,
+                self.dockerfile, self.salt_master_ipaddr,
+            )
+
+            if container_id:
+                # container ID in short format
+                self.node.id = container_id[:12]
+
+                container_ip = self.docker.get_container_ip(self.node.id)
+                self.node.hostname = container_ip
+                self.node.ip = container_ip
+
+                # runs callback to prepare node attributes;
+                # warning: don't override node.id attribute!
+                self.prepare_node_attrs()
+
+                self.prepare_minion()
+                setup_obj = self.setup_class(self.node, self.cluster, self.logger)
+                setup_obj.setup()
+                self.save_to_db()
+            else:
+                self.logger.error("Failed to start "
+                                  "the {!r} container".format(self.node.name))
+        except Exception as exc:
+            self.logger.error(exc)
+
+
+class OxTrustModelHelper(BaseModelHelper):
+    setup_class = OxTrustSetup
+    node_class = oxtrustNode
+    image = "gluuoxtrust"
+    dockerfile = "https://raw.githubusercontent.com/GluuFederation" \
+                 "/gluu-docker/master/ubuntu/14.04/gluuoxtrust/Dockerfile"

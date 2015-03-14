@@ -1,6 +1,7 @@
+# -*- coding: utf-8 -*-
 # The MIT License (MIT)
 #
-# Copyright (c) 2014 Gluu
+# Copyright (c) 2015 Gluu
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -19,27 +20,26 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-from flask_restful_swagger import swagger
-from flask.ext.restful import fields
+import time
 
-from .base import BaseModel
+from api.setup.base import BaseSetup
 
 
-@swagger.model
-class oxtrustNode(BaseModel):
-    # Swager Doc
-    resource_fields = {
-        "id": fields.String(attribute="Node unique identifier"),
-        "name": fields.String(attribute="Node name"),
-        "type": fields.String(attribute="Node type"),
-        "ip": fields.String(attribute="Node IP address"),
-        "cluster_id": fields.String(attribute="Cluster ID"),
-    }
+class OxTrustSetup(BaseSetup):
+    def setup(self):
+        start = time.time()
+        self.logger.info("oxTrust setup is started")
 
-    def __init__(self):
-        self.id = ""
-        self.cluster_id = ""
-        self.name = ""
-        self.hostname = ""
-        self.ip = ""
-        self.type = "oxtrust"
+        # generate oxtrustLdap.properties, oxTrust.properties,
+        # oxauth-static-conf.json, oxTrustLogRotationConfiguration.xml,
+        # self.copy_tomcat_conf()
+
+        # Create or copy key material to /etc/certs
+        # self.gen_cert()
+
+        # Configure apache httpd to proxy AJP:8009
+
+        # Configure tomcat to run oxtrust war file
+
+        elapsed = time.time() - start
+        self.logger.info("oxTrust setup is finished ({} seconds)".format(elapsed))
