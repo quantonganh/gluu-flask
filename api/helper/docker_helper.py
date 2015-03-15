@@ -143,7 +143,6 @@ class DockerHelper(object):
             dockerfile = DOCKER_REPO + '/saltminion/Dockerfile'
             files = [minion_file, supervisor_conf, render, dockerfile]
             build_dir = self.get_remote_files(*files)
-            #removed, details https://github.com/GluuFederation/gluu-flask/issues/5
             build_succeed = self.build_image(build_dir, "saltminion")
             shutil.rmtree(build_dir)
         return build_succeed

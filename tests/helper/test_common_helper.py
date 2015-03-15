@@ -31,3 +31,11 @@ def test_encrypt_password():
 
     passwd = "secret"
     assert encrypt_password(passwd).startswith("{SSHA}")
+
+
+def test_get_quad():
+    from api.helper.common_helper import get_quad
+
+    quad = get_quad()
+    assert len(quad) == 4
+    assert quad.isupper()
