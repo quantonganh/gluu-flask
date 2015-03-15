@@ -43,3 +43,15 @@ class oxtrustNode(BaseModel):
         self.hostname = ""
         self.ip = ""
         self.type = "oxtrust"
+
+        self.tomcat_home = "/opt/tomcat"
+        self.tomcat_conf_dir = "/opt/tomcat/conf"
+        self.tomcat_log_folder = "/opt/tomcat/logs"
+        self.ldap_binddn = 'cn=directory manager'
+
+        # these templates should be rendered and copied to tomcat
+        # conf directory
+        self.oxtrust_properties = "api/templates/salt/oxtrust/oxTrust.properties"
+        self.oxtrust_ldap_properties = "api/templates/salt/oxtrust/oxTrustLdap.properties"
+        self.oxtrust_log_rotation_configuration = "api/templates/salt/oxtrust/oxTrustLogRotationConfiguration.xml"
+        self.oxauth_static_conf_json = "api/templates/salt/_shared/oxauth-static-conf.json"
