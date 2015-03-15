@@ -81,8 +81,33 @@ def test_run_container(monkeypatch, docker_helper):
 def test_build_saltminion(monkeypatch, docker_helper):
     monkeypatch.setattr(
         "api.helper.docker_helper.DockerHelper.image_exists",
+        lambda cls, name: [{
+            'Created': 1401926735,
+            'Id': 'a9eb172552348a9a49180694790b33a1097f546456d041b6e82e4d',
+            'ParentId': '120e218dd395ec314e7b6249f39d2853911b3d6def6ea164',
+            'RepoTags': ['saltminion:latest'],
+            'Size': 0,
+            'VirtualSize': 2433303,
+        }],
+    )
+    assert docker_helper._build_saltminion() is True
+
+
+def test_build_saltminion_no_image(monkeypatch, docker_helper):
+    monkeypatch.setattr(
+        "api.helper.docker_helper.DockerHelper.image_exists",
         lambda cls, name: [],
     )
+    monkeypatch.setattr(
+        "api.helper.docker_helper.DockerHelper.get_remote_files",
+        lambda cls, *files: "/tmp/gluuopendj",
+    )
+    monkeypatch.setattr(
+        "api.helper.docker_helper.DockerHelper.build_image",
+        lambda cls, path, tag: True,
+    )
+    # not sure whether to monkeypatch of use fixture
+    monkeypatch.setattr("shutil.rmtree", lambda path: None)
     assert docker_helper._build_saltminion() is True
 
 
@@ -97,7 +122,7 @@ def test_setup_container_existing_image(monkeypatch, docker_helper):
             'Created': 1401926735,
             'Id': 'a9eb172552348a9a49180694790b33a1097f546456d041b6e82e4d',
             'ParentId': '120e218dd395ec314e7b6249f39d2853911b3d6def6ea164',
-            'RepoTags': ['busybox:buildroot-2014.02', 'busybox:latest'],
+            'RepoTags': ['gluuopendj:latest'],
             'Size': 0,
             'VirtualSize': 2433303,
         }],
@@ -119,6 +144,33 @@ def test_setup_container_no_saltminion(monkeypatch, docker_helper):
         "api.helper.docker_helper.DockerHelper._build_saltminion",
         lambda cls: False,
     )
+    container_id = docker_helper.setup_container(
+        "gluuopendj_123", "gluuopendj",
+        "http://example.com/Dockerfile", "127.0.0.1",
+    )
+    assert container_id == ""
+
+
+def test_setup_container_failed(monkeypatch, docker_helper):
+    monkeypatch.setattr(
+        "api.helper.docker_helper.DockerHelper._build_saltminion",
+        lambda cls: True,
+    )
+    monkeypatch.setattr(
+        "api.helper.docker_helper.DockerHelper.image_exists",
+        lambda cls, name: [],
+    )
+    monkeypatch.setattr(
+        "api.helper.docker_helper.DockerHelper.get_remote_files",
+        lambda cls, *files: "/tmp/gluuopendj",
+    )
+    monkeypatch.setattr(
+        "api.helper.docker_helper.DockerHelper.build_image",
+        lambda cls, path, tag: False,
+    )
+    # not sure whether to monkeypatch of use fixture
+    monkeypatch.setattr("shutil.rmtree", lambda path: None)
+
     container_id = docker_helper.setup_container(
         "gluuopendj_123", "gluuopendj",
         "http://example.com/Dockerfile", "127.0.0.1",
