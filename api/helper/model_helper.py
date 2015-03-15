@@ -34,6 +34,7 @@ from api.helper.docker_helper import DockerHelper
 from api.helper.salt_helper import register_minion
 from api.helper.common_helper import get_random_chars
 from api.helper.common_helper import run
+from api.helper.common_helper import get_quad
 from api.setup.ldap_setup import ldapSetup
 from api.setup.oxauth_setup import OxAuthSetup
 from api.setup.oxtrust_setup import OxTrustSetup
@@ -177,6 +178,10 @@ class OxAuthModelHelper(BaseModelHelper):
         container_ip = self.docker.get_container_ip(self.node.id)
         self.node.hostname = container_ip
         self.node.ip = container_ip
+        self.node.oxauth_client_pw = get_random_chars()
+
+        client_quads = '%s.%s' % tuple([get_quad() for i in xrange(2)])
+        self.node.oxauth_client_id = '%s!0008!%s' % (self.cluster.baseInum, client_quads)
 
 
 class OxTrustModelHelper(BaseModelHelper):
@@ -190,3 +195,7 @@ class OxTrustModelHelper(BaseModelHelper):
         container_ip = self.docker.get_container_ip(self.node.id)
         self.node.hostname = container_ip
         self.node.ip = container_ip
+
+        client_quads = '%s.%s' % tuple([get_quad() for i in xrange(2)])
+        self.node.oxauth_client_id = '%s!0008!%s' % (self.cluster.baseInum, client_quads)
+        self.shib_jks_pass = get_random_chars()

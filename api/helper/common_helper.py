@@ -26,6 +26,7 @@ import random
 import string
 import subprocess
 import sys
+import uuid
 
 # Default charset
 _DEFAULT_CHARS = "".join([string.ascii_uppercase,
@@ -58,3 +59,9 @@ def encrypt_password(password):
     b64encoded = '{0}{1}'.format(sha.digest(), salt).encode('base64').strip()
     encrypted_password = '{{SSHA}}{0}'.format(b64encoded)
     return encrypted_password
+
+
+def get_quad():
+    # borrowed from community-edition-setup project
+    # see http://git.io/he1p
+    return str(uuid.uuid4())[:4].upper()

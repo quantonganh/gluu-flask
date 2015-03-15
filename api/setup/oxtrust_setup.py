@@ -57,17 +57,17 @@ class OxTrustSetup(BaseSetup):
             "orgShortName": self.cluster.orgShortName,
             "admin_email": self.cluster.admin_email,
             "tomcat_log_folder": self.node.tomcat_log_folder,
+            "shibJksPass": self.node.shib_jks_pass,
+            "shibJksFn": self.node.shib_jks_fn,
+            "oxTrustConfigGeneration": self.node.oxtrust_config_generation,
+            "oxauth_client_id": self.node.oxauth_client_id,
 
             # FIXME: the following keys are left blank
             #        it will be populated eventually
             "ldap_hostname": "",
             "encoded_ox_ldap_pw": "",
             "encoded_shib_jks_pw": "",
-            "shibJksFn": "",
-            "shibJksPass": "",
-            "oxTrustConfigGeneration": "",
             "oxauthClient_encoded_pw": "",
-            "oxauth_client_id": "",
         }
 
         # rendered templates

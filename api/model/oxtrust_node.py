@@ -55,6 +55,11 @@ class oxtrustNode(BaseModel):
         self.httpd_csr = "/etc/certs/httpd.csr"
         self.httpd_crt = "/etc/certs/httpd.crt"
         self.defaultTrustStoreFN = '/usr/lib/jvm/java-7-openjdk-amd64/jre/lib/security/cacerts'
+        self.shib_jks_pass = ""
+        self.shib_jks_fn = "/etc/certs/shibIDP.jks"
+        # enabled if we have saml
+        self.oxtrust_config_generation = "disabled"
+        self.oxauth_client_id = ""
 
         # these templates should be rendered and copied to tomcat
         # conf directory
