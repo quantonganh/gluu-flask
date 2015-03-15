@@ -69,9 +69,9 @@ class oxauthNode(BaseModel):
         # to tomcat conf directory
         self.oxauth_ldap_properties = "api/templates/salt/oxauth/oxauth-ldap.properties"
         self.oxauth_config_xml = "api/templates/salt/oxauth/oxauth-config.xml"
-        self.oxauth_static_conf_json = "api/templates/salt/oxauth/oxauth-static-conf.json"
+        self.oxauth_static_conf_json = "api/templates/salt/_shared/oxauth-static-conf.json"
         self.tomcat_server_xml = "api/templates/salt/oxauth/server.xml"
 
         # the following template should be rendered and copied
         # to apache2 conf directory
-        self.apache2_ssl_conf = "api/templates/salt/oxauth/https_gluu.conf"
+        self.apache2_ssl_conf = "api/templates/salt/_shared/https_gluu.conf"
