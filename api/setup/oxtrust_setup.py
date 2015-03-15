@@ -31,7 +31,19 @@ from api.setup.base import BaseSetup
 
 class OxTrustSetup(BaseSetup):
     def copy_tomcat_conf(self):
-        # TODO: template context
+        # copy static template
+        remote_dest_dir = os.path.join(self.node.tomcat_conf_dir, "template", "conf")
+        self.logger.info("copying {}".format(self.node.oxtrust_cache_refresh_properties))
+        self.saltlocal.cmd(self.node.id, "cmd.run", ["mkdir -p {}".format(remote_dest_dir)])
+        run("salt-cp {} {} {}".format(
+            self.node.id,
+            self.node.oxtrust_cache_refresh_properties,
+            os.path.join(
+                remote_dest_dir,
+                os.path.basename(self.node.oxtrust_cache_refresh_properties),
+            ),
+        ))
+
         ctx = {
             "inumOrg": self.cluster.inumOrg,
             "inumOrgFN": self.cluster.inumOrgFN,

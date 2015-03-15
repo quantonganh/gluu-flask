@@ -66,3 +66,7 @@ class oxtrustNode(BaseModel):
         # the following template should be rendered and copied
         # to apache2 conf directory
         self.apache2_ssl_conf = "api/templates/salt/_shared/https_gluu.conf"
+
+        # the following template should be copied to
+        # /opt/tomcat/conf/template/conf
+        self.oxtrust_cache_refresh_properties = "api/templates/salt/oxtrust/oxTrustCacheRefresh-template.properties.vm"
