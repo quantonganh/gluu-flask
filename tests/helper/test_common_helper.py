@@ -38,4 +38,3 @@ def test_get_quad():
 
     quad = get_quad()
     assert len(quad) == 4
-    assert quad.isupper()
