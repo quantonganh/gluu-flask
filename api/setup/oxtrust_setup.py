@@ -25,11 +25,10 @@ import os.path
 import time
 
 from api.helper.common_helper import run
-from api.helper.common_helper import get_random_chars
-from api.setup.base import BaseSetup
+from api.setup.oxauth_setup import OxAuthSetup
 
 
-class OxTrustSetup(BaseSetup):
+class OxTrustSetup(OxAuthSetup):
     def copy_tomcat_conf(self):
         # copy static template
         remote_dest_dir = os.path.join(self.node.tomcat_conf_dir, "template", "conf")
@@ -48,7 +47,6 @@ class OxTrustSetup(BaseSetup):
             "inumOrg": self.cluster.inumOrg,
             "inumOrgFN": self.cluster.inumOrgFN,
             "ldaps_port": self.cluster.ldaps_port,
-            # "certFolder": self.node.cert_folder,
             "hostname": self.node.hostname,
             "inumAppliance": self.cluster.inumAppliance,
             "inumApplianceFN": self.cluster.inumApplianceFN,
@@ -98,125 +96,6 @@ class OxTrustSetup(BaseSetup):
             self.logger.info("copying {}".format(local_dest))
             run("salt-cp {} {} {}".format(self.node.id, local_dest,
                                           remote_dest))
-
-    def gen_cert(self):
-        passwd = get_random_chars()
-        suffix = "httpd"
-        user = "apache"
-
-        mkdir_cmd = "mkdir -p {}".format(self.node.cert_folder)
-
-        # command to create key with password file
-        keypass_cmd = " ".join([self.node.openssl_cmd, "genrsa", "-des3",
-                                "-out", self.node.httpd_key_orig,
-                                "-passout", "pass:{}".format(passwd), "2048"])
-
-        # command to create key file
-        key_cmd = " ".join([self.node.openssl_cmd, "rsa", "-in",
-                            self.node.httpd_key_orig, "-passin",
-                            "pass:{}".format(passwd), "-out", self.node.httpd_key])
-
-        # command to create csr file
-        csr_cmd = " ".join([self.node.openssl_cmd, "req", "-new",
-                            "-key", self.node.httpd_key, "-out", self.node.httpd_csr,
-                            "-subj", "/CN=%s/O=%s/C=%s/ST=%s/L=%s" % (
-                                self.node.hostname,
-                                self.cluster.orgName,
-                                self.cluster.countryCode,
-                                self.cluster.state,
-                                self.cluster.city,
-                            )])
-
-        # command to create crt file
-        crt_cmd = " ".join([self.node.openssl_cmd, "x509", "-req",
-                            "-days", "365",
-                            "-in", self.node.httpd_csr,
-                            "-signkey", self.node.httpd_key,
-                            "-out", self.node.httpd_crt])
-
-        self.logger.info("generating certificates for {}".format(suffix))
-        self.saltlocal.cmd(
-            self.node.id,
-            ["cmd.run", "cmd.run", "cmd.run", "cmd.run", "cmd.run"],
-            [[mkdir_cmd], [keypass_cmd], [key_cmd], [csr_cmd], [crt_cmd]],
-        )
-
-        self.logger.info("changing access to certificates")
-        self.saltlocal.cmd(
-            self.node.id,
-            ["cmd.run", "cmd.run", "cmd.run", "cmd.run"],
-            [
-                ["/bin/chown {0}:{0} {1}".format(user, self.node.httpd_key_orig)],
-                ["/bin/chmod 700 {}".format(self.node.httpd_key_orig)],
-                ["/bin/chown {0}:{0} {1}".format(user, self.node.httpd_key)],
-                ["/bin/chmod 700 {}".format(self.node.httpd_key)],
-            ],
-        )
-
-        import_cmd = " ".join(["/usr/bin/keytool", "-import", "-trustcacerts",
-                               "-alias", "{}_{}".format(self.node.hostname, suffix),
-                               "-file", self.node.httpd_crt,
-                               "-keystore", self.node.defaultTrustStoreFN,
-                               "-storepass", "changeit", "-noprompt"])
-
-        self.logger.info("importing public certificate into Java truststore")
-        self.saltlocal.cmd(self.node.id, "cmd.run", [import_cmd])
-
-        # TODO: generate OpenID keys; see http://git.io/pMJE
-        self.logger.info("changing access to {}".format(self.node.cert_folder))
-        self.saltlocal.cmd(
-            self.node.id,
-            ["cmd.run", "cmd.run"],
-            [["/bin/chown -R tomcat:tomcat {}".format(self.node.cert_folder)],
-             ["/bin/cmhmod -R 500 {}".format(self.node.cert_folder)]],
-        )
-
-    def copy_httpd_conf(self):
-        ctx = {
-            "hostname": self.node.hostname,
-            "ip": self.node.ip,
-            "httpdCertFn": self.node.httpd_crt,
-            "httpdKeyFn": self.node.httpd_key,
-        }
-
-        tmpl = self.node.apache2_ssl_conf
-        rendered_content = ""
-
-        self.saltlocal.cmd(
-            self.node.id,
-            ["cmd.run", "cmd.run"],
-            [
-                ["mkdir -p /etc/apache2/sites-available"],
-                ["mkdir -p /etc/apache2/sites-enabled"],
-            ],
-        )
-
-        try:
-            with codecs.open(tmpl, "r", encoding="utf-8") as fp:
-                rendered_content = fp.read() % ctx
-        except Exception as exc:
-            self.logger.error(exc)
-
-        file_basename = os.path.basename(tmpl)
-        local_dest = os.path.join(self.build_dir, file_basename)
-        remote_dest = os.path.join("/etc/apache2/sites-available",
-                                   file_basename)
-
-        try:
-            with codecs.open(local_dest, "w", encoding="utf-8") as fp:
-                fp.write(rendered_content)
-        except Exception as exc:
-            self.logger.error(exc)
-
-        self.logger.info("copying {}".format(local_dest))
-        run("salt-cp {} {} {}".format(self.node.id, local_dest,
-                                      remote_dest))
-
-        # TODO: when to run httpd service?
-        symlink_cmd = "ln -s /etc/apache2/sites-available/{0} " \
-                      "/etc/apache2/sites-enabled/{0}".format(file_basename)
-        self.logger.info("symlinking {}".format(file_basename))
-        self.saltlocal.cmd(self.node.id, "cmd.run", [symlink_cmd])
 
     def setup(self):
         start = time.time()
