@@ -23,30 +23,14 @@
 import codecs
 import json
 import os.path
-import tempfile
 import time
 
 from api.helper.common_helper import run
 from api.helper.common_helper import encrypt_password
-from api.log import create_file_logger
+from api.setup.base import BaseSetup
 
 
-class ldapSetup(object):
-    def __init__(self, node, cluster, logger=None):
-        self.logger = logger or create_file_logger()
-        self.build_dir = tempfile.mkdtemp()
-
-        # salt supresses the flask logger, hence we import salt inside
-        # this function as a workaround
-        import salt.client
-
-        self.saltlocal = salt.client.LocalClient()
-
-        self.node = node
-        self.cluster = cluster
-        #saltlocal.cmd(self.id, 'cmd.run', [dsconfigCmd])
-        #saltlocal.cmd(self.id, 'cp.get_file', [schemaFile, self.schemaFolder])
-
+class ldapSetup(BaseSetup):
     def write_ldap_pw(self):
         self.logger.info("writing temporary LDAP password")
         self.saltlocal.cmd(

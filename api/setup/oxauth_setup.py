@@ -23,28 +23,14 @@
 import codecs
 import os.path
 import shutil
-import tempfile
 import time
 
-from api.log import create_file_logger
 from api.helper.common_helper import run
 from api.helper.common_helper import get_random_chars
+from api.setup.base import BaseSetup
 
 
-class OxAuthSetup(object):
-    def __init__(self, node, cluster, logger=None):
-        self.logger = logger or create_file_logger()
-        self.build_dir = tempfile.mkdtemp()
-
-        # salt supresses the flask logger, hence we import salt inside
-        # this function as a workaround
-        import salt.client
-
-        self.saltlocal = salt.client.LocalClient()
-
-        self.node = node
-        self.cluster = cluster
-
+class OxAuthSetup(BaseSetup):
     def copy_tomcat_conf(self):
         # static template
         self.logger.info("copying {}".format(self.node.oxauth_errors_json))
