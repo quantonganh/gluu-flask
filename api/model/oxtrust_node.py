@@ -62,3 +62,7 @@ class oxtrustNode(BaseModel):
         self.oxtrust_ldap_properties = "api/templates/salt/oxtrust/oxTrustLdap.properties"
         self.oxtrust_log_rotation_configuration = "api/templates/salt/oxtrust/oxTrustLogRotationConfiguration.xml"
         self.oxauth_static_conf_json = "api/templates/salt/_shared/oxauth-static-conf.json"
+
+        # the following template should be rendered and copied
+        # to apache2 conf directory
+        self.apache2_ssl_conf = "api/templates/salt/_shared/https_gluu.conf"

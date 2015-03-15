@@ -159,20 +159,68 @@ class OxTrustSetup(BaseSetup):
              ["/bin/cmhmod -R 500 {}".format(self.node.cert_folder)]],
         )
 
+    def copy_httpd_conf(self):
+        ctx = {
+            "hostname": self.node.hostname,
+            "ip": self.node.ip,
+            "httpdCertFn": self.node.httpd_crt,
+            "httpdKeyFn": self.node.httpd_key,
+        }
+
+        tmpl = self.node.apache2_ssl_conf
+        rendered_content = ""
+
+        self.saltlocal.cmd(
+            self.node.id,
+            ["cmd.run", "cmd.run"],
+            [
+                ["mkdir -p /etc/apache2/sites-available"],
+                ["mkdir -p /etc/apache2/sites-enabled"],
+            ],
+        )
+
+        try:
+            with codecs.open(tmpl, "r", encoding="utf-8") as fp:
+                rendered_content = fp.read() % ctx
+        except Exception as exc:
+            self.logger.error(exc)
+
+        file_basename = os.path.basename(tmpl)
+        local_dest = os.path.join(self.build_dir, file_basename)
+        remote_dest = os.path.join("/etc/apache2/sites-available",
+                                   file_basename)
+
+        try:
+            with codecs.open(local_dest, "w", encoding="utf-8") as fp:
+                fp.write(rendered_content)
+        except Exception as exc:
+            self.logger.error(exc)
+
+        self.logger.info("copying {}".format(local_dest))
+        run("salt-cp {} {} {}".format(self.node.id, local_dest,
+                                      remote_dest))
+
+        # TODO: when to run httpd service?
+        symlink_cmd = "ln -s /etc/apache2/sites-available/{0} " \
+                      "/etc/apache2/sites-enabled/{0}".format(file_basename)
+        self.logger.info("symlinking {}".format(file_basename))
+        self.saltlocal.cmd(self.node.id, "cmd.run", [symlink_cmd])
+
     def setup(self):
         start = time.time()
         self.logger.info("oxTrust setup is started")
 
         # generate oxtrustLdap.properties, oxTrust.properties,
-        # oxauth-static-conf.json, oxTrustLogRotationConfiguration.xml,
+        # oxauth-static-conf.json, oxTrustLogRotationConfiguration.xml
         self.copy_tomcat_conf()
 
         # Create or copy key material to /etc/certs
         self.gen_cert()
 
         # Configure apache httpd to proxy AJP:8009
+        self.copy_httpd_conf()
 
-        # Configure tomcat to run oxtrust war file
+        # TODO: Configure tomcat to run oxtrust war file
 
         elapsed = time.time() - start
         self.logger.info("oxTrust setup is finished ({} seconds)".format(elapsed))
