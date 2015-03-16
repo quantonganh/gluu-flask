@@ -20,12 +20,15 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import abc
 import tempfile
 
 from api.log import create_file_logger
 
 
 class BaseSetup(object):
+    __metaclass__ = abc.ABCMeta
+
     def __init__(self, node, cluster, logger=None):
         self.logger = logger or create_file_logger()
         self.build_dir = tempfile.mkdtemp()
@@ -38,5 +41,8 @@ class BaseSetup(object):
         self.node = node
         self.cluster = cluster
 
+    @abc.abstractmethod
     def setup(self):
+        """Runs the actual setup. Must be overriden by subclass.
+        """
         pass

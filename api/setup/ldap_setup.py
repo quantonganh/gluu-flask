@@ -26,7 +26,6 @@ import os.path
 import time
 
 from api.helper.common_helper import run
-from api.helper.common_helper import encrypt_password
 from api.setup.base import BaseSetup
 
 
@@ -239,7 +238,7 @@ class ldapSetup(BaseSetup):
             "encoded_ox_ldap_pw": "",
             "oxauth_client_id": "",
             "oxauthClient_encoded_pw": "",
-            "encoded_ldap_pw": encrypt_password(self.node.ldapPass),
+            "encoded_ldap_pw": self.node.encoded_ldap_pw,
 
             "inumAppliance": self.cluster.inumAppliance,
             "hostname": self.node.local_hostname,

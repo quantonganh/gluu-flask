@@ -65,11 +65,11 @@ class ldapNode(BaseModel):
         'ldif_groups': fields.String(attribute='Full path to output folder ldif'),
         'ldif_site': fields.String(attribute='Full path to output folder ldif'),
         'ldif_scripts': fields.String(attribute='Full path to output folder ldif'),
-        'ldif_files': fields.List(fields.String, attribute='List of initial ldif files')
+        'ldif_files': fields.List(fields.String, attribute='List of initial ldif files'),
     }
 
-    def __init__(self, install_dir=None, cluster_name=None):
-        self.install_dir = install_dir
+    def __init__(self):
+        self.install_dir = ""
         self.ldap_type = "opendj"
 
         self.local_hostname = ""
@@ -131,6 +131,7 @@ class ldapNode(BaseModel):
         self.id = ''
         self.name = ''
         self.type = 'ldap'
-        self.cluster_name = cluster_name
+        self.cluster_name = ""
         self.defaultTrustStoreFN = '/usr/lib/jvm/java-7-openjdk-amd64/jre/lib/security/cacerts'
         self.indexJson = "api/templates/salt/opendj/opendj_index.json"
+        self.encoded_ldap_pw = ""

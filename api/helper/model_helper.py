@@ -32,6 +32,7 @@ from api.model import oxauthNode
 from api.model import oxtrustNode
 from api.helper.docker_helper import DockerHelper
 from api.helper.salt_helper import register_minion
+from api.helper.common_helper import encrypt_password
 from api.helper.common_helper import get_random_chars
 from api.helper.common_helper import run
 from api.helper.common_helper import get_quad
@@ -101,9 +102,20 @@ class BaseModelHelper(object):
                          "sleeping for 15 seconds")
         time.sleep(15)
 
-    def save_to_db(self):
+    def before_save(self):
+        """Callback before saving to database.
+
+        Typical usage is to remove or protect sensitive field such as
+        password or secret.
+        """
+        pass
+
+    def save(self):
         """Saves node and updates the cluster where node belongs to.
         """
+        # Runs pre-save callback
+        self.before_save()
+
         db.persist(self.node, "nodes")
         self.cluster.add_node(self.node)
         db.update(self.cluster.id, self.cluster, "clusters")
@@ -129,7 +141,9 @@ class BaseModelHelper(object):
                 self.prepare_minion()
                 setup_obj = self.setup_class(self.node, self.cluster, self.logger)
                 setup_obj.setup()
-                self.save_to_db()
+
+                self.logger.info("saving to database")
+                self.save()
             else:
                 self.logger.error("Failed to start "
                                   "the {!r} container".format(self.node.name))
@@ -156,6 +170,11 @@ class LdapModelHelper(BaseModelHelper):
         self.node.local_hostname = container_ip
         self.node.ip = container_ip
         self.node.ldapPass = get_random_chars()
+        self.node.encoded_ldap_pw = encrypt_password(self.node.ldapPass)
+
+    def before_save(self):
+        # set LDAP plain-text password as empty before saving to database
+        self.node.ldapPass = ""
 
 
 def stop_ldap(node):
@@ -178,7 +197,7 @@ class OxAuthModelHelper(BaseModelHelper):
         container_ip = self.docker.get_container_ip(self.node.id)
         self.node.hostname = container_ip
         self.node.ip = container_ip
-        self.node.oxauth_client_pw = get_random_chars()
+        # self.node.oxauth_client_pw = get_random_chars()
 
         client_quads = '%s.%s' % tuple([get_quad() for i in xrange(2)])
         self.node.oxauth_client_id = '%s!0008!%s' % (self.cluster.baseInum, client_quads)
@@ -198,4 +217,8 @@ class OxTrustModelHelper(BaseModelHelper):
 
         client_quads = '%s.%s' % tuple([get_quad() for i in xrange(2)])
         self.node.oxauth_client_id = '%s!0008!%s' % (self.cluster.baseInum, client_quads)
-        self.shib_jks_pass = get_random_chars()
+        self.node.shib_jks_pass = get_random_chars()
+
+    def before_save(self):
+        # set oxtrust plain-text password as empty before saving to database
+        self.node.shib_jks_pass = ""
