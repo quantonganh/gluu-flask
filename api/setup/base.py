@@ -31,7 +31,7 @@ class BaseSetup(object):
 
     def __init__(self, node, cluster, logger=None):
         self.logger = logger or create_file_logger()
-        self.build_dir = tempfile.mkdtemp()
+        self.build_dir = tempfile.mkdtemp(dir='./tmp')
 
         # salt supresses the flask logger, hence we import salt inside
         # this function as a workaround
