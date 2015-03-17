@@ -170,11 +170,19 @@ class LdapModelHelper(BaseModelHelper):
         container_ip = self.docker.get_container_ip(self.node.id)
         self.node.local_hostname = container_ip
         self.node.ip = container_ip
+
         # random plain-text LDAP password
         self.node.ldapPass = get_random_chars()
         self.node.encoded_ldap_pw = encrypt_password(self.node.ldapPass)
+
         key = "".join([get_random_chars(), get_random_chars()])
         self.node.encoded_ox_ldap_pw = ox_encode_password(self.node.ldapPass, key)
+
+        client_quads = '%s.%s' % tuple([get_quad() for i in xrange(2)])
+        self.node.oxauth_client_id = '%s!0008!%s' % (self.cluster.baseInum, client_quads)
+
+        self.node.oxauth_client_pw = get_random_chars()
+        self.node.oxauth_client_encoded_pw = ox_encode_password(self.node.oxauth_client_pw, key)
 
     def before_save(self):
         # set LDAP plain-text password as empty before saving to database
