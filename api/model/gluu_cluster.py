@@ -19,11 +19,11 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-
 from flask_restful_swagger import swagger
 from flask.ext.restful import fields
 
-from .base import BaseModel
+from api.model.base import BaseModel
+from api.helper.common_helper import get_quad
 
 
 @swagger.model
@@ -78,11 +78,16 @@ class GluuCluster(BaseModel):
         self.encrypted_pw = ""
 
         # Inums
-        self.baseInum = ""
-        self.inumOrg = ""
-        self.inumAppliance = ""
-        self.inumOrgFN = ""
-        self.inumApplianceFN = ""
+        self.baseInum = '@!%s.%s.%s.%s' % tuple([get_quad() for i in xrange(4)])
+
+        org_quads = '%s.%s' % tuple([get_quad() for i in xrange(2)])
+        self.inumOrg = '%s!0001!%s' % (self.baseInum, org_quads)
+
+        appliance_quads = '%s.%s' % tuple([get_quad() for i in xrange(2)])
+        self.inumAppliance = '%s!0002!%s' % (self.baseInum, appliance_quads)
+
+        self.inumOrgFN = self.inumOrg.replace('@', '').replace('!', '').replace('.', '')
+        self.inumApplianceFN = self.inumAppliance.replace('@', '').replace('!', '').replace('.', '')
 
     def add_node(self, node):
         """Adds node into current cluster.

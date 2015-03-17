@@ -27,14 +27,3 @@ cluster_reqparser.add_argument("state", type=str, location="form",
                                required=True)
 cluster_reqparser.add_argument("admin_email", type=str, location="form",
                                required=True)
-
-# cluster_reqparser.add_argument("ldaps_port", type=str, location="form",
-#                                required=True)
-
-
-cluster_reqparser.add_argument("inumOrg", type=str, location="form",
-                               required=True)
-cluster_reqparser.add_argument("inumOrgFN", type=str, location="form",
-                               required=True)
-cluster_reqparser.add_argument("inumAppliance", type=str, location="form",
-                               required=True)
