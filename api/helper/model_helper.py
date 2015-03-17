@@ -34,6 +34,7 @@ from api.helper.docker_helper import DockerHelper
 from api.helper.salt_helper import register_minion
 from api.helper.common_helper import encrypt_password
 from api.helper.common_helper import get_random_chars
+from api.helper.common_helper import ox_encode_password
 from api.helper.common_helper import run
 from api.helper.common_helper import get_quad
 from api.setup.ldap_setup import ldapSetup
@@ -169,8 +170,11 @@ class LdapModelHelper(BaseModelHelper):
         container_ip = self.docker.get_container_ip(self.node.id)
         self.node.local_hostname = container_ip
         self.node.ip = container_ip
+        # random plain-text LDAP password
         self.node.ldapPass = get_random_chars()
         self.node.encoded_ldap_pw = encrypt_password(self.node.ldapPass)
+        key = "".join([get_random_chars(), get_random_chars()])
+        self.node.encoded_ox_ldap_pw = ox_encode_password(self.node.ldapPass, key)
 
     def before_save(self):
         # set LDAP plain-text password as empty before saving to database

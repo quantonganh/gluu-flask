@@ -134,4 +134,7 @@ class ldapNode(BaseModel):
         self.cluster_name = ""
         self.defaultTrustStoreFN = '/usr/lib/jvm/java-7-openjdk-amd64/jre/lib/security/cacerts'
         self.indexJson = "api/templates/salt/opendj/opendj_index.json"
+
+        self.ldapPass = ""
         self.encoded_ldap_pw = ""
+        self.encoded_ox_ldap_pw = ""

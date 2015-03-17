@@ -235,11 +235,11 @@ class ldapSetup(BaseSetup):
             # FIXME: these keys are left-blank
             # to avoid error for now; they will be
             # populated eventually
-            "encoded_ox_ldap_pw": "",
             "oxauth_client_id": "",
             "oxauthClient_encoded_pw": "",
-            "encoded_ldap_pw": self.node.encoded_ldap_pw,
 
+            "encoded_ldap_pw": self.node.encoded_ldap_pw,
+            "encoded_ox_ldap_pw": self.node.encoded_ox_ldap_pw,
             "inumAppliance": self.cluster.inumAppliance,
             "hostname": self.node.local_hostname,
             "ldaps_port": self.node.ldaps_port,
