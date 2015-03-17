@@ -26,4 +26,7 @@ delete: .clean
 create-ldap-node: .clean delete
 	@SERVER="$(SALT_MASTER_IPADDR):8080" cram create-ldap-node
 
+create-oxauth-node: .clean delete
+	@SERVER="$(SALT_MASTER_IPADDR):8080" cram create-oxauth-node
+
 .PHONY: delete create-ldap-node
