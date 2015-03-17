@@ -53,16 +53,5 @@ Create some clusters
   >   echo $PAR | post $SERVER/cluster > /dev/null
   > done
 
-Delete all clusters
-  $ CLUSTERS=`get $SERVER/cluster | jq -a -r '.[] | .id'`
-  $ for i in $CLUSTERS
-  > do
-  >   delete $SERVER/cluster/$i
-  > done
-
-There should be no clusters left
-  $ get $SERVER/cluster
-  []
-
   $ delete $SERVER/cluster/random-invalid-id -i | head -n 1
   HTTP/1.0 404 NOT FOUND

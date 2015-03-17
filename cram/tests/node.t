@@ -22,17 +22,6 @@ Create a node with invalid data
   $ echo cluster=invalid-id | post $SERVER/node | jq -r .message
   ldap | oxauth | oxtrust
 
-Delete all nodes
-  $ NODES=`get $SERVER/node | jq -a -r '.[] | .id'`
-  $ for i in $NODES
-  > do
-  >   delete $SERVER/node/$i
-  > done
-
-There should be no nodes left
-  $ get $SERVER/node
-  []
-
 Get invalid data
   $ get $SERVER/node/random-invalid-id -i | head -n 1
   HTTP/1.0 404 NOT FOUND
@@ -42,8 +31,3 @@ Get invalid data
 
   $ get $SERVER/node/random-invalid-id | jq -r .message
   Node not found
-
-  $ PAR2="cluster=$ID&node_type=ldap&"
-
-  $ echo $PAR2 | post $SERVER/node -i | head -n 1
-  HTTP/1.0 202 ACCEPTED
