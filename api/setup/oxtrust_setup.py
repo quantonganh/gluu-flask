@@ -59,13 +59,13 @@ class OxTrustSetup(OxAuthSetup):
             "shibJksFn": self.node.shib_jks_fn,
             "oxTrustConfigGeneration": self.node.oxtrust_config_generation,
             "oxauth_client_id": self.node.oxauth_client_id,
+            "encoded_ox_ldap_pw": self.node.encoded_ox_ldap_pw,
+            "encoded_shib_jks_pw": self.node.encoded_shib_jks_pw,
+            "oxauthClient_encoded_pw": self.node.oxauth_client_encoded_pw,
 
             # FIXME: the following keys are left blank
             #        it will be populated eventually
             "ldap_hostname": "",
-            "encoded_ox_ldap_pw": "",
-            "encoded_shib_jks_pw": "",
-            "oxauthClient_encoded_pw": "",
         }
 
         # rendered templates

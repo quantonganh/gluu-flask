@@ -43,7 +43,6 @@ class OxAuthSetup(BaseSetup):
             ),
         ))
 
-        # TODO: template context
         ctx = {
             "inumOrg": self.cluster.inumOrg,
             "ldaps_port": self.cluster.ldaps_port,
@@ -51,11 +50,11 @@ class OxAuthSetup(BaseSetup):
             "hostname": self.node.hostname,
             "inumAppliance": self.cluster.inumAppliance,
             "ldap_binddn": self.node.ldap_binddn,
+            "encoded_ox_ldap_pw": self.node.encoded_ox_ldap_pw,
 
             # FIXME: the following keys are left blank
             #        it will be populated eventually
             "ldap_hostname": "",
-            "encoded_ox_ldap_pw": "",
         }
 
         # rendered templates

@@ -187,6 +187,7 @@ class LdapModelHelper(BaseModelHelper):
     def before_save(self):
         # set LDAP plain-text password as empty before saving to database
         self.node.ldapPass = ""
+        self.node.oxauth_client_pw = ""
 
 
 def stop_ldap(node):
@@ -209,10 +210,16 @@ class OxAuthModelHelper(BaseModelHelper):
         container_ip = self.docker.get_container_ip(self.node.id)
         self.node.hostname = container_ip
         self.node.ip = container_ip
-        # self.node.oxauth_client_pw = get_random_chars()
 
-        client_quads = '%s.%s' % tuple([get_quad() for i in xrange(2)])
-        self.node.oxauth_client_id = '%s!0008!%s' % (self.cluster.baseInum, client_quads)
+        # random plain-text LDAP password
+        # TODO: perhaps should be stored in cluster object instead
+        self.node.ldapPass = get_random_chars()
+        key = "".join([get_random_chars(), get_random_chars()])
+        self.node.encoded_ox_ldap_pw = ox_encode_password(self.node.ldapPass, key)
+
+    def before_save(self):
+        # set LDAP plain-text password as empty before saving to database
+        self.node.ldapPass = ""
 
 
 class OxTrustModelHelper(BaseModelHelper):
@@ -227,10 +234,21 @@ class OxTrustModelHelper(BaseModelHelper):
         self.node.hostname = container_ip
         self.node.ip = container_ip
 
+        self.node.ldapPass = get_random_chars()
+        key = "".join([get_random_chars(), get_random_chars()])
+        self.node.encoded_ox_ldap_pw = ox_encode_password(self.node.ldapPass, key)
+
+        self.node.oxauth_client_pw = get_random_chars()
+        self.node.oxauth_client_encoded_pw = ox_encode_password(self.node.oxauth_client_pw, key)
+
         client_quads = '%s.%s' % tuple([get_quad() for i in xrange(2)])
         self.node.oxauth_client_id = '%s!0008!%s' % (self.cluster.baseInum, client_quads)
+
         self.node.shib_jks_pass = get_random_chars()
+        self.node.encoded_shib_jks_pw = ox_encode_password(self.node.shib_jks_pass, key)
 
     def before_save(self):
         # set oxtrust plain-text password as empty before saving to database
         self.node.shib_jks_pass = ""
+        self.node.ldapPass = ""
+        self.node.oxauth_client_pw = ""
