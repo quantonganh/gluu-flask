@@ -27,3 +27,5 @@ cluster_reqparser.add_argument("state", type=str, location="form",
                                required=True)
 cluster_reqparser.add_argument("admin_email", type=str, location="form",
                                required=True)
+cluster_reqparser.add_argument("ldap_replication_admin_pw", type=str,
+                               location="form", required=True)

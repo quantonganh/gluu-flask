@@ -142,6 +142,7 @@ class BaseModelHelper(object):
                 self.prepare_minion()
                 setup_obj = self.setup_class(self.node, self.cluster, self.logger)
                 setup_obj.setup()
+                setup_obj.after_setup()
 
                 self.logger.info("saving to database")
                 self.save()
@@ -186,7 +187,7 @@ class LdapModelHelper(BaseModelHelper):
 
     def before_save(self):
         # set LDAP plain-text password as empty before saving to database
-        self.node.ldapPass = ""
+        # self.node.ldapPass = ""
         self.node.oxauth_client_pw = ""
 
 

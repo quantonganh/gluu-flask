@@ -25,6 +25,7 @@ import json
 import os.path
 import time
 
+from api.database import db
 from api.helper.common_helper import run
 from api.setup.base import BaseSetup
 
@@ -371,16 +372,66 @@ class ldapSetup(BaseSetup):
         self.saltlocal.cmd(self.node.id, 'cmd.run', [cmdstr])
         self.logger.debug("{}".format(cmdsrt))
 
+    def get_primary_node(self):
+        try:
+            primary_node_id = self.cluster.ldap_nodes[0]
+            primary_node = db.get(primary_node_id, "nodes")
+            self.logger.info("getting primary node {}".format(primary_node_id))
+            return primary_node
+        except IndexError as exc:
+            self.logger.warn(exc)
+            return None
+
+    def replicate_from(self, primary_node):
+        try:
+            enable_cmd = " ".join([
+                "/opt/opendj/bin/dsreplication", "enable",
+                "--host1", primary_node.local_hostname,
+                "--port1", primary_node.ldap_admin_port,
+                "--bindDN1", "'{}'".format(primary_node.ldap_binddn),
+                "--bindPassword1", primary_node.ldapPass,
+                "--replicationPort1", "8989",
+                "--host2", self.node.local_hostname,
+                "--port2", self.node.ldap_admin_port,
+                "--bindDN2", "'{}'".format(self.node.ldap_binddn),
+                "--bindPassword2", self.node.ldapPass,
+                "--replicationPort2", "8989",
+                "--adminUID", "admin",
+                "--adminPassword", self.cluster.ldap_replication_admin_pw,
+                "--baseDN", "'o=gluu'",
+                "--secureReplication1", "--secureReplication2",
+                "-X", "-n",
+            ])
+            self.logger.info("enabling replication between {} and {}".format(
+                primary_node.local_hostname, self.node.local_hostname,
+            ))
+            self.saltlocal.cmd(primary_node.id, "cmd.run", [enable_cmd])
+
+            init_cmd = " ".join([
+                "/opt/opendj/bin/dsreplication", "initialize",
+                "--baseDN", "'o=gluu'",
+                "--adminUID", "admin",
+                "--adminPassword", self.cluster.ldap_replication_admin_pw,
+                "--hostSource", primary_node.local_hostname,
+                "--portSource", primary_node.ldap_admin_port,
+                "--hostDestination", self.node.local_hostname,
+                "--portDestination", self.node.ldap_admin_port,
+                "-X", "-n"
+            ])
+            self.logger.info("initializing replication between {} and {}".format(
+                primary_node.local_hostname, self.node.local_hostname,
+            ))
+            self.saltlocal.cmd(primary_node.id, "cmd.run", [init_cmd])
+        except Exception as exc:
+            self.logger.error(exc)
+
     def setup(self):
         self.logger.info("LDAP setup is started")
-        # Echo important events to the main Flask log too
-        print("LDAP setup is started")
         start = time.time()
+
         self.write_ldap_pw()
         self.setup_opendj()
 
-        # FIXME: sometime, salt command returns error about
-        #        unable to connect to port 4444
         self.configure_opendj()
         self.index_opendj()
 
@@ -388,10 +439,16 @@ class ldapSetup(BaseSetup):
         # base ldif data; otherwise initialize data from existing ldap node.
         # Also to create fully meshed replication, update the other ldap
         # nodes to use this new ldap node as a master.
-        self.import_ldif()
+        primary_node = self.get_primary_node()
+        if primary_node:
+            self.replicate_from(primary_node)
+        else:
+            self.import_ldif()
 
         self.export_opendj_public_cert()
-        self.delete_ldap_pw()
-        self.logger.info("LDAP setup is finished")
-        seconds = time.time() - start
-        print("LDAP setup is finished ({} seconds)".format(seconds))
+
+        # TODO: 2-way password encryption so we can delete LDAP password file
+        # self.delete_ldap_pw()
+
+        elapsed = time.time() - start
+        self.logger.info("LDAP setup is finished ({} seconds)".format(elapsed))

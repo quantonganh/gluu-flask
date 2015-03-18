@@ -301,6 +301,14 @@ class ClusterList(Resource):
                 "dataType": 'string',
                 "paramType": "form"
             },
+            {
+                "name": "ldap_replication_admin_pw",
+                "description": "Password for LDAP replication admin.",
+                "required": True,
+                "allowMultiple": False,
+                "dataType": 'string',
+                "paramType": "form"
+            },
         ],
         responseMessages=[
             {

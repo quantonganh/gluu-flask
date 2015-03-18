@@ -47,11 +47,12 @@ class GluuCluster(BaseModel):
         'state': fields.String(attribute='State or province for X.509 certificate'),  # noqa
         'admin_email': fields.String(attribute='Admin email address for X.509 certificate'),  # noqa
         'encrypted_pw': fields.String(attribute='Secret for ldap cn=directory manager, and oxTrust admin'),
+        'ldap_replication_admin_pw': fields.String(attribute='Password for LDAP replication admin'),
         'baseInum': fields.String(attribute='Unique identifier for domain'),
         'inumOrg': fields.String(attribute='Unique identifier for organization'),  # noqa
         'inumOrgFN': fields.String(attribute='Unique organization identifier sans special characters.'),  # noqa
         'inumAppliance': fields.String(attribute='Unique identifier for cluster'),  # noqa
-        'inumApplianceFN': fields.String(attribute='Unique cluster identifier sans special characters.')  # noqa
+        'inumApplianceFN': fields.String(attribute='Unique cluster identifier sans special characters.'),  # noqa
     }
 
     def __init__(self):
@@ -76,6 +77,9 @@ class GluuCluster(BaseModel):
 
         # Secret for ldap cn=directory manager, and oxTrust admin
         self.encrypted_pw = ""
+
+        # Password for LDAP replication admin
+        self.ldap_replication_admin_pw = ""
 
         # Inums
         self.baseInum = '@!%s.%s.%s.%s' % tuple([get_quad() for i in xrange(4)])

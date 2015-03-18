@@ -21,6 +21,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 import abc
+import shutil
 import tempfile
 
 from api.log import create_file_logger
@@ -46,3 +47,6 @@ class BaseSetup(object):
         """Runs the actual setup. Must be overriden by subclass.
         """
         pass
+
+    def after_setup(self):
+        shutil.rmtree(self.build_dir)
