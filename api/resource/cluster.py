@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-'''/cluster resource'''
-import uuid
-
 from flask import url_for
 from flask.ext.restful import Resource
 from flask_restful_swagger import swagger
@@ -302,7 +299,7 @@ class ClusterList(Resource):
                 "paramType": "form"
             },
             {
-                "name": "ldap_replication_admin_pw",
+                "name": "admin_pw",
                 "description": "Password for LDAP replication admin.",
                 "required": True,
                 "allowMultiple": False,
@@ -324,10 +321,7 @@ class ClusterList(Resource):
     )
     def post(self):
         params = cluster_reqparser.parse_args()
-
-        cluster = GluuCluster()
-        cluster.id = "{}".format(uuid.uuid4())
-        cluster.set_fields(params)
+        cluster = GluuCluster(fields=params)
         db.persist(cluster, "clusters")
 
         headers = {

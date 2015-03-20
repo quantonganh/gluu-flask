@@ -19,9 +19,10 @@ def test_cluster_post(app, db):
             "state": "Texas",
             "admin_email": "john@example.com",
             # "ldaps_port": "1636",
-            "inumOrg": "Gluu",
-            "inumOrgFN": "Gluu",
-            "inumAppliance": "gluu",
+            # "inumOrg": "Gluu",
+            # "inumOrgFN": "Gluu",
+            # "inumAppliance": "gluu",
+            "admin_pw": "secret",
         },
     )
     actual_data = json.loads(resp.data)
@@ -102,9 +103,10 @@ def test_cluster_update(app, db, cluster):
             "state": "Texas",
             "admin_email": "john@example.com",
             # "ldaps_port": "1636",
-            "inumOrg": "Gluu",
-            "inumOrgFN": "Gluu",
-            "inumAppliance": "gluu",
+            # "inumOrg": "Gluu",
+            # "inumOrgFN": "Gluu",
+            # "inumAppliance": "gluu",
+            "admin_pw": "secret",
         },
     )
     actual_data = json.loads(resp.data)

@@ -42,7 +42,7 @@ class ldapSetup(BaseSetup):
             ],
             [
                 ["mkdir -p {}".format(os.path.dirname(self.node.ldapPassFn))],
-                ["echo {} > {}".format(self.node.ldapPass,
+                ["echo {} > {}".format(self.node.decrypted_ldap_pw,
                                        self.node.ldapPassFn)],
                 #["chown ldap:ldap {}".format(self.node.ldapPassFn)],
             ],
@@ -180,7 +180,7 @@ class ldapSetup(BaseSetup):
                                         '--bindPasswordFile',
                                         self.node.ldapPassFn] + changes)
                 self.logger.info("configuring opendj config changes: {}".format(dsconfigCmd))
-                self.logger.debug("{}".format(dsconfigCmd))
+                # self.logger.debug("{}".format(dsconfigCmd))
                 self.saltlocal.cmd(self.node.id, 'cmd.run', [dsconfigCmd])
         except Exception as exc:
             self.logger.error("error executing config changes: %s" % exc)
@@ -235,7 +235,8 @@ class ldapSetup(BaseSetup):
         ctx = {
             "oxauth_client_id": self.node.oxauth_client_id,
             "oxauthClient_encoded_pw": self.node.oxauth_client_encoded_pw,
-            "encoded_ldap_pw": self.node.encoded_ldap_pw,
+            # "encoded_ldap_pw": self.node.encoded_ldap_pw,
+            "encoded_ldap_pw": self.cluster.decrypted_admin_pw,
             "encoded_ox_ldap_pw": self.node.encoded_ox_ldap_pw,
             "inumAppliance": self.cluster.inumAppliance,
             "hostname": self.node.local_hostname,
@@ -383,51 +384,73 @@ class ldapSetup(BaseSetup):
             return None
 
     def replicate_from(self, primary_node):
-        try:
-            enable_cmd = " ".join([
-                "/opt/opendj/bin/dsreplication", "enable",
-                "--host1", primary_node.local_hostname,
-                "--port1", primary_node.ldap_admin_port,
-                "--bindDN1", "'{}'".format(primary_node.ldap_binddn),
-                "--bindPassword1", primary_node.ldapPass,
-                "--replicationPort1", "8989",
-                "--host2", self.node.local_hostname,
-                "--port2", self.node.ldap_admin_port,
-                "--bindDN2", "'{}'".format(self.node.ldap_binddn),
-                "--bindPassword2", self.node.ldapPass,
-                "--replicationPort2", "8989",
-                "--adminUID", "admin",
-                "--adminPassword", self.cluster.ldap_replication_admin_pw,
-                "--baseDN", "'o=gluu'",
-                "--secureReplication1", "--secureReplication2",
-                "-X", "-n",
-            ])
-            self.logger.info("enabling replication between {} and {}".format(
-                primary_node.local_hostname, self.node.local_hostname,
-            ))
-            self.saltlocal.cmd(primary_node.id, "cmd.run", [enable_cmd])
+        base_dns = ("o=gluu", "o=site",)
+        for base_dn in base_dns:
+            try:
+                enable_cmd = " ".join([
+                    "/opt/opendj/bin/dsreplication", "enable",
+                    "--host1", primary_node.local_hostname,
+                    "--port1", primary_node.ldap_admin_port,
+                    "--bindDN1", "{!r}".format(primary_node.ldap_binddn),
+                    "--bindPassword1", primary_node.decrypted_ldap_pw,
+                    "--replicationPort1", "8989",
+                    "--host2", self.node.local_hostname,
+                    "--port2", self.node.ldap_admin_port,
+                    "--bindDN2", "{!r}".format(self.node.ldap_binddn),
+                    "--bindPassword2", self.node.decrypted_ldap_pw,
+                    "--replicationPort2", "8989",
+                    "--adminUID", "admin",
+                    "--adminPassword", self.cluster.decrypted_admin_pw,
+                    # "--adminPassword", self.node.encoded_ldap_pw,
+                    "--baseDN", "{!r}".format(base_dn),
+                    "--secureReplication1", "--secureReplication2",
+                    "-X", "-n",
+                ])
+                self.logger.info("enabling {!r} replication between {} and {}".format(
+                    base_dn, primary_node.local_hostname, self.node.local_hostname,
+                ))
+                self.saltlocal.cmd(primary_node.id, "cmd.run", [enable_cmd])
+            except Exception as exc:
+                self.logger.error("error enabling {!r} replication: {}".format(base_dn, exc))
 
-            init_cmd = " ".join([
-                "/opt/opendj/bin/dsreplication", "initialize",
-                "--baseDN", "'o=gluu'",
-                "--adminUID", "admin",
-                "--adminPassword", self.cluster.ldap_replication_admin_pw,
-                "--hostSource", primary_node.local_hostname,
-                "--portSource", primary_node.ldap_admin_port,
-                "--hostDestination", self.node.local_hostname,
-                "--portDestination", self.node.ldap_admin_port,
-                "-X", "-n"
-            ])
-            self.logger.info("initializing replication between {} and {}".format(
-                primary_node.local_hostname, self.node.local_hostname,
-            ))
-            self.saltlocal.cmd(primary_node.id, "cmd.run", [init_cmd])
-        except Exception as exc:
-            self.logger.error(exc)
+            # wait before initializing the replication to ensure it
+            # has been enabled
+            time.sleep(5)
+
+            try:
+                init_cmd = " ".join([
+                    "/opt/opendj/bin/dsreplication", "initialize",
+                    "--baseDN", "{!r}".format(base_dn),
+                    "--adminUID", "admin",
+                    "--adminPassword", self.cluster.decrypted_admin_pw,
+                    # "--adminPassword", self.node.encoded_ldap_pw,
+                    "--hostSource", primary_node.local_hostname,
+                    "--portSource", primary_node.ldap_admin_port,
+                    "--hostDestination", self.node.local_hostname,
+                    "--portDestination", self.node.ldap_admin_port,
+                    "-X", "-n"
+                ])
+                self.logger.info("initializing {!r} replication between {} and {}".format(
+                    base_dn, primary_node.local_hostname, self.node.local_hostname,
+                ))
+                self.saltlocal.cmd(primary_node.id, "cmd.run", [init_cmd])
+            except Exception as exc:
+                self.logger.error("error initializing {!r} replication: {}".format(base_dn, exc))
 
     def setup(self):
         self.logger.info("LDAP setup is started")
         start = time.time()
+
+        # LDAP implementations sometimes need to open a vast number of files
+        # during the course of operation.
+        self.saltlocal.cmd(
+            self.node.id,
+            ["cmd.run", "cmd.run"],
+            [
+                ['echo -e "root\tsoft\tnofile\t65535" >> /etc/security/limits.conf'],
+                ['echo -e "root\thard\tnofile\t65535" >> /etc/security/limits.conf'],
+            ],
+        )
 
         self.write_ldap_pw()
         self.setup_opendj()
@@ -443,12 +466,14 @@ class ldapSetup(BaseSetup):
         if primary_node:
             self.replicate_from(primary_node)
         else:
+            # FIXME: sometime import failed with error message "unable to connect to port 4444"
+            #        this may affects the replication process
             self.import_ldif()
 
         self.export_opendj_public_cert()
 
-        # TODO: 2-way password encryption so we can delete LDAP password file
-        # self.delete_ldap_pw()
+        # # TODO: 2-way password encryption so we can delete LDAP password file
+        # # self.delete_ldap_pw()
 
         elapsed = time.time() - start
         self.logger.info("LDAP setup is finished ({} seconds)".format(elapsed))

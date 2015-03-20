@@ -19,11 +19,17 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import uuid
+
 from flask_restful_swagger import swagger
 from flask.ext.restful import fields
 
 from api.model.base import BaseModel
 from api.helper.common_helper import get_quad
+from api.helper.common_helper import get_random_chars
+from api.helper.common_helper import encrypt_text
+from api.helper.common_helper import decrypt_text
+from api.helper.common_helper import generate_passkey
 
 
 @swagger.model
@@ -46,8 +52,8 @@ class GluuCluster(BaseModel):
         'city': fields.String(attribute='City for X.509 certificate'),
         'state': fields.String(attribute='State or province for X.509 certificate'),  # noqa
         'admin_email': fields.String(attribute='Admin email address for X.509 certificate'),  # noqa
-        'encrypted_pw': fields.String(attribute='Secret for ldap cn=directory manager, and oxTrust admin'),
-        'ldap_replication_admin_pw': fields.String(attribute='Password for LDAP replication admin'),
+        # 'encrypted_pw': fields.String(attribute='Secret for ldap cn=directory manager, and oxTrust admin'),
+        # 'ldap_replication_admin_pw': fields.String(attribute='Password for LDAP replication admin'),
         'baseInum': fields.String(attribute='Unique identifier for domain'),
         'inumOrg': fields.String(attribute='Unique identifier for organization'),  # noqa
         'inumOrgFN': fields.String(attribute='Unique organization identifier sans special characters.'),  # noqa
@@ -55,31 +61,37 @@ class GluuCluster(BaseModel):
         'inumApplianceFN': fields.String(attribute='Unique cluster identifier sans special characters.'),  # noqa
     }
 
-    def __init__(self):
-        self.id = ""
-        self.name = ""
-        self.description = ""
+    def __init__(self, fields=None):
+        fields = fields or {}
+
+        self.id = "{}".format(uuid.uuid4())
+        self.name = fields.get("name")
+        self.description = fields.get("description")
         self.ldap_nodes = []
         self.oxauth_nodes = []
         self.oxtrust_nodes = []
-        self.hostname_ldap_cluster = ""
-        self.hostname_oxauth_cluster = ""
-        self.hostname_oxtrust_cluster = ""
+        self.hostname_ldap_cluster = fields.get("hostname_ldap_cluster")
+        self.hostname_oxauth_cluster = fields.get("hostname_oxauth_cluster")
+        self.hostname_oxtrust_cluster = fields.get("hostname_oxtrust_cluster")
         self.ldaps_port = "1636"
 
         # X.509 Certificate Information
-        self.orgName = ""
-        self.orgShortName = ""
-        self.countryCode = ""
-        self.city = ""
-        self.state = ""
-        self.admin_email = ""
+        self.orgName = fields.get("orgName")
+        self.orgShortName = fields.get("orgShortName")
+        self.countryCode = fields.get("countryCode")
+        self.city = fields.get("city")
+        self.state = fields.get("state")
+        self.admin_email = fields.get("admin_email")
+
+        # pass key
+        self.passkey = generate_passkey()
 
         # Secret for ldap cn=directory manager, and oxTrust admin
-        self.encrypted_pw = ""
+        # self.encrypted_pw = ""
 
-        # Password for LDAP replication admin
-        self.ldap_replication_admin_pw = ""
+        # Password for Global Administrator
+        admin_pw = fields.get("admin_pw", get_random_chars())
+        self.admin_pw = encrypt_text(admin_pw, self.passkey)
 
         # Inums
         self.baseInum = '@!%s.%s.%s.%s' % tuple([get_quad() for i in xrange(4)])
@@ -143,6 +155,10 @@ class GluuCluster(BaseModel):
             "oxtrust": self.oxtrust_nodes,
         }
         return node_type_map
+
+    @property
+    def decrypted_admin_pw(self):
+        return decrypt_text(self.admin_pw, self.passkey)
 
     def set_fields(self, data=None):
         data = data or {}

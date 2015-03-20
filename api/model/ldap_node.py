@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # The MIT License (MIT)
 #
-# Copyright (c) 2014 Gluu
+# Copyright (c) 2015 Gluu
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,11 @@
 from flask_restful_swagger import swagger
 from flask.ext.restful import fields
 
-from .base import BaseModel
+from api.model.base import BaseModel
+from api.helper.common_helper import generate_passkey
+from api.helper.common_helper import decrypt_text
+from api.helper.common_helper import encrypt_text
+from api.helper.common_helper import get_random_chars
 
 
 @swagger.model
@@ -135,10 +139,15 @@ class ldapNode(BaseModel):
         self.defaultTrustStoreFN = '/usr/lib/jvm/java-7-openjdk-amd64/jre/lib/security/cacerts'
         self.indexJson = "api/templates/salt/opendj/opendj_index.json"
 
-        self.ldapPass = ""
-        self.encoded_ldap_pw = ""
+        self.passkey = generate_passkey()
+        self.ldapPass = encrypt_text(get_random_chars(), self.passkey)
+        # self.encoded_ldap_pw = ""
         self.encoded_ox_ldap_pw = ""
         # not sure whether these attrs belong this model or oxauthNode
         self.oxauth_client_id = ""
         self.oxauth_client_pw = ""
         self.oxauth_client_encoded_pw = ""
+
+    @property
+    def decrypted_ldap_pw(self):
+        return decrypt_text(self.ldapPass, self.passkey)
