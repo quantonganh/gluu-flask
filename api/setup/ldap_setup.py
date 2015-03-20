@@ -182,6 +182,7 @@ class ldapSetup(BaseSetup):
                 self.logger.info("configuring opendj config changes: {}".format(dsconfigCmd))
                 # self.logger.debug("{}".format(dsconfigCmd))
                 self.saltlocal.cmd(self.node.id, 'cmd.run', [dsconfigCmd])
+                time.sleep(1)
         except Exception as exc:
             self.logger.error("error executing config changes: %s" % exc)
 
@@ -283,44 +284,30 @@ class ldapSetup(BaseSetup):
                 #     ['chown ldap:ldap {}'.format(remote_dest)],
                 # )
 
-                if file_basename != "o_site.ldif":
-                    importCmd = " ".join([
-                        self.node.importLdifCommand,
-                        '--ldifFile',
-                        remote_dest,
-                        '--backendID',
-                        'userRoot',
-                        '--hostname',
-                        self.node.local_hostname,
-                        '--port',
-                        self.node.ldap_admin_port,
-                        '--bindDN',
-                        '"%s"' % self.node.ldap_binddn,
-                        '-j',
-                        self.node.ldapPassFn,
-                        '--append',
-                        '--trustAll',
-                    ])
+                if file_basename == "o_site.ldif":
+                    backend_id = "site"
                 else:
-                    importCmd = " ".join([
-                        self.node.importLdifCommand,
-                        '--ldifFile',
-                        remote_dest,
-                        '--backendID',
-                        'site',
-                        '--hostname',
-                        self.node.local_hostname,
-                        '--port',
-                        self.node.ldap_admin_port,
-                        '--bindDN',
-                        '"%s"' % self.node.ldap_binddn,
-                        '-j',
-                        self.node.ldapPassFn,
-                        '--append',
-                        '--trustAll',
-                    ])
+                    backend_id = "userRoot"
+                importCmd = " ".join([
+                    self.node.importLdifCommand,
+                    '--ldifFile',
+                    remote_dest,
+                    '--backendID',
+                    backend_id,
+                    '--hostname',
+                    self.node.local_hostname,
+                    '--port',
+                    self.node.ldap_admin_port,
+                    '--bindDN',
+                    '"%s"' % self.node.ldap_binddn,
+                    '-j',
+                    self.node.ldapPassFn,
+                    '--append',
+                    '--trustAll',
+                ])
                 self.saltlocal.cmd(self.node.id, 'cmd.run', [importCmd])
                 self.logger.debug("{}".format(importCmd))
+                time.sleep(1)
             except Exception as exc:
                 self.logger.error(exc)
             finally:
@@ -331,9 +318,6 @@ class ldapSetup(BaseSetup):
         # Load password to acces OpenDJ truststore
         openDjPinFn = '%s/config/keystore.pin' % self.node.ldapBaseFolder
         openDjTruststoreFn = '%s/config/truststore' % self.node.ldapBaseFolder
-
-        # outd = self.saltlocal.cmd(self.node.id, 'cmd.run', ['cat {}'.format(openDjPinFn)])
-        # openDjPin = outd[self.node.id].strip()
         openDjPin = "`cat {}`".format(openDjPinFn)
 
         self.saltlocal.cmd(
@@ -391,18 +375,18 @@ class ldapSetup(BaseSetup):
                     "/opt/opendj/bin/dsreplication", "enable",
                     "--host1", primary_node.local_hostname,
                     "--port1", primary_node.ldap_admin_port,
-                    "--bindDN1", "{!r}".format(primary_node.ldap_binddn),
+                    "--bindDN1", "'{}'".format(primary_node.ldap_binddn),
                     "--bindPassword1", primary_node.decrypted_ldap_pw,
                     "--replicationPort1", "8989",
                     "--host2", self.node.local_hostname,
                     "--port2", self.node.ldap_admin_port,
-                    "--bindDN2", "{!r}".format(self.node.ldap_binddn),
+                    "--bindDN2", "'{}'".format(self.node.ldap_binddn),
                     "--bindPassword2", self.node.decrypted_ldap_pw,
                     "--replicationPort2", "8989",
                     "--adminUID", "admin",
                     "--adminPassword", self.cluster.decrypted_admin_pw,
                     # "--adminPassword", self.node.encoded_ldap_pw,
-                    "--baseDN", "{!r}".format(base_dn),
+                    "--baseDN", "'{}'".format(base_dn),
                     "--secureReplication1", "--secureReplication2",
                     "-X", "-n",
                 ])
@@ -410,17 +394,17 @@ class ldapSetup(BaseSetup):
                     base_dn, primary_node.local_hostname, self.node.local_hostname,
                 ))
                 self.saltlocal.cmd(primary_node.id, "cmd.run", [enable_cmd])
+
+                # wait before initializing the replication to ensure it
+                # has been enabled
+                time.sleep(5)
             except Exception as exc:
                 self.logger.error("error enabling {!r} replication: {}".format(base_dn, exc))
-
-            # wait before initializing the replication to ensure it
-            # has been enabled
-            time.sleep(5)
 
             try:
                 init_cmd = " ".join([
                     "/opt/opendj/bin/dsreplication", "initialize",
-                    "--baseDN", "{!r}".format(base_dn),
+                    "--baseDN", "'{}'".format(base_dn),
                     "--adminUID", "admin",
                     "--adminPassword", self.cluster.decrypted_admin_pw,
                     # "--adminPassword", self.node.encoded_ldap_pw,
@@ -434,6 +418,7 @@ class ldapSetup(BaseSetup):
                     base_dn, primary_node.local_hostname, self.node.local_hostname,
                 ))
                 self.saltlocal.cmd(primary_node.id, "cmd.run", [init_cmd])
+                time.sleep(5)
             except Exception as exc:
                 self.logger.error("error initializing {!r} replication: {}".format(base_dn, exc))
 
