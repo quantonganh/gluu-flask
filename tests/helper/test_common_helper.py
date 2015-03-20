@@ -38,3 +38,14 @@ def test_get_quad():
 
     quad = get_quad()
     assert len(quad) == 4
+
+
+def test_encrypt_decrypt_text():
+    from api.helper.common_helper import encrypt_text
+    from api.helper.common_helper import decrypt_text
+    from cryptography.fernet import Fernet
+
+    key = Fernet.generate_key()
+    text = "password"
+    enc_text = encrypt_text(text, key)
+    assert decrypt_text(enc_text, key) == text
