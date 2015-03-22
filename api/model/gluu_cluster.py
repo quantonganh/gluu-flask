@@ -167,3 +167,7 @@ class GluuCluster(BaseModel):
             if val is None:
                 continue
             setattr(self, attr, val)
+
+    @property
+    def max_allowed_ldap_nodes(self):
+        return 4

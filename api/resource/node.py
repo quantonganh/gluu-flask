@@ -165,6 +165,10 @@ status of the cluster node is available.""",
                 "message": "Bad Request",
             },
             {
+                "code": 403,
+                "message": "Forbidden",
+            },
+            {
                 "code": 500,
                 "message": "Internal Server Error",
             }
@@ -186,6 +190,9 @@ status of the cluster node is available.""",
             abort(400)
 
         if params.node_type == "ldap":
+            # checks if this new node will exceed max. allowed LDAP nodes
+            if len(cluster.ldap_nodes) + 1 > cluster.max_allowed_ldap_nodes:
+                return {"code": 403, "message": "max. allowed LDAP nodes is reached"}, 403
             helper_class = LdapModelHelper
         elif params.node_type == "oxauth":
             helper_class = OxAuthModelHelper
