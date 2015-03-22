@@ -357,26 +357,24 @@ class ldapSetup(BaseSetup):
         self.saltlocal.cmd(self.node.id, 'cmd.run', [cmdstr])
         self.logger.debug("{}".format(cmdsrt))
 
-    def get_primary_node(self):
+    def get_existing_node(self, node_id):
         try:
-            primary_node_id = self.cluster.ldap_nodes[0]
-            primary_node = db.get(primary_node_id, "nodes")
-            self.logger.info("getting primary node {}".format(primary_node_id))
-            return primary_node
+            self.logger.info("getting existing node {}".format(node_id))
+            node = db.get(node_id, "nodes")
+            return node
         except IndexError as exc:
             self.logger.warn(exc)
-            return None
 
-    def replicate_from(self, primary_node):
+    def replicate_from(self, existing_node):
         base_dns = ("o=gluu", "o=site",)
         for base_dn in base_dns:
             try:
                 enable_cmd = " ".join([
                     "/opt/opendj/bin/dsreplication", "enable",
-                    "--host1", primary_node.local_hostname,
-                    "--port1", primary_node.ldap_admin_port,
-                    "--bindDN1", "'{}'".format(primary_node.ldap_binddn),
-                    "--bindPassword1", primary_node.decrypted_ldap_pw,
+                    "--host1", existing_node.local_hostname,
+                    "--port1", existing_node.ldap_admin_port,
+                    "--bindDN1", "'{}'".format(existing_node.ldap_binddn),
+                    "--bindPassword1", existing_node.decrypted_ldap_pw,
                     "--replicationPort1", "8989",
                     "--host2", self.node.local_hostname,
                     "--port2", self.node.ldap_admin_port,
@@ -391,9 +389,9 @@ class ldapSetup(BaseSetup):
                     "-X", "-n",
                 ])
                 self.logger.info("enabling {!r} replication between {} and {}".format(
-                    base_dn, primary_node.local_hostname, self.node.local_hostname,
+                    base_dn, existing_node.local_hostname, self.node.local_hostname,
                 ))
-                self.saltlocal.cmd(primary_node.id, "cmd.run", [enable_cmd])
+                self.saltlocal.cmd(existing_node.id, "cmd.run", [enable_cmd])
 
                 # wait before initializing the replication to ensure it
                 # has been enabled
@@ -408,16 +406,16 @@ class ldapSetup(BaseSetup):
                     "--adminUID", "admin",
                     "--adminPassword", self.cluster.decrypted_admin_pw,
                     # "--adminPassword", self.node.encoded_ldap_pw,
-                    "--hostSource", primary_node.local_hostname,
-                    "--portSource", primary_node.ldap_admin_port,
+                    "--hostSource", existing_node.local_hostname,
+                    "--portSource", existing_node.ldap_admin_port,
                     "--hostDestination", self.node.local_hostname,
                     "--portDestination", self.node.ldap_admin_port,
                     "-X", "-n"
                 ])
                 self.logger.info("initializing {!r} replication between {} and {}".format(
-                    base_dn, primary_node.local_hostname, self.node.local_hostname,
+                    base_dn, existing_node.local_hostname, self.node.local_hostname,
                 ))
-                self.saltlocal.cmd(primary_node.id, "cmd.run", [init_cmd])
+                self.saltlocal.cmd(existing_node.id, "cmd.run", [init_cmd])
                 time.sleep(5)
             except Exception as exc:
                 self.logger.error("error initializing {!r} replication: {}".format(base_dn, exc))
@@ -440,6 +438,8 @@ class ldapSetup(BaseSetup):
         self.write_ldap_pw()
         self.setup_opendj()
 
+        # FIXME: sometime configuru failed with error message "unable to connect to port 4444"
+        #        this may affects the replication process
         self.configure_opendj()
         self.index_opendj()
 
@@ -447,9 +447,11 @@ class ldapSetup(BaseSetup):
         # base ldif data; otherwise initialize data from existing ldap node.
         # Also to create fully meshed replication, update the other ldap
         # nodes to use this new ldap node as a master.
-        primary_node = self.get_primary_node()
-        if primary_node:
-            self.replicate_from(primary_node)
+        if self.cluster.ldap_nodes:
+            for node_id in self.cluster.ldap_nodes:
+                existing_node = self.get_existing_node(node_id)
+                if existing_node:
+                    self.replicate_from(existing_node)
         else:
             # FIXME: sometime import failed with error message "unable to connect to port 4444"
             #        this may affects the replication process
