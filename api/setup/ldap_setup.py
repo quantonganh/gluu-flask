@@ -464,3 +464,4 @@ class ldapSetup(BaseSetup):
 
         elapsed = time.time() - start
         self.logger.info("LDAP setup is finished ({} seconds)".format(elapsed))
+        return True

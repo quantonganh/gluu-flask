@@ -31,7 +31,7 @@ from api.model import ldapNode
 from api.model import oxauthNode
 from api.model import oxtrustNode
 from api.helper.docker_helper import DockerHelper
-from api.helper.salt_helper import register_minion
+from api.helper.salt_helper import SaltHelper
 # from api.helper.common_helper import encrypt_password
 # from api.helper.common_helper import generate_passkey
 from api.helper.common_helper import get_random_chars
@@ -75,6 +75,7 @@ class BaseModelHelper(object):
             suffix=".log", prefix=self.image + "-build-")
         self.logger = create_file_logger(self.logpath, name=self.node.name)
         self.docker = DockerHelper(logger=self.logger, base_url=docker_base_url)
+        self.salt = SaltHelper()
 
     def prepare_node_attrs(self):
         """Prepares changes to node's attributes (if any).
@@ -95,7 +96,7 @@ class BaseModelHelper(object):
         time.sleep(10)
 
         # register the container as minion
-        register_minion(self.node.id)
+        self.salt.register_minion(self.node.id)
 
         # delay the remote execution
         # see https://github.com/saltstack/salt/issues/13561
@@ -141,15 +142,20 @@ class BaseModelHelper(object):
                 self.prepare_node_attrs()
 
                 self.prepare_minion()
-                setup_obj = self.setup_class(self.node, self.cluster, self.logger)
-                setup_obj.setup()
-                setup_obj.after_setup()
+                if self.salt.is_minion_registered(self.node.id):
+                    setup_obj = self.setup_class(self.node, self.cluster, self.logger)
+                    setup_obj.setup()
+                    if setup_obj.after_setup():
+                        self.logger.info("saving to database")
+                        self.save()
 
-                self.logger.info("saving to database")
-                self.save()
+                # minion is not connected
+                else:
+                    self.logger.warn("minion is unreachable")
+
+            # container is not running
             else:
-                self.logger.error("Failed to start "
-                                  "the {!r} container".format(self.node.name))
+                self.logger.error("Failed to start the {!r} container".format(self.node.name))
         except Exception as exc:
             self.logger.error(exc)
 

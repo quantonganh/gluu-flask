@@ -31,7 +31,7 @@ from api.helper.model_helper import OxAuthModelHelper
 from api.helper.model_helper import OxTrustModelHelper
 from api.helper.model_helper import stop_ldap
 from api.helper.docker_helper import DockerHelper
-from api.helper.salt_helper import unregister_minion
+from api.helper.salt_helper import SaltHelper
 from api.reqparser import node_reqparser
 
 
@@ -96,7 +96,8 @@ class Node(Resource):
         docker.remove_container(node.id)
 
         # unregister minion
-        unregister_minion(node.id)
+        salt_helper = SaltHelper()
+        salt_helper.unregister_minion(node.id)
 
         # remove node
         db.delete(node_id, "nodes")

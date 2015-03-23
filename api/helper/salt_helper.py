@@ -22,32 +22,30 @@
 # SOFTWARE.
 
 
-def create_key_store():
-    # salt supresses the flask logger, hence we import salt inside
-    # this function as a workaround
-    import salt.config
-    import salt.key
+class SaltHelper(object):
+    def __init__(self):
+        # salt supresses the flask logger, hence we import salt inside
+        # this function as a workaround
+        import salt.config
+        import salt.key
 
-    salt_opts = salt.config.client_config("/etc/salt/master")
-    key_store = salt.key.Key(salt_opts)
-    return key_store
+        salt_opts = salt.config.client_config("/etc/salt/master")
+        self.key_store = salt.key.Key(salt_opts)
 
+    def register_minion(self, key):
+        """Registers a minion.
 
-def register_minion(key):
-    """Registers a minion.
+        :param key: Key used by minion; typically a container ID (short format)
+        """
+        return self.key_store.accept(key)
 
-    :param key: Key used by minion; typically a container ID (short format)
-    """
-    # accepts minion's key
-    key_store = create_key_store()
-    return key_store.accept(key)
+    def unregister_minion(self, key):
+        """Unregisters a minion.
 
+        :param key: Key used by minion; typically a container ID (short format)
+        """
+        return self.key_store.delete_key(key)
 
-def unregister_minion(key):
-    """Unregisters a minion.
-
-    :param key: Key used by minion; typically a container ID (short format)
-    """
-    # deletes minion's key
-    key_store = create_key_store()
-    return key_store.delete_key(key)
+    def is_minion_registered(self, key):
+        keys = self.key_store.list_keys()
+        return key in keys["minions"]
