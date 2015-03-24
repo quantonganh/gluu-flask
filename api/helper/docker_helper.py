@@ -35,7 +35,7 @@ from api.log import create_file_logger
 class DockerHelper(object):
     def __init__(self, logger=None, base_url=""):
         self.logger = logger or create_file_logger()
-        self.docker = Client(base_url=base_url or "unix://var/run/docker.sock")
+        self.docker = Client(base_url=base_url or "unix:///var/run/docker.sock")
 
     def image_exists(self, name):
         """Checks whether a docker image exists.
