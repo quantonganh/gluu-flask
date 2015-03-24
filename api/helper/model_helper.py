@@ -144,14 +144,14 @@ class BaseModelHelper(object):
                 self.prepare_minion()
                 if self.salt.is_minion_registered(self.node.id):
                     setup_obj = self.setup_class(self.node, self.cluster, self.logger)
-                    setup_obj.setup()
-                    if setup_obj.after_setup():
+                    if setup_obj.setup():
                         self.logger.info("saving to database")
                         self.save()
+                    setup_obj.after_setup()
 
                 # minion is not connected
                 else:
-                    self.logger.warn("minion is unreachable")
+                    self.logger.error("minion {} is unreachable".format(self.node.id))
 
             # container is not running
             else:
@@ -197,13 +197,24 @@ class LdapModelHelper(BaseModelHelper):
         self.node.oxauth_client_pw = ""
 
 
-def stop_ldap(node):
+def stop_ldap(node, cluster):
     try:
+        disable_repl_cmd = " ".join([
+            "{}/bin/dsreplication".format(node.ldapBaseFolder), "disable",
+            "--hostname", node.local_hostname,
+            "--port", node.ldap_admin_port,
+            "--adminUID", "admin",
+            "--adminPassword", cluster.decrypted_admin_pw,
+            # "-X", "-n", "--disableAll",
+            "-X", "-n", "--disableReplicationServer",
+        ])
+        run("salt {} cmd.run '{}'".format(node.id, disable_repl_cmd))
         run("salt {} cmd.run '{}/bin/stop-ds'".format(node.id, node.ldapBaseFolder))
     except SystemExit as exc:
         if exc.code == 2:
             # executable may not exist or minion is unreachable
             pass
+        print(exc)
 
 
 class OxAuthModelHelper(BaseModelHelper):

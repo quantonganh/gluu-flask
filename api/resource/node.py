@@ -88,8 +88,10 @@ class Node(Resource):
         if not node:
             return {"code": 404, "message": "Node not found"}, 404
 
+        cluster = db.get(node.cluster_id, "clusters")
+
         if node.type == "ldap":
-            stop_ldap(node)
+            stop_ldap(node, cluster)
 
         # remove container
         docker = DockerHelper()
@@ -102,11 +104,10 @@ class Node(Resource):
         # remove node
         db.delete(node_id, "nodes")
 
-        # removes reference from cluster, if any
-        cluster = db.get(node.cluster_id, "clusters")
-        if cluster:
-            cluster.remove_node(node)
-            db.update(cluster.id, cluster, "clusters")
+        # # removes reference from cluster, if any
+        # if cluster:
+        cluster.remove_node(node)
+        db.update(cluster.id, cluster, "clusters")
         return {}, 204
 
 
