@@ -205,8 +205,7 @@ def stop_ldap(node, cluster):
             "--port", node.ldap_admin_port,
             "--adminUID", "admin",
             "--adminPassword", cluster.decrypted_admin_pw,
-            # "-X", "-n", "--disableAll",
-            "-X", "-n", "--disableReplicationServer",
+            "-X", "-n", "--disableAll",
         ])
         run("salt {} cmd.run '{}'".format(node.id, disable_repl_cmd))
         run("salt {} cmd.run '{}/bin/stop-ds'".format(node.id, node.ldapBaseFolder))

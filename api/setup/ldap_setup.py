@@ -424,16 +424,16 @@ class ldapSetup(BaseSetup):
         self.logger.info("LDAP setup is started")
         start = time.time()
 
-        # LDAP implementations sometimes need to open a vast number of files
-        # during the course of operation.
-        self.saltlocal.cmd(
-            self.node.id,
-            ["cmd.run", "cmd.run"],
-            [
-                ['echo -e "root\tsoft\tnofile\t65535" >> /etc/security/limits.conf'],
-                ['echo -e "root\thard\tnofile\t65535" >> /etc/security/limits.conf'],
-            ],
-        )
+        # # LDAP implementations sometimes need to open a vast number of files
+        # # during the course of operation.
+        # self.saltlocal.cmd(
+        #     self.node.id,
+        #     ["cmd.run", "cmd.run"],
+        #     [
+        #         ['echo -e "root\tsoft\tnofile\t65535" >> /etc/security/limits.conf'],
+        #         ['echo -e "root\thard\tnofile\t65535" >> /etc/security/limits.conf'],
+        #     ],
+        # )
 
         self.write_ldap_pw()
         self.setup_opendj()
