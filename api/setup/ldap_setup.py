@@ -157,6 +157,15 @@ class ldapSetup(BaseSetup):
         except Exception as exc:
             self.logger.error("error running dsjavaproperties: %s" % exc)
 
+        # wait for opendj being started before proceeding to next step
+        try:
+            self.logger.info(
+                "warming up opendj server; "
+                "sleeping for {} seconds".format(self.node.ldapStartTimeOut))
+            time.sleep(self.node.ldapStartTimeOut)
+        except Exception as exc:
+            self.logger.error(exc)
+
     def configure_opendj(self):
         config_changes = [
             ['set-global-configuration-prop', '--set', 'single-structural-objectclass-behavior:accept'],
