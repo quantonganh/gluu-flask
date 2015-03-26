@@ -64,6 +64,7 @@ class ldapNode(BaseModel):
         self.ldaps_port = '1636'
         self.ldap_jmx_port = '1689'
         self.ldap_admin_port = '4444'
+        self.ldap_replication_port = "8989"
 
         # Where to install OpenDJ, usually /opt/opendj
         self.ldapBaseFolder = '/opt/opendj'
