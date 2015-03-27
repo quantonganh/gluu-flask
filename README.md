@@ -11,7 +11,7 @@ the design of the gluu-flask component.
 ### Ubuntu packages
 
 ```
-$ sudo apt-get install libssl-dev python-dev swig
+$ sudo apt-get install libssl-dev python-dev swig libffi-dev
 $ sudo apt-get build-dep openssl
 ```
 
