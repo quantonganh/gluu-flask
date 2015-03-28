@@ -199,15 +199,19 @@ class LdapModelHelper(BaseModelHelper):
 
 def stop_ldap(node, cluster):
     try:
-        disable_repl_cmd = " ".join([
-            "{}/bin/dsreplication".format(node.ldapBaseFolder), "disable",
-            "--hostname", node.local_hostname,
-            "--port", node.ldap_admin_port,
-            "--adminUID", "admin",
-            "--adminPassword", cluster.decrypted_admin_pw,
-            "-X", "-n", "--disableAll",
-        ])
-        run("salt {} cmd.run '{}'".format(node.id, disable_repl_cmd))
+        # since LDAP nodes are replicated if there's more than 1 node,
+        # we need to disable the replication agreement first before
+        # before stopping the opendj server
+        if len(cluster.ldap_nodes) > 1:
+            disable_repl_cmd = " ".join([
+                "{}/bin/dsreplication".format(node.ldapBaseFolder), "disable",
+                "--hostname", node.local_hostname,
+                "--port", node.ldap_admin_port,
+                "--adminUID", "admin",
+                "--adminPassword", cluster.decrypted_admin_pw,
+                "-X", "-n", "--disableAll",
+            ])
+            run("salt {} cmd.run '{}'".format(node.id, disable_repl_cmd))
         run("salt {} cmd.run '{}/bin/stop-ds'".format(node.id, node.ldapBaseFolder))
     except SystemExit as exc:
         if exc.code == 2:
