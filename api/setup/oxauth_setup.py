@@ -22,9 +22,9 @@
 # SOFTWARE.
 import codecs
 import os.path
-import shutil
 import time
 
+from api.database import db
 from api.helper.common_helper import run
 from api.helper.common_helper import get_random_chars
 from api.setup.base import BaseSetup
@@ -47,14 +47,11 @@ class OxAuthSetup(BaseSetup):
             "inumOrg": self.cluster.inumOrg,
             "ldaps_port": self.cluster.ldaps_port,
             "certFolder": self.node.cert_folder,
-            "hostname": self.node.hostname,
+            "hostname": self.cluster.hostname_oxauth_cluster,
             "inumAppliance": self.cluster.inumAppliance,
             "ldap_binddn": self.node.ldap_binddn,
             "encoded_ox_ldap_pw": self.node.encoded_ox_ldap_pw,
-
-            # FIXME: the following keys are left blank
-            #        it will be populated eventually
-            "ldap_hostname": "",
+            "ldap_hosts": ",".join(self.get_ldap_hosts()),
         }
 
         # rendered templates
@@ -107,7 +104,7 @@ class OxAuthSetup(BaseSetup):
         csr_cmd = " ".join([self.node.openssl_cmd, "req", "-new",
                             "-key", self.node.httpd_key, "-out", self.node.httpd_csr,
                             "-subj", "/CN=%s/O=%s/C=%s/ST=%s/L=%s" % (
-                                self.node.hostname,
+                                self.cluster.hostname_oxauth_cluster,
                                 self.cluster.orgName,
                                 self.cluster.countryCode,
                                 self.cluster.state,
@@ -140,11 +137,13 @@ class OxAuthSetup(BaseSetup):
             ],
         )
 
-        import_cmd = " ".join(["/usr/bin/keytool", "-import", "-trustcacerts",
-                               "-alias", "{}_{}".format(self.node.hostname, suffix),
-                               "-file", self.node.httpd_crt,
-                               "-keystore", self.node.defaultTrustStoreFN,
-                               "-storepass", "changeit", "-noprompt"])
+        import_cmd = " ".join([
+            "/usr/bin/keytool", "-import", "-trustcacerts",
+            "-alias", "{}_{}".format(self.cluster.hostname_oxauth_cluster, suffix),
+            "-file", self.node.httpd_crt,
+            "-keystore", self.node.defaultTrustStoreFN,
+            "-storepass", "changeit", "-noprompt",
+        ])
 
         self.logger.info("importing public certificate into Java truststore")
         self.saltlocal.cmd(self.node.id, "cmd.run", [import_cmd])
@@ -160,7 +159,7 @@ class OxAuthSetup(BaseSetup):
 
     def copy_httpd_conf(self):
         ctx = {
-            "hostname": self.node.hostname,
+            "hostname": self.cluster.hostname_oxauth_cluster,
             "ip": self.node.ip,
             "httpdCertFn": self.node.httpd_crt,
             "httpdKeyFn": self.node.httpd_key,
@@ -205,6 +204,15 @@ class OxAuthSetup(BaseSetup):
         self.logger.info("symlinking {}".format(file_basename))
         self.saltlocal.cmd(self.node.id, "cmd.run", [symlink_cmd])
 
+    def get_ldap_hosts(self):
+        ldap_hosts = []
+        for ldap_id in self.cluster.ldap_nodes:
+            ldap = db.get(ldap_id, "nodes")
+            if ldap:
+                ldap_host = "{}:{}".format(ldap.local_hostname, self.cluster.ldaps_port)
+                ldap_hosts.append(ldap_host)
+        return ldap_hosts
+
     def setup(self):
         start = time.time()
 
@@ -221,8 +229,6 @@ class OxAuthSetup(BaseSetup):
 
         # TODO: configure tomcat to run oxauth war file
 
-        # cleanup build directory
-        shutil.rmtree(self.build_dir)
         elapsed = time.time() - start
         self.logger.info("oxAuth setup is finished ({} seconds)".format(elapsed))
         return True

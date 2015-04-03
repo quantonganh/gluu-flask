@@ -22,7 +22,10 @@
 from flask_restful_swagger import swagger
 from flask.ext.restful import fields
 
-from .base import BaseModel
+from api.model.base import BaseModel
+from api.helper.common_helper import generate_passkey
+from api.helper.common_helper import get_random_chars
+from api.helper.common_helper import encrypt_text
 
 
 @swagger.model
@@ -40,7 +43,6 @@ class oxauthNode(BaseModel):
         self.id = ""
         self.cluster_id = ""
         self.name = ""
-        self.hostname = ""
         self.ip = ""
         self.type = "oxauth"
 
@@ -61,8 +63,10 @@ class oxauthNode(BaseModel):
         self.oxauth_client_id = ""
         self.oxauth_client_pw = ""
         self.oxauth_client_encoded_pw = ""
-        self.ldapPass = ""
-        self.encoded_ox_ldap_pw = ""
+
+        self.passkey = generate_passkey()
+        self.ldapPass = get_random_chars()
+        self.encoded_ox_ldap_pw = encrypt_text(self.ldapPass, self.passkey)
 
         # the following template should be copied to tomcat conf directory
         self.oxauth_errors_json = "api/templates/salt/oxauth/oxauth-errors.json"

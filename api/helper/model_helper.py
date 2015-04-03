@@ -229,18 +229,10 @@ class OxAuthModelHelper(BaseModelHelper):
 
     def prepare_node_attrs(self):
         container_ip = self.docker.get_container_ip(self.node.id)
-        self.node.hostname = container_ip
         self.node.ip = container_ip
 
-        # random plain-text LDAP password
-        # TODO: perhaps should be stored in cluster object instead
-        self.node.ldapPass = get_random_chars()
-        key = "".join([get_random_chars(), get_random_chars()])
-        self.node.encoded_ox_ldap_pw = ox_encode_password(self.node.ldapPass, key)
-
     def before_save(self):
-        # set LDAP plain-text password as empty before saving to database
-        self.node.ldapPass = ""
+        pass
 
 
 class OxTrustModelHelper(BaseModelHelper):
