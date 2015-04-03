@@ -113,7 +113,7 @@ class DockerHelper(object):
         :returns: Absolute path to temporary directory where all files
                 were downloaded to.
         """
-        local_dir = tempfile.mkdtemp(dir='./tmp')
+        local_dir = tempfile.mkdtemp()
 
         for file_ in files:
             local_path = os.path.join(local_dir, os.path.basename(file_))

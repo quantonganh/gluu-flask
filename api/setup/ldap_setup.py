@@ -433,22 +433,9 @@ class ldapSetup(BaseSetup):
         self.logger.info("LDAP setup is started")
         start = time.time()
 
-        # # LDAP implementations sometimes need to open a vast number of files
-        # # during the course of operation.
-        # self.saltlocal.cmd(
-        #     self.node.id,
-        #     ["cmd.run", "cmd.run"],
-        #     [
-        #         ['echo -e "root\tsoft\tnofile\t65535" >> /etc/security/limits.conf'],
-        #         ['echo -e "root\thard\tnofile\t65535" >> /etc/security/limits.conf'],
-        #     ],
-        # )
-
         self.write_ldap_pw()
         self.setup_opendj()
 
-        # FIXME: sometime configuru failed with error message "unable to connect to port 4444"
-        #        this may affects the replication process
         self.configure_opendj()
         self.index_opendj()
 
@@ -462,14 +449,12 @@ class ldapSetup(BaseSetup):
                 if existing_node:
                     self.replicate_from(existing_node)
         else:
-            # FIXME: sometime import failed with error message "unable to connect to port 4444"
-            #        this may affects the replication process
             self.import_ldif()
 
         self.export_opendj_public_cert()
 
-        # # TODO: 2-way password encryption so we can delete LDAP password file
-        # # self.delete_ldap_pw()
+        # TODO: 2-way password encryption so we can delete LDAP password file
+        # self.delete_ldap_pw()
 
         elapsed = time.time() - start
         self.logger.info("LDAP setup is finished ({} seconds)".format(elapsed))
