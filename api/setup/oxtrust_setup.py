@@ -106,6 +106,7 @@ class OxTrustSetup(OxAuthSetup):
         self.copy_tomcat_conf()
 
         # Create or copy key material to /etc/certs
+        # FIXME: missing /etc/certs/httpd.crt
         self.gen_cert()
 
         # Configure apache httpd to proxy AJP:8009
@@ -115,3 +116,4 @@ class OxTrustSetup(OxAuthSetup):
 
         elapsed = time.time() - start
         self.logger.info("oxTrust setup is finished ({} seconds)".format(elapsed))
+        return True

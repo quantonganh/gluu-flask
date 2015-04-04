@@ -33,20 +33,20 @@ from api.setup.base import BaseSetup
 class ldapSetup(BaseSetup):
     def write_ldap_pw(self):
         self.logger.info("writing temporary LDAP password")
-        self.saltlocal.cmd(
-            self.node.id,
-            [
-                "cmd.run",
-                "cmd.run",
-                # "cmd.run",
-            ],
-            [
-                ["mkdir -p {}".format(os.path.dirname(self.node.ldapPassFn))],
-                ["echo {} > {}".format(self.node.decrypted_ldap_pw,
-                                       self.node.ldapPassFn)],
-                #["chown ldap:ldap {}".format(self.node.ldapPassFn)],
-            ],
-        )
+
+        try:
+            local_dest = os.path.join(self.build_dir, ".pw")
+            with codecs.open(local_dest, "w", encoding="utf-8") as fp:
+                fp.write(self.cluster.decrypted_admin_pw)
+
+            self.saltlocal.cmd(
+                self.node.id, "cmd.run", ["mkdir -p {}".format(os.path.dirname(self.node.ldapPassFn))],
+            )
+            run("salt-cp {} {} {}".format(self.node.id, local_dest, self.node.ldapPassFn))
+        except Exception as exc:
+            self.logger.error(exc)
+        finally:
+            os.unlink(local_dest)
 
     def delete_ldap_pw(self):
         self.logger.info("deleting temporary LDAP password")
@@ -245,8 +245,7 @@ class ldapSetup(BaseSetup):
         ctx = {
             "oxauth_client_id": self.node.oxauth_client_id,
             "oxauthClient_encoded_pw": self.node.oxauth_client_encoded_pw,
-            # "encoded_ldap_pw": self.node.encoded_ldap_pw,
-            "encoded_ldap_pw": self.cluster.decrypted_admin_pw,
+            "encoded_ldap_pw": self.node.encoded_ldap_pw,
             "encoded_ox_ldap_pw": self.node.encoded_ox_ldap_pw,
             "inumAppliance": self.cluster.inumAppliance,
             "hostname": self.node.local_hostname,
@@ -383,15 +382,18 @@ class ldapSetup(BaseSetup):
                     "--host1", existing_node.local_hostname,
                     "--port1", existing_node.ldap_admin_port,
                     "--bindDN1", "'{}'".format(existing_node.ldap_binddn),
-                    "--bindPassword1", existing_node.decrypted_ldap_pw,
+                    # "--bindPassword1", self.cluster.decrypted_admin_pw,
+                    "--bindPasswordFile1", self.node.ldapPassFn,
                     "--replicationPort1", existing_node.ldap_replication_port,
                     "--host2", self.node.local_hostname,
                     "--port2", self.node.ldap_admin_port,
                     "--bindDN2", "'{}'".format(self.node.ldap_binddn),
-                    "--bindPassword2", self.node.decrypted_ldap_pw,
+                    # "--bindPassword2", self.cluster.decrypted_admin_pw,
+                    "--bindPasswordFile2", self.node.ldapPassFn,
                     "--replicationPort2", self.node.ldap_replication_port,
                     "--adminUID", "admin",
-                    "--adminPassword", self.cluster.decrypted_admin_pw,
+                    # "--adminPassword", self.cluster.decrypted_admin_pw,
+                    "--adminPasswordFile", self.node.ldapPassFn,
                     # "--adminPassword", self.node.encoded_ldap_pw,
                     "--baseDN", "'{}'".format(base_dn),
                     "--secureReplication1", "--secureReplication2",
@@ -400,11 +402,12 @@ class ldapSetup(BaseSetup):
                 self.logger.info("enabling {!r} replication between {} and {}".format(
                     base_dn, existing_node.local_hostname, self.node.local_hostname,
                 ))
-                self.saltlocal.cmd(existing_node.id, "cmd.run", [enable_cmd])
+                # self.saltlocal.cmd(existing_node.id, "cmd.run", [enable_cmd])
+                self.saltlocal.cmd(self.node.id, "cmd.run", [enable_cmd])
 
                 # wait before initializing the replication to ensure it
                 # has been enabled
-                time.sleep(5)
+                time.sleep(10)
             except Exception as exc:
                 self.logger.error("error enabling {!r} replication: {}".format(base_dn, exc))
 
@@ -413,7 +416,8 @@ class ldapSetup(BaseSetup):
                     "/opt/opendj/bin/dsreplication", "initialize",
                     "--baseDN", "'{}'".format(base_dn),
                     "--adminUID", "admin",
-                    "--adminPassword", self.cluster.decrypted_admin_pw,
+                    # "--adminPassword", self.cluster.decrypted_admin_pw,
+                    "--adminPasswordFile", self.node.ldapPassFn,
                     # "--adminPassword", self.node.encoded_ldap_pw,
                     "--hostSource", existing_node.local_hostname,
                     "--portSource", existing_node.ldap_admin_port,
@@ -424,7 +428,8 @@ class ldapSetup(BaseSetup):
                 self.logger.info("initializing {!r} replication between {} and {}".format(
                     base_dn, existing_node.local_hostname, self.node.local_hostname,
                 ))
-                self.saltlocal.cmd(existing_node.id, "cmd.run", [init_cmd])
+                # self.saltlocal.cmd(existing_node.id, "cmd.run", [init_cmd])
+                self.saltlocal.cmd(self.node.id, "cmd.run", [init_cmd])
                 time.sleep(5)
             except Exception as exc:
                 self.logger.error("error initializing {!r} replication: {}".format(base_dn, exc))
@@ -435,12 +440,11 @@ class ldapSetup(BaseSetup):
 
         self.write_ldap_pw()
         self.setup_opendj()
-
         self.configure_opendj()
         self.index_opendj()
 
-        # If no ldap nodes exist, import auto-generated
-        # base ldif data; otherwise initialize data from existing ldap node.
+        # If no ldap nodes exist, import auto-generated base ldif data;
+        # otherwise initialize data from existing ldap node.
         # Also to create fully meshed replication, update the other ldap
         # nodes to use this new ldap node as a master.
         if self.cluster.ldap_nodes:

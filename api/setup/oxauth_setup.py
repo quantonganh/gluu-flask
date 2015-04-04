@@ -154,7 +154,7 @@ class OxAuthSetup(BaseSetup):
             self.node.id,
             ["cmd.run", "cmd.run"],
             [["/bin/chown -R tomcat:tomcat {}".format(self.node.cert_folder)],
-             ["/bin/cmhmod -R 500 {}".format(self.node.cert_folder)]],
+             ["/bin/chmod -R 500 {}".format(self.node.cert_folder)]],
         )
 
     def copy_httpd_conf(self):
