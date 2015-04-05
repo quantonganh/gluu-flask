@@ -8,13 +8,13 @@ EMAIL_RE_ = re.compile(r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)")
 
 def country_code(value, name):
     if len(value) == 2:
-        return True
+        return value
     raise ValueError("The parameter {} requires 2 letters value".format(name))
 
 
 def admin_email(value, name):
     if EMAIL_RE_.match(value):
-        return True
+        return value
     raise ValueError("The parameter {} is not valid email address".format(name))
 
 
