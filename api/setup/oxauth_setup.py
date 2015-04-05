@@ -209,7 +209,7 @@ class OxAuthSetup(BaseSetup):
         for ldap_id in self.cluster.ldap_nodes:
             ldap = db.get(ldap_id, "nodes")
             if ldap:
-                ldap_host = "{}:{}".format(ldap.local_hostname, self.cluster.ldaps_port)
+                ldap_host = "{}:{}".format(ldap.local_hostname, ldap.ldaps_port)
                 ldap_hosts.append(ldap_host)
         return ldap_hosts
 

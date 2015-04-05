@@ -62,10 +62,7 @@ class OxTrustSetup(OxAuthSetup):
             "encoded_ox_ldap_pw": self.node.encoded_ox_ldap_pw,
             "encoded_shib_jks_pw": self.node.encoded_shib_jks_pw,
             "oxauthClient_encoded_pw": self.node.oxauth_client_encoded_pw,
-
-            # FIXME: the following keys are left blank
-            #        it will be populated eventually
-            "ldap_hostname": "",
+            "ldap_hosts": ",".join(self.get_ldap_hosts()),
         }
 
         # rendered templates
