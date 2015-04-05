@@ -49,4 +49,5 @@ class BaseSetup(object):
         pass
 
     def after_setup(self):
+        self.logger.info("removing temporary build directory {}".format(self.build_dir))
         shutil.rmtree(self.build_dir)
