@@ -103,6 +103,8 @@ class OxTrustSetup(OxAuthSetup):
         # oxauth-static-conf.json, oxTrustLogRotationConfiguration.xml
         self.copy_tomcat_conf()
 
+        self.write_salt_file()
+
         # Create or copy key material to /etc/certs
         self.gen_cert()
 
