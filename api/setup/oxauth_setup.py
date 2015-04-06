@@ -83,7 +83,7 @@ class OxAuthSetup(BaseSetup):
             run("salt-cp {} {} {}".format(self.node.id, local_dest,
                                           remote_dest))
 
-    def gen_cert(self):
+    def gen_httpd_cert(self):
         passwd = get_random_chars()
         suffix = "httpd"
         user = "apache"
@@ -125,7 +125,7 @@ class OxAuthSetup(BaseSetup):
             [[mkdir_cmd], [keypass_cmd], [key_cmd], [csr_cmd], [crt_cmd]],
         )
 
-        self.logger.info("changing access to certificates")
+        self.logger.info("changing access to httpd certificates")
         self.saltlocal.cmd(
             self.node.id,
             ["cmd.run", "cmd.run", "cmd.run", "cmd.run"],
@@ -147,15 +147,6 @@ class OxAuthSetup(BaseSetup):
 
         self.logger.info("importing public certificate into Java truststore")
         self.saltlocal.cmd(self.node.id, "cmd.run", [import_cmd])
-
-        # TODO: generate OpenID keys; see http://git.io/pMJE
-        self.logger.info("changing access to {}".format(self.node.cert_folder))
-        self.saltlocal.cmd(
-            self.node.id,
-            ["cmd.run", "cmd.run"],
-            [["/bin/chown -R tomcat:tomcat {}".format(self.node.cert_folder)],
-             ["/bin/chmod -R 500 {}".format(self.node.cert_folder)]],
-        )
 
     def copy_httpd_conf(self):
         ctx = {
@@ -228,8 +219,44 @@ class OxAuthSetup(BaseSetup):
         finally:
             os.unlink(local_dest)
 
+    def gen_openid_keys(self):
+        # FIXME: generate proper OpenID keys; see http://git.io/pMJE
+        openid_key = "{}"
+        openid_key_json_fn = os.path.join(self.node.cert_folder, "oxauth-web-keys.json")
+
+        self.logger.info("generating OpenID key file")
+        self.saltlocal.cmd(
+            self.node.id,
+            "cmd.run",
+            ["echo '{}' > {}".format(openid_key, openid_key_json_fn)],
+        )
+
+        self.logger.info("changing access to OpenID key file")
+        self.saltlocal.cmd(
+            self.node.id,
+            ["cmd.run", "cmd.run"],
+            [["/bin/chown {0}:{0} {1}".format("tomcat", openid_key_json_fn)],
+             ["/bin/chmod 700 {}".format(openid_key_json_fn)]],
+        )
+
+    def change_cert_access(self):
+        self.logger.info("changing access to {}".format(self.node.cert_folder))
+        self.saltlocal.cmd(
+            self.node.id,
+            ["cmd.run", "cmd.run"],
+            [["/bin/chown -R tomcat:tomcat {}".format(self.node.cert_folder)],
+             ["/bin/chmod -R 500 {}".format(self.node.cert_folder)]],
+        )
+
+    def start_tomcat(self):
+        self.logger.info("starting tomcat")
+        self.saltlocal.cmd(
+            self.node.id,
+            "cmd.run",
+            ["{}/bin/catalina.sh start".format(self.node.tomcat_home)],
+        )
+
     def setup(self):
-        # FIXME: Failed to load web keys configuration from file: /etc/certs/oxauth-web-keys.json.
         start = time.time()
         self.logger.info("oxAuth setup is started")
 
@@ -240,12 +267,15 @@ class OxAuthSetup(BaseSetup):
         self.write_salt_file()
 
         # create or copy key material to /etc/certs
-        self.gen_cert()
+        self.gen_httpd_cert()
+        self.gen_openid_keys()
+        self.change_cert_access()
 
         # configure apache httpd to proxy AJP:8009
         self.copy_httpd_conf()
 
-        # TODO: configure tomcat to run oxauth war file
+        # configure tomcat to run oxauth war file
+        self.start_tomcat()
 
         elapsed = time.time() - start
         self.logger.info("oxAuth setup is finished ({} seconds)".format(elapsed))

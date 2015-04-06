@@ -106,12 +106,15 @@ class OxTrustSetup(OxAuthSetup):
         self.write_salt_file()
 
         # Create or copy key material to /etc/certs
-        self.gen_cert()
+        self.gen_httpd_cert()
+        self.change_cert_access()
 
         # Configure apache httpd to proxy AJP:8009
         self.copy_httpd_conf()
 
-        # TODO: Configure tomcat to run oxtrust war file
+        # Configure tomcat to run oxtrust war file
+        # FIXME: cannot found "facter" and "check_ssl" commands
+        self.start_tomcat()
 
         elapsed = time.time() - start
         self.logger.info("oxTrust setup is finished ({} seconds)".format(elapsed))
