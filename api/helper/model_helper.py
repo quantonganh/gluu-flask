@@ -35,7 +35,6 @@ from api.helper.salt_helper import SaltHelper
 from api.helper.common_helper import get_random_chars
 from api.helper.common_helper import encrypt_text
 from api.helper.common_helper import run
-from api.helper.common_helper import get_quad
 from api.setup.ldap_setup import ldapSetup
 from api.setup.oxauth_setup import OxAuthSetup
 from api.setup.oxtrust_setup import OxTrustSetup
@@ -177,18 +176,6 @@ class LdapModelHelper(BaseModelHelper):
         self.node.local_hostname = container_ip
         self.node.ip = container_ip
 
-        self.node.encoded_ldap_pw = self.cluster.admin_pw
-        self.node.encoded_ox_ldap_pw = self.cluster.admin_pw
-
-        client_quads = '%s.%s' % tuple([get_quad() for i in xrange(2)])
-        self.node.oxauth_client_id = '%s!0008!%s' % (self.cluster.baseInum, client_quads)
-
-        self.node.oxauth_client_pw = get_random_chars()
-        self.node.oxauth_client_encoded_pw = encrypt_text(self.node.oxauth_client_pw, self.cluster.passkey)
-
-    def before_save(self):
-        self.node.oxauth_client_pw = ""
-
 
 def stop_ldap(node, cluster):
     try:
@@ -224,10 +211,6 @@ class OxAuthModelHelper(BaseModelHelper):
     def prepare_node_attrs(self):
         container_ip = self.docker.get_container_ip(self.node.id)
         self.node.ip = container_ip
-        self.node.encoded_ox_ldap_pw = self.cluster.admin_pw
-
-    def before_save(self):
-        pass
 
 
 class OxTrustModelHelper(BaseModelHelper):
@@ -241,20 +224,9 @@ class OxTrustModelHelper(BaseModelHelper):
         container_ip = self.docker.get_container_ip(self.node.id)
         self.node.hostname = container_ip
         self.node.ip = container_ip
-
-        self.node.encoded_ox_ldap_pw = self.cluster.admin_pw
-
-        self.node.oxauth_client_pw = get_random_chars()
-        self.node.oxauth_client_encoded_pw = encrypt_text(self.node.oxauth_client_pw, self.cluster.passkey)
-
-        client_quads = '%s.%s' % tuple([get_quad() for i in xrange(2)])
-        self.node.oxauth_client_id = '%s!0008!%s' % (self.cluster.baseInum, client_quads)
-
         self.node.shib_jks_pass = get_random_chars()
         self.node.encoded_shib_jks_pw = encrypt_text(self.node.shib_jks_pass, self.cluster.passkey)
 
     def before_save(self):
         # set oxtrust plain-text password as empty before saving to database
         self.node.shib_jks_pass = ""
-        self.node.ldapPass = ""
-        self.node.oxauth_client_pw = ""

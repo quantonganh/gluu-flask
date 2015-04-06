@@ -57,10 +57,6 @@ class oxauthNode(BaseModel):
         self.httpd_crt = "/etc/certs/httpd.crt"
 
         self.oxauth_lib = "/opt/tomcat/webapps/oxauth/WEB-INF/lib"
-        self.oxauth_client_id = ""
-        self.oxauth_client_pw = ""
-        self.oxauth_client_encoded_pw = ""
-        self.encoded_ox_ldap_pw = ""
 
         # the following template should be copied to tomcat conf directory
         self.oxauth_errors_json = "api/templates/salt/oxauth/oxauth-errors.json"

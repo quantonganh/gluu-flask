@@ -47,10 +47,10 @@ class OxAuthSetup(BaseSetup):
             "inumOrg": self.cluster.inumOrg,
             "ldaps_port": self.cluster.ldaps_port,
             "certFolder": self.node.cert_folder,
-            "hostname": self.cluster.hostname_oxauth_cluster,
+            "hostname_oxauth_cluster": self.cluster.hostname_oxauth_cluster,
             "inumAppliance": self.cluster.inumAppliance,
             "ldap_binddn": self.node.ldap_binddn,
-            "encoded_ox_ldap_pw": self.node.encoded_ox_ldap_pw,
+            "encoded_ox_ldap_pw": self.cluster.encoded_ox_ldap_pw,
             "ldap_hosts": ",".join(self.get_ldap_hosts()),
         }
 

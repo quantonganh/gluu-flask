@@ -243,12 +243,13 @@ class ldapSetup(BaseSetup):
     def import_ldif(self):
         # template's context
         ctx = {
-            "oxauth_client_id": self.node.oxauth_client_id,
-            "oxauthClient_encoded_pw": self.node.oxauth_client_encoded_pw,
-            "encoded_ldap_pw": self.node.encoded_ldap_pw,
-            "encoded_ox_ldap_pw": self.node.encoded_ox_ldap_pw,
+            "oxauth_client_id": self.cluster.oxauth_client_id,
+            "oxauthClient_encoded_pw": self.cluster.oxauth_client_encoded_pw,
+            "encoded_ldap_pw": self.cluster.encoded_ldap_pw,
+            "encoded_ox_ldap_pw": self.cluster.encoded_ox_ldap_pw,
             "inumAppliance": self.cluster.inumAppliance,
             "hostname": self.node.local_hostname,
+            "hostname_oxauth_cluster": self.cluster.hostname_oxauth_cluster,
             "ldaps_port": self.node.ldaps_port,
             "ldap_binddn": self.node.ldap_binddn,
             "inumOrg": self.cluster.inumOrg,

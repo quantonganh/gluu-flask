@@ -62,12 +62,6 @@ class oxtrustNode(BaseModel):
 
         # enabled if we have saml
         self.oxtrust_config_generation = "disabled"
-        self.oxauth_client_id = ""
-
-        self.ldapPass = ""
-        self.encoded_ox_ldap_pw = ""
-        self.oxauth_client_pw = ""
-        self.oxauth_client_encoded_pw = ""
 
         # these templates should be rendered and copied to tomcat
         # conf directory

@@ -87,11 +87,10 @@ class GluuCluster(BaseModel):
         self.passkey = generate_passkey()
 
         # Secret for ldap cn=directory manager, and oxTrust admin
-        # self.encrypted_pw = ""
-
-        # Password for Global Administrator
         admin_pw = fields.get("admin_pw", get_random_chars())
         self.admin_pw = encrypt_text(admin_pw, self.passkey)
+        self.encoded_ldap_pw = self.admin_pw
+        self.encoded_ox_ldap_pw = self.admin_pw
 
         # Inums
         self.baseInum = '@!%s.%s.%s.%s' % tuple([get_quad() for i in xrange(4)])
@@ -104,6 +103,11 @@ class GluuCluster(BaseModel):
 
         self.inumOrgFN = self.inumOrg.replace('@', '').replace('!', '').replace('.', '')
         self.inumApplianceFN = self.inumAppliance.replace('@', '').replace('!', '').replace('.', '')
+
+        # ox-related attrs
+        client_quads = '%s.%s' % tuple([get_quad() for i in xrange(2)])
+        self.oxauth_client_id = '%s!0008!%s' % (self.baseInum, client_quads)
+        self.oxauth_client_encoded_pw = self.admin_pw
 
     def add_node(self, node):
         """Adds node into current cluster.

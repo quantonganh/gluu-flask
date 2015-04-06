@@ -47,7 +47,8 @@ class OxTrustSetup(OxAuthSetup):
             "inumOrg": self.cluster.inumOrg,
             "inumOrgFN": self.cluster.inumOrgFN,
             "ldaps_port": self.cluster.ldaps_port,
-            "hostname": self.node.hostname,
+            "hostname_oxtrust_cluster": self.cluster.hostname_oxtrust_cluster,
+            "hostname_oxauth_cluster": self.cluster.hostname_oxauth_cluster,
             "inumAppliance": self.cluster.inumAppliance,
             "inumApplianceFN": self.cluster.inumApplianceFN,
             "ldap_binddn": self.node.ldap_binddn,
@@ -58,10 +59,10 @@ class OxTrustSetup(OxAuthSetup):
             "shibJksPass": self.node.shib_jks_pass,
             "shibJksFn": self.node.shib_jks_fn,
             "oxTrustConfigGeneration": self.node.oxtrust_config_generation,
-            "oxauth_client_id": self.node.oxauth_client_id,
-            "encoded_ox_ldap_pw": self.node.encoded_ox_ldap_pw,
+            "oxauth_client_id": self.cluster.oxauth_client_id,
+            "encoded_ox_ldap_pw": self.cluster.encoded_ox_ldap_pw,
             "encoded_shib_jks_pw": self.node.encoded_shib_jks_pw,
-            "oxauthClient_encoded_pw": self.node.oxauth_client_encoded_pw,
+            "oxauthClient_encoded_pw": self.cluster.oxauth_client_encoded_pw,
             "ldap_hosts": ",".join(self.get_ldap_hosts()),
         }
 
