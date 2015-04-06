@@ -20,6 +20,7 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+import base64
 import hashlib
 import os
 import random
@@ -28,7 +29,7 @@ import subprocess
 import sys
 import uuid
 
-from cryptography.fernet import Fernet
+from M2Crypto.EVP import Cipher
 
 # Default charset
 _DEFAULT_CHARS = "".join([string.ascii_uppercase,
@@ -70,17 +71,25 @@ def get_quad():
 
 
 def generate_passkey():
-    return Fernet.generate_key()
+    return "".join([get_random_chars(), get_random_chars()])
 
 
 def encrypt_text(text, key):
-    fnt = Fernet(b"{}".format(key))
-    return fnt.encrypt(b"{}".format(text))
+    # Porting from pyDes-based encryption (see http://git.io/htxa)
+    # to use M2Crypto instead (see https://gist.github.com/mrluanma/917014)
+    cipher = Cipher(alg="des_ede3_ecb", key=b"{}".format(key), op=1, iv="\0" * 16)
+    encrypted_text = cipher.update(b"{}".format(text))
+    encrypted_text += cipher.final()
+    return base64.b64encode(encrypted_text)
 
 
 def decrypt_text(encrypted_text, key):
-    fnt = Fernet(b"{}".format(key))
-    return fnt.decrypt(b"{}".format(encrypted_text))
+    # Porting from pyDes-based encryption (see http://git.io/htpk)
+    # to use M2Crypto instead (see https://gist.github.com/mrluanma/917014)
+    cipher = Cipher(alg="des_ede3_ecb", key=b"{}".format(key), op=0, iv="\0" * 16)
+    decrypted_text = cipher.update(base64.b64decode(b"{}".format(encrypted_text)))
+    decrypted_text += cipher.final()
+    return decrypted_text
 
 
 # backward-compat
