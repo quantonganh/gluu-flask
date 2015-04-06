@@ -107,7 +107,8 @@ class GluuCluster(BaseModel):
         # ox-related attrs
         client_quads = '%s.%s' % tuple([get_quad() for i in xrange(2)])
         self.oxauth_client_id = '%s!0008!%s' % (self.baseInum, client_quads)
-        self.oxauth_client_encoded_pw = self.admin_pw
+        oxauth_client_pw = get_random_chars()
+        self.oxauth_client_encoded_pw = encrypt_text(oxauth_client_pw, self.passkey)
 
     def add_node(self, node):
         """Adds node into current cluster.
