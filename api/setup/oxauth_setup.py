@@ -213,13 +213,31 @@ class OxAuthSetup(BaseSetup):
                 ldap_hosts.append(ldap_host)
         return ldap_hosts
 
-    def setup(self):
-        start = time.time()
+    def write_salt_file(self):
+        self.logger.info("writing salt file")
 
+        try:
+            local_dest = os.path.join(self.build_dir, "salt")
+            with codecs.open(local_dest, "w", encoding="utf-8") as fp:
+                fp.write("encodeSalt = {}".format(self.cluster.passkey))
+
+            remote_dest = os.path.join(self.node.tomcat_conf_dir, "salt")
+            run("salt-cp {} {} {}".format(self.node.id, local_dest, remote_dest))
+        except Exception as exc:
+            self.logger.error(exc)
+        finally:
+            os.unlink(local_dest)
+
+    def setup(self):
+        # FIXME: Failed to load web keys configuration from file: /etc/certs/oxauth-web-keys.json.
+        start = time.time()
         self.logger.info("oxAuth setup is started")
+
         # copy rendered templates: oxauth-ldap.properties,
         # oxauth-config.xml, oxauth-static-conf.json
         self.copy_tomcat_conf()
+
+        self.write_salt_file()
 
         # create or copy key material to /etc/certs
         self.gen_cert()
