@@ -34,6 +34,3 @@ jsonpickle==0.9.0
 
 #cram
 cram==0.6
-
-# encryption
-cryptography==0.8
