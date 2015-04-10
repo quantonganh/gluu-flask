@@ -1,0 +1,9 @@
+respawn
+
+start on (net-device-up
+          and local-filesystems
+          and runlevel [2345])
+stop on runlevel [!2345]
+
+env SALT_MASTER_IPADDR={{ grains['ip_interfaces']['eth0'][0] }}
+exec /usr/local/gluu-flask/env/bin/python /usr/local/gluu-flask/run.py
