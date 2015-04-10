@@ -8,7 +8,7 @@ flask_depends:
       - wget
   pkgrepo:
     - managed
-    - name: deb-src http://mirror-fpt-telecom.fpt.net/ubuntu/ {{ grains['oscodename'] }} main restricted universe multiverse
+    - name: deb-src http://archive.ubuntu.com/ubuntu {{ grains['oscodename'] }} main restricted universe multiverse
     - file: /etc/apt/sources.list.d/gluu-src.list
     - clean_file: True
     - require_in:
@@ -25,20 +25,18 @@ docker:
     - require:
       - pkg: flask_depends
 
+software-properties-common:
+  pkg:
+    - installed
+
 salt:
   pkgrepo:
     - managed
-    - name: deb http://ppa.launchpad.net/saltstack/salt/ubuntu {{ grains['oscodename'] }} main
-    - file: /etc/apt/sources.list.d/saltstack-salt.list
-    - clean_file: True
+    - ppa: saltstack/salt
+    - require:
+      - pkg: software-properties-common
     - require_in:
       - pkg: salt
-  cmd:
-    - run
-    - name: wget -q -O- "http://keyserver.ubuntu.com:11371/pks/lookup?op=get&search=0x4759FA960E27C0A6" | sudo apt-key add -
-    - require:
-      - pkg: flask_depends
-      - pkgrepo: salt
   pkg:
     - installed
     - name: salt-master
@@ -51,8 +49,8 @@ setuptools:
   file:
     - managed
     - name: /usr/local/sbin/ez_setup.py
-    - source: https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py
-    - source_hash: md5=d843f5d9670cbd55f5187a199b43d2f8
+    - source: https://bitbucket.org/pypa/setuptools/raw/99ee7f2/ez_setup.py
+    - source_hash: md5=7b634f9185651639f69b64f313265126
     - require:
       - pkg: python
   cmd:
@@ -66,7 +64,7 @@ pip:
   file:
     - managed
     - name: /usr/local/sbin/get-pip.py
-    - source: https://raw.github.com/pypa/pip/master/contrib/get-pip.py
+    - source: https://github.com/pypa/pip/raw/701a80f/contrib/get-pip.py
     - source_hash: md5=d151ff23e488d8f579d68a7a5777badc
     - require:
       - cmd: setuptools
@@ -87,29 +85,30 @@ git:
   pkg:
     - installed
 
+{%- set home = salt['user.info']('root')['home'] %}
 gluu-flask:
   git:
     - latest
     - name: https://github.com/GluuFederation/gluu-flask.git
-    - target: /root/gluu-flask
+    - target: {{ home }}/gluu-flask
     - require:
       - pkg: git
   virtualenv:
     - managed
-    - name: /root/gluu-flask/env
-    - requirements: /root/gluu-flask/requirements.txt
+    - name: {{ home }}/gluu-flask/env
+    - requirements: {{ home }}/gluu-flask/requirements.txt
     - require:
       - git: gluu-flask
   cmd:
     - wait
-    - cwd: /root/gluu-flask
+    - cwd: {{ home }}/gluu-flask
     - name: SALT_MASTER_IPADDR={{ grains['ip_interfaces']['eth0'][0] }} nohup env/bin/python run.py > nohup.log 2>&1 &
     - watch:
       - virtualenv: gluu-flask
   module:
     - run
     - name: cmd.run
-    - cwd: /root/gluu-flask
+    - cwd: {{ home }}/gluu-flask
     - cmd: env/bin/py.test --cov api --cov-report term-missing
     - require:
       - cmd: gluu-flask
