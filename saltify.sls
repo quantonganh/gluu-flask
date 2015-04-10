@@ -103,7 +103,7 @@ gluu-flask:
   cmd:
     - wait
     - cwd: /root/gluu-flask
-    - name: SALT_MASTER_IPADDR={{ grains['ip_interfaces']['eth0'][0] }} env/bin/python run.py
+    - name: SALT_MASTER_IPADDR={{ grains['ip_interfaces']['eth0'][0] }} nohup env/bin/python run.py > nohup.log 2>&1 &
     - watch:
       - virtualenv: gluu-flask
   module:
