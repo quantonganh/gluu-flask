@@ -103,7 +103,7 @@ gluu-flask:
   cmd:
     - wait
     - cwd: /root/gluu-flask
-    - name: SALT_MASTER_IPADDR=127.0.0.1 env/bin/python run.py
+    - name: SALT_MASTER_IPADDR={{ grains['ip_interfaces']['eth0'][0] }} env/bin/python run.py
     - watch:
       - virtualenv: gluu-flask
   module:
