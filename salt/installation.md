@@ -12,7 +12,13 @@ $ sudo apt-get install salt-minion
 
 ```
 mkdir /srv/salt
-wget -P /srv/salt -O gluu-flask.sls https://raw.githubusercontent.com/quantonganh/gluu-flask/master/saltify.sls
+git init /tmp/gluu-flask
+cd /tmp/gluu-flask
+git config core.sparseCheckout true
+git remote add -f origin git@github.com:quantonganh/gluu-flask.git
+echo salt > .git/info/sparse-checkout
+git pull origin master
+mv salt /srv/salt/gluu-flask
 ```
 
 ## Install gluu-flask
