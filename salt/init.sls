@@ -171,6 +171,6 @@ gluu-flask:
   cmd:
     - wait
     - cwd: /usr/local/gluu-flask
-    - name: env/bin/py.test --cov api --cov-report term-missing
+    - name: env/bin/py.test tests --cov api --cov-report term-missing
     - watch:
       - service: gluu-flask
