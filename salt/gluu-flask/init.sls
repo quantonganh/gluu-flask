@@ -1,3 +1,6 @@
+include:
+  - docker
+
 flask_depends:
   pkg:
     - installed
@@ -8,7 +11,6 @@ flask_depends:
       - python-dev
       - software-properties-common
       - swig
-      - wget
   pkgrepo:
     - managed
     - name: deb-src http://archive.ubuntu.com/ubuntu {{ grains['oscodename'] }} main restricted universe multiverse
@@ -19,14 +21,6 @@ flask_depends:
   cmd:
     - run
     - name: apt-get -y build-dep openssl
-
-docker:
-  cmd:
-    - run
-    - name: wget -qO- https://get.docker.com/ubuntu | sh
-    - unless: docker version
-    - require:
-      - pkg: flask_depends
 
 salt:
   pkgrepo:
