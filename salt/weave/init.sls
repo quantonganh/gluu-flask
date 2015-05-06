@@ -7,9 +7,11 @@ weave:
     - name: wget -O /usr/local/bin/weave https://github.com/weaveworks/weave/releases/download/latest_release/weave
     - require:
       - pkg: wget
-  module:
-    - wait
-    - name: cmd.run
-    - cmd: chmod +x /usr/local/bin/weave
-    - watch:
+  file:
+    - managed
+    - name: /usr/local/bin/weave
+    - user: root
+    - group: root
+    - mode: 755
+    - require:
       - cmd: weave
